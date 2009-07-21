@@ -1,0 +1,66 @@
+body { background: #eee; font-size:12px; font-family: arial,sans-serif; color:#666666; }
+h1 { font-size:18px; font-weight: bold; color: #666666; letter-spacing: +0.1em; } 
+h2 { font-size:16px; }
+a { color: #000066; xtext-decoration:none; } 
+a:hover { text-decoration: underline; } 
+a.inactiveMenu, a.activeMenu { padding:0 20px; font-size:14px; }
+a.inactiveMenu { color: #666666; }
+a.activeMenu { color: #ffffff; background:#666666; }
+a.inactiveMenu:hover { text-decoration:underline; }
+input, textarea { font-family: verdana, sans-serif; font-size: 8pt; }
+div.li	{ margin: 0 0 0 10px; padding: 0 0 0 12px; list-style-position: inside; background: url(@bullet.gif) no-repeat; } 
+li { list-style-position: outside; list-style-type: none; padding-left: 10px; background: url(@bullet.gif) no-repeat; } 
+p { margin-bottom:5px; }
+#logo { padding: 15px 0;}
+#menu { border-top:1px solid #666666; text-align:center; font-weight: bold; }
+#menu a { text-decoration:none;  }
+#page { width: 600px; height: 400px; padding: 0; margin: 0 auto; }
+#header, #content, #footer { padding: 20px 20px; }
+#header { background: transparent url(@backgroundtop.gif) no-repeat top center; }
+#content { height: 400px; background: transparent url(@backgroundmiddle.gif) repeat center; }
+#footer { text-align:right; background: transparent url(@backgroundbottom.gif) no-repeat bottom center; }
+#footmessage { border-top:1px solid #666666; }
+.visibleBox { display:block; }
+.invisibleBox { display:none; }
+.borderGrey, .formWidget { border-width: 1px; border-style: solid; border-color: #666; } 
+.formWidget { width:278px; margin-bottom:5px; } 
+.news { padding-bottom: 5px; margin-left: 5px; }
+.citation {margin:auto;width:450px;font-size:18px;font-style:italic;text-align:center;}
+.cartouche {width:280px;text-align:center;float:left;margin:25px;}
+.soft-table {
+	background-color: black;
+	border-width:1px;
+	border-collapse:collapse;
+	border-style:solid;
+	border-color:#AAA;
+	padding:10px;
+	margin: 20px 20px;
+	font-family:verdana, arial, Helvetica, sans-serif;
+	font-size:.8em;
+}
+
+.soft-table th {
+	background-color:#EEEEEE; 
+	font-weight:bold;
+}
+
+.soft-table td {
+	border-width:1px;
+	border-style:solid;
+	padding:10px;
+}
+
+.soft-table .col1 {
+	background-color:#E4EEFF; 
+	font-weight:bold;
+	text-align:left;
+}
+
+.soft-table .coln {
+	background-color:#FFFCDC; 
+}
+
+.soft-table .colnc {
+	background-color:#FFFCDC; 
+	text-align:center;
+}

@@ -1,0 +1,14 @@
+<%
+	set-net [dockimbel@free.fr smtp.free.fr none none none none]
+	
+	msg: make string! 1024
+	foreach [name value] request/content [
+		repend msg [name ": " value]
+	]
+	send/header test@softinnov.com msg make system/standard/email [
+		From: test@test.com
+		Subject: "Test"
+	]
+	
+	;response/redirect "http://softinnov.org"
+%>

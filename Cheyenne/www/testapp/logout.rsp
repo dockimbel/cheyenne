@@ -1,0 +1,5 @@
+<%
+	;session/content/login?: false
+	session/end
+	response/redirect "/"
+%>

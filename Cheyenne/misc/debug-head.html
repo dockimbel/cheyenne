@@ -1,0 +1,93 @@
+	<script language="javascript">
+		var folded = true;
+
+		function show(ref) {
+			var node;
+			node = document.getElementById('menu' + ref);
+			node.style.visibility = 'visible';
+			node = document.getElementById('dbgmenu' + ref);
+			node.style.backgroundColor = '#FFFFE0';
+		}
+		function hide(ref) {
+			var node;
+			node = document.getElementById('menu' + ref);
+			node.style.visibility = 'hidden';
+			node = document.getElementById('dbgmenu' + ref);
+			node.style.backgroundColor = 'silver';
+		}
+		function toggle_folding() {
+			var id, node;
+			for(id = 1; id < 5; id++) {
+				if (node = document.getElementById('menu' + id)) {
+					node.style.visibility = folded ? 'visible' : 'hidden';
+					node.style.position = folded ? 'static' : 'absolute';
+					node = node.firstChild;
+					node.style.width = folded ? '100%' : '';
+				}
+			}
+			node = document.getElementById('but-fold');
+			node.value = folded ? 'hide all' : 'show all';
+			folded = !folded;
+		}
+	</script>
+	<style type="text/css">
+		.dbgzone {
+			width: 100%;
+			background-color: silver;
+			border: solid #444 1px;
+			margin: 0;
+			padding: 4
+		}
+		.dbgtitle {
+			font-weight: bold;
+			font-variant: small-caps;
+			font-size: 14px;
+			font-family: Verdana, Helvetica, Arial;
+			margin: 2;
+			padding: 2 4;
+		}
+		.dbgmenu {
+			font-weight: bold;
+			font-variant: small-caps;
+			font-size: 14px;
+			font-family: Verdana, Helvetica, Arial;
+			color: blue;
+			border-width:1;
+			background-color:silver;
+			margin: 2;
+			padding: 4
+			border: solid black thin;
+		}
+		.dbgmenubut {
+			font-weight: bold;
+			font-variant: small-caps;
+			font-size: 10px;
+			font-family: Verdana, Helvetica, Arial;
+			color: blue;
+			border-width:1;
+			background-color:silver;
+		}
+		.dbginfo-frame {
+			background-color:silver;
+			border: solid #444 1px;
+			border-top: none;
+			visibility:hidden;
+			z-index:100;
+			position:absolute;
+		}
+		.dgbinfo-name {
+			font-weight: bold;
+			font-size: 11px;
+			font-family: Verdana, Helvetica, Arial;
+			background-color:#E4EEFF;
+			padding-left: 2;
+			width: 100px;
+		}
+		.dgbinfo-value {
+			font-weight: normal;
+			font-size: 11px;
+			font-family: Verdana, monospace;
+			background-color:#FFFFE0;
+			padding-left: 2;
+		}
+ 	</style>

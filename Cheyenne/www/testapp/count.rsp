@@ -1,0 +1,17 @@
+<html>
+<head><title>Session counter test</title></head>
+<body>
+<br><br>
+<font face="fixed">
+<u>Page <% print any [all [select request/content 'page] "unknown!"] %></u>
+<ul>
+	<li> Session ID = <%=session/id%></li>
+	<li><b> Count = <%=session/content/hits%></b></li>
+</ul>
+</font>
+<% 
+session/content/hits: session/content/hits + 1 
+if session/content/hits = 20 [session/content/hits: 0] 
+%>
+</body>
+</html>

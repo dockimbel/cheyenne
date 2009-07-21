@@ -1,0 +1,40 @@
+<%
+	if val: select request/content 'action [
+		any [
+			all [
+				val = "go"
+				not session/active?
+				session/start
+				response/redirect "/manual.rsp"
+			]
+			all [
+				val = "halt"
+				session/active?
+				session/end
+				response/redirect "/manual.rsp"
+			]
+		]
+	]
+%>
+<html>
+<head>
+	<title> Manual Sessions</title>
+</head>
+<body>
+<img src="logo.png">
+<center>
+<h2>Manual session mode</h2>
+<BR><BR>Your ID is :  <%=session/id%><BR><BR>
+<FORM method="POST">
+	<%either session/active? [%>
+		<input type="hidden" name="action" value="halt">
+		<input type="submit" value="Stop Session">
+	<%][%>
+		<input type="hidden" name="action" value="go">
+		<input type="submit" value="Start Session">
+	<%]%>
+</FORM>
+<a href="show.rsp">Test RSP script</a>
+</center>
+</body>
+</html>

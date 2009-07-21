@@ -1,0 +1,17 @@
+<html>
+<head>
+	<title>Welcome to TestApp web application</title>
+</head>
+<body>
+<img src="logo.png">
+<center>
+<h2>Welcome! </h2>
+<BR><BR>Your ID is :  <%=session/id%><BR><BR>
+<a href="show.rsp">Example RSP script</a><BR><BR>
+<a href="four.html">Test page : 4 RSP concurently</a><BR><BR>
+<a href="sixteen.html">Test page : 16 RSP concurently</a><BR><BR>
+<BR><BR><BR><BR>
+<a href="logout.rsp">Logout</a>
+</center>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<%
+	OS-type: switch system/version/4 [
+		1 ["AmigaOS"]
+		2 [pick ["OSX" "MacOS"] system/version/5 = 4]
+		3 ["MS Windows"]
+		4 ["Linux"]
+		5 ["BeOS"]
+		6 ["BSDi"]
+		7 ["FreeBSD"]
+		8 ["NetBSD"]
+		9 ["OpenBSD"]
+		10 ["Sun Solaris"]
+		11 ["IRIX"]
+		12 ["HP-UX"]
+		15 ["Windows CE"]
+		17 ["AIX"]
+		19 ["SCO Unix"]
+		22 ["QNX RTOS"]
+		24 ["SCO Open Server"]
+		27 ["Tao Elate/Intent"]
+		28 ["QNX RTP"]
+	]
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+	<title>Cheyenne :: About</title>
+	<link rel="stylesheet" type="text/css" href="@default.css" />
+	<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-15" />
+	<title>SOFTINNOV</title>
+</head>
+<body>
+
+<div id="page">
+	<div id="header">
+		<div id="logo">
+			<a href="http://softinnov.org/cheyenne.shtml">
+				<img alt="Cheyenne" style="float:left;border: 0px" src="@cheyenne.png"/>
+			</a>
+			<a href="http://softinnov.com">
+				<img alt="Softinnov" style="float:right;border: 0px" src="@si.png"/>
+			</a>
+		</div>
+		<br><br>&nbsp;&nbsp;<small>spreads the Rebellion !</small>
+	</div>
+	<div id="content">
+	<center>
+	<h1>Server Status:  <font color="green">Online</font></h1>
+
+	<br><br>
+	<table class="soft-table">
+		<tr><td class="col1">Operating System</td><td class="coln"><%=OS-type%></td>
+		<tr><td class="col1">Cheyenne Version</td><td class="coln">0.9.9.0</td>
+		<tr><td class="col1">REBOL Version</td><td class="coln"><%=system/version%></td>
+	</table>
+	
+	</center>
+	</div> <!-- end content -->
+	<div id="footer">
+		<div id="logo">
+			<a href="http://www.rebol.com">
+				<img alt="logo" style="float:left;border: 0px" src="@rebol.gif"/>
+			</a>
+		</div><br><br>
+		<div id="footmessage">Copyright &copy; 2002-2006 SOFTINNOV</div>
+	</div>
+
+</div> <!-- end page -->
+
+</body>
+</html>

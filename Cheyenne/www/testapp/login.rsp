@@ -1,0 +1,35 @@
+<%
+	user: "test"
+	pass: "letmein"
+
+	in-user: select request/content 'login
+	in-pass: select request/content 'pass
+	
+	if all [user = in-user pass = in-pass][
+		session/content/login?: yes
+		response/redirect "/testapp/"
+	]
+%>
+<html>
+<head>
+	<title>Login</title>
+</head>
+<body>
+<img src="public/logo.png">
+<center>
+<h3>Please login</h3>
+(use: test / letmein)
+<BR><BR>
+<%
+if all [in-user in-user <> user][print {<font color="red">Error: Invalid login!</font>}]
+if all [in-pass in-pass <> pass][print {<BR><font color="red">Error: Invalid password!</font>}]
+%>
+<form method="POST" action="login.rsp">
+<table border="0">
+	<tr><td>Login</td><td><input type="text" name="login"></td></tr>
+	<tr><td>Pass</td><td><input type="password" name="pass"></td></tr>
+	<tr><td>&nbsp</td><td><input type="submit" value="Enter"></td></tr>
+</table>
+</form>
+</body>
+</html>

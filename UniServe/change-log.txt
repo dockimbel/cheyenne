@@ -1,0 +1,153 @@
+UniServe ChangeLog:
+------------------
+
+0.9.33  12/02/2009
+
+	o On-error events now processed through 'fire-event allow logging
+	  and 'stop-event being honored.
+
+
+0.9.32  31/12/2008
+
+	o no-delay disabled (issue with Vista)
+
+
+0.9.31  15/11/2008
+
+	o Fixed a bug in 'reopen-port.
+
+
+0.9.30  19/07/2008
+
+	o Added global 'reopen-port and 'closed-port? functions.
+
+
+0.9.29	12/05/2008
+
+	o UNLESS native now replaces all "if not" patterns
+	
+
+0.9.28	10/02/2008
+
+	o Fix for main loop premature exiting (was introduced in previous version).
+
+
+0.9.27	03/12/2007
+
+	o Globally defined words now 'protect-ed.
+	o Function 'control can now be called with /shutdown option to close
+	  all running servers.
+	o Fixed: bug in the patching of IN function (running in source mode).
+	o Native 'launch not modified anymore (using now 'launch*) 
+
+
+0.9.25	09/06/2007
+
+	o Services startup code refactored. Now it's more flexible.
+		  - boot/no-start option added.
+		  - boot/no-loop option deprecated, use /no-wait.
+		  - control/only option added.
+		  - control/all option removed.
+
+
+0.9.24	27/05/2007
+
+	o Added 'start-time and 'expire properties to port/locals.
+	o Expiration system refactored. Fixes a major port leaking issue.
+
+
+0.9.23	17/05/2007
+
+	o More aggressive port closing.
+	o Fix for an issue with timeout testing method for expired ports.
+	o 'no-delay port mode restricted to TCP ports only.
+
+
+0.9.22	13/05/2007
+
+	o Important issue fixed: file handles were not always released properly.
+	o Fixed a local word ('data) leaking in global context.
+
+
+0.9.21	05/02/2007
+
+	o Bug Fix in 'open-port on dns cache querying issue.
+
+
+0.9.20  09/09/2006
+
+	o Error code processing on port operations refactored. Closing code 501 now 
+	  correctly handled on all port operations.
+
+
+0.9.19  25/08/2006
+
+	o Publically released.
+	o Added a DNS caching system for dns requests.
+	o Added 'on-write-chunk event to pre-process part of big files just before
+	  sending it.
+
+
+0.9.18	06/08/2006
+
+	o Changed 'uniserve-path handling (no more CHANGE-DIR-ed)
+	o Added 'stop-events user function to be able to exit the main event loop.
+	o URL parsing now done in an external library.
+
+
+0.9.17	21/12/2004
+
+	o Added 'on-write-done event.
+	o 'on-write call in 'write-peer temporaly deactivated.
+	o bugfix in 'open-port, custom port-id now correctly used.
+
+
+0.9.16	11/11/2004
+
+	o Added expiration/timeout system to client ports.
+	o Async 'write mode lifetime extended to fix some issues with
+	  blocking writes.
+	o Added 'on-start event. It's called just after a service
+	  port is opened.
+
+
+0.9.15	09/11/2004
+
+	o Changed handling of the (state = -1) case in 'on-write event
+
+
+0.9.14 	02/11/2004
+
+	o Fixed a bug in client port! building (prototype block is now
+	  copied before use for a new port).
+
+
+0.9.13	01/11/2004
+
+	o Fixed a critical bug in user events handling (event functions
+	  persisted in new connections).
+
+
+0.9.12  29/10/2004
+
+	o Added a /custom refinement support to 'insert-port.
+
+
+0.9.11	15/10/2004
+
+	o A 'on-raw-received cannot be generated after a on-received 
+	  if there's no more incoming packet (while in in-buffer being
+	  not empty). Fixed.
+	o Improved UDP service handling and bugfixes.
+	o Packet writing little improvement.
+	o More consistent 'async-modes value management
+	o On-data event splitted in 'on-read and 'on-write
+	o Several minor bugfixes
+
+
+0.9.10	11/10/2004
+
+	o Bugfix in 'insert-port (added correct path to 'write-peer)
+
+
+0.9.9	03/10/2004 "History starts"

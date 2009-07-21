@@ -1,0 +1,55 @@
+<% offx: 265 %>
+<div class="dbgzone">
+<table width="100%"><tr>
+	<td class="dbgtitle" width="100">rsp debug:</td>
+	<td width="60" align="left"><a class="dbgmenu" id="dbgmenu1" onMouseOver="show(1)" onMouseOut="hide(1)">request</a></td>
+	<td width="60"><a class="dbgmenu" id="dbgmenu2" onMouseOver="show(2)" onMouseOut="hide(2)">headers</a></td>
+	<%if not empty? request/content [%>
+	<td width="60"><a class="dbgmenu" id="dbgmenu3" onMouseOver="show(3)" onMouseOut="hide(3)">parameters</a></td>
+	<%]%>
+	<%if session/content [%>
+	<td width="60"><a class="dbgmenu" id="dbgmenu4" onMouseOver="show(4)" onMouseOut="hide(4)">session</a></td>
+	<%]%>
+	<td align="right">
+		<input type="button"id="but-fold" onClick="toggle_folding()"  class="dbgmenubut" value="show all">
+	</td>
+</tr></table>
+
+</div>
+<div id="menu1" class="dbginfo-frame" style="left:130px;"><table cellspacing="1">
+		<tr><td class="dgbinfo-name">HTTP Method</td><td class="dgbinfo-value"><%=mold request/method%></td></tr>
+		<tr><td class="dgbinfo-name">URL</td><td class="dgbinfo-value"><%=mold request/parsed/url%></td></tr>
+		<tr><td class="dgbinfo-name">HTTP Port</td><td class="dgbinfo-value"><%=mold request/server-port%></td></tr>
+		<tr><td class="dgbinfo-name">Client IP</td><td class="dgbinfo-value"><%=mold request/client-ip%></td></tr>
+		<tr><td class="dgbinfo-name">Translated file</td><td class="dgbinfo-value"><%=mold request/translated%></td></tr>
+		<tr><td class="dgbinfo-name">Config bloc</td><td class="dgbinfo-value"><pre class="dgbinfo-value"><%=mold request/config%></pre></td></tr>
+		<%if request/web-app [%>
+		<tr><td class="dgbinfo-name">Application</td><td class="dgbinfo-value"><%=mold request/web-app%></td></tr>
+		<%]%>
+	</table>
+</div>
+<div id="menu2" class="dbginfo-frame" style="left:200px;"><table cellspacing="1">
+		<%foreach [name value] request/headers [%>
+		<tr><td class="dgbinfo-name"><%=name%></td><td class="dgbinfo-value"><%=mold value%></td></tr>
+		<%]%>
+	</table>
+</div>
+<%if not empty? request/content [%>
+<div id="menu3" class="dbginfo-frame" style="left:250px;"><table cellspacing="1">
+		<%foreach [name value] request/content [%>
+		<tr><td class="dgbinfo-name"><%=name%></td><td class="dgbinfo-value"><%=mold value%></td></tr>
+		<%]%>
+	</table>
+</div>
+<%	offx: 345
+]
+if session/content [%>
+<div id="menu4" class="dbginfo-frame" style="left:<%=offx%>px;"><table cellspacing="1">
+		<tr><td class="dgbinfo-name">Session ID</td><td class="dgbinfo-value"><%=mold session/id%></td></tr>
+		<tr><td class="dgbinfo-name">timeout (hh:mm[:ss])</td><td class="dgbinfo-value"><%=mold session/timeout%></td></tr>
+		<%foreach [name value] session/content [%>
+		<tr><td class="dgbinfo-name"><%=name%></td><td class="dgbinfo-value"><%=mold value%></td></tr>
+		<%]%>
+	</table>
+</div>
+<%]%><HR>

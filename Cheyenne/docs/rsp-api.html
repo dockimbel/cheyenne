@@ -1,0 +1,2253 @@
+<html>
+<head>
+<title>RSP API Reference</title>
+<style type="text/css">
+body, a, small, h3, .desc {
+	font-family:verdana, arial, Helvetica, sans-serif;
+}
+body  {font-size:9pt;}
+small {font-size:0.7em;}
+pre {
+	border: 1px solid #AAAAAA;
+	background-color:#FFF;
+	font-family:Courier,sans-serif;
+	font-size:10pt;
+	padding-left: 30px;
+	padding-bottom:10px;
+	padding-right:40px;
+	margin-left: 50px;
+	margin-right: 60px;
+}
+.desc {
+	background-color:#EEE;
+	padding-top:10px;
+	padding-right:50px;
+	align: left;
+}
+.desctext {
+	margin-left:50px;
+	margin-right:60px;
+	text-align:justify;
+}
+h3 {
+	margin-top: 50px;
+	color:#338;
+	font-size:13pt;
+}
+h4 {
+	font-weight:900;
+	font-stretch: wider;
+	font-size:.9em;
+}
+em {
+	font-variant:small-caps;
+	font-style:normal;
+}
+a {
+	color:#338;
+	text-decoration:none;
+}
+a:hover, a:active, a:focus {
+	text-decoration:underline;
+}
+.soft-table {
+	background-color:#AAAAAA;
+	border: 1px solid #AAAAAA;
+	border-collapse:collapse;
+	font-family:verdana, arial, Helvetica, sans-serif;
+	font-size:.7em;
+	width: 100%;
+}
+.soft-table-w {
+	background-color:#AAAAAA;
+	border: 1px solid #AAAAAA;
+	border-collapse:collapse;
+	font-family:verdana, arial, Helvetica, sans-serif;
+	font-size:.9em;
+}
+.soft-table th, .soft-table-w th {
+	background-color:#DDDDDD;
+	font-weight:bold;
+	padding:4px;
+}
+.soft-table td, .soft-table-w td {
+	border: 1px solid #AAAAAA;;
+	padding:4px;
+}
+.soft-table .col1, .soft-table-w .col1 {
+	background-color:#E4EEFF;
+	font-weight:bold;
+	text-align:left;
+}
+.soft-table .col1c, .soft-table-w .col1c {
+	background-color:#E4EEFF;
+	text-align:center;
+}
+.soft-table .coln, .soft-table-w .coln {
+	background-color:#FFFCDC;
+}
+.soft-table .colnc, .soft-table-w .colnc {
+	background-color:#FFFCDC;
+	text-align:center;
+}
+
+.new {
+	font-family:arial, Helvetica, sans-serif;
+	margin-left:4px;
+	padding-left:2px;
+	padding-right:2px;
+	background-color:#F00;
+	color:#FFF;
+}
+	</style>
+</head>
+<body>
+<table width="100%">
+	<tr>
+		<td><h1>RSP API Reference</h1></td>
+		<td align="right" valign="top">
+			<small>v1.4 - 1-Mar-2009<br>Nenad Rakocevic / SOFTINNOV</small>
+		</td>
+	</tr>
+</table>
+
+<table>
+	<tr>
+		<td valign="top">
+<table class="soft-table">
+	<tr>
+		<th colspan="2">REQUEST Object</th>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-1">content</a></td>
+		<td class="coln">access to the HTTP request parameters</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-2">headers</a></td>
+		<td class="coln">access to the HTTP request headers</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-3">method</a></td>
+		<td class="coln">HTTP request method (GET, POST,...)</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-4">posted</a></td>
+		<td class="coln">optional content sent in the HTTP request (POST/PUT data)</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-5">client-ip</a></td>
+		<td class="coln">IP address of the client sending the request</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-6">server-port</a></td>
+		<td class="coln">server port through which the request was received</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-7">translated</a></td>
+		<td class="coln">full path to the resource in the filesystem</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-8">config</a></td>
+		<td class="coln">configuration options for the requested domain</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-9">web-app</a></td>
+		<td class="coln">web application name</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-10">parsed</a></td>
+		<td class="coln">complete HTTP request detailed information</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-40">query-string</a></td>
+		<td class="coln">encode request's parameters in URL query-string format</td>
+	</tr>
+</table>
+<br>
+<table class="soft-table">
+	<tr>
+		<th colspan="2">SESSION Object</th>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-11">content</a></td>
+		<td class="coln">access session variables</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-12">start</a></td>
+		<td class="coln">starts a new session</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-13">reset</a></td>
+		<td class="coln">reset the initial session context</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-14">end</a></td>
+		<td class="coln">destroy the current session</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-15">active?</a></td>
+		<td class="coln">test if a session is defined for the current client</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-16">add</a></td>
+		<td class="coln">create a new session variable</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-17">remove</a></td>
+		<td class="coln">destroy an existing session variable</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-18">exists?</a></td>
+		<td class="coln">test if a variable exists in the current session</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-19">id</a></td>
+		<td class="coln">session unique identifier</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-20">timeout</a></td>
+		<td class="coln">get or set the session timeout value</td>
+	</tr>
+</table>
+<br>
+<table class="soft-table">
+	<tr>
+		<th colspan="2">Global Functions</th>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-21">include</a></td>
+		<td class="coln">load and execute another RSP file</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-22">include-file</a></td>
+		<td class="coln">load and output a static file</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-23">validate</a></td>
+		<td class="coln">manage a predefined list of request parameters</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-24">html-decode</a></td>
+		<td class="coln">convert HTML encoded string to normal text</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-25">html-encode</a></td>
+		<td class="coln">convert normal text to HTML encoded string</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-26">url-encode</a></td>
+		<td class="coln">encode special URL characters in hexadecimal values</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-27">do-sql</a></td>
+		<td class="coln">execute a SQL query on a database</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-91">say</a></td>
+		<td class="coln">translate a text in the current language</td>
+	</tr>
+	<tr>
+		<td class="col1"><span class="new">New</span> <a href="#def-45">??</a></td>
+		<td class="coln">log a variable name followed by its molded value</td>
+	</tr>
+	<tr>
+		<td class="col1"><span class="new">New</span> <a href="#def-43">?</a></td>
+		<td class="coln">shortcut for debug/print</td>
+	</tr>
+</table>
+</td>
+<td valign="top">
+<table class="soft-table">
+	<tr>
+		<th colspan="2">RESPONSE Object</th>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-28">buffer</a></td>
+		<td class="coln">output buffer</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-29">set-status</a></td>
+		<td class="coln">set the HTTP status code</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-30">set-cookie</a></td>
+		<td class="coln">n/a</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-31">set-header</a></td>
+		<td class="coln">set a header (name/value pair)</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-32">end</a></td>
+		<td class="coln">abort the RSP and send the response buffer</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-33">reset</a></td>
+		<td class="coln">clear the response buffer</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-34">redirect</a></td>
+		<td class="coln">send an HTTP redirection</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-35">forward</a></td>
+		<td class="coln">forward a request to a new URL</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-36">auto-flush</a></td>
+		<td class="coln">n/a</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-37">flush</a></td>
+		<td class="coln">send the current response buffer to the client</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-38">cache</a></td>
+		<td class="coln">n/a</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-39">cache-delete</a></td>
+		<td class="coln">n/a</td>
+	</tr>
+	<tr>
+		<td class="col1"><span class="new">New</span> <a href="#def-41">no-log</a></td>
+		<td class="coln">don't write log entry for this request</td>
+	</tr>
+	<tr>
+		<td class="col1"><span class="new">New</span> <a href="#def-42">no-compress</a></td>
+		<td class="coln">don't compress output</td>
+	</tr>
+</table>
+<br>
+<table class="soft-table">
+	<tr>
+		<th colspan="2">RSP Events</th>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-50">on-rsp-start</a></td>
+		<td class="coln">[DEPRECATED]</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-51">on-rsp-end</a></td>
+		<td class="coln">[DEPRECATED]</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-52">on-application-start</a></td>
+		<td class="coln">called when a WebApp is first accessed</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-53">on-application-end</a></td>
+		<td class="coln">called when a background RSP process quits</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-54">on-session-start</a></td>
+		<td class="coln">called when a session starts</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-55">on-session-end</a></td>
+		<td class="coln">n/a</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-56">on-page-start</a></td>
+		<td class="coln">called just before a RSP is executed</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-57">on-page-end</a></td>
+		<td class="coln">called just after a RSP has been executed</td>
+	</tr>
+</table>
+<br>
+<table class="soft-table">
+	<tr>
+		<th colspan="2">DB-CACHE Object</th>
+	</tr>
+	<tr>
+		<td class="col1" style="width:80px"><a href="#def-80">define</a></td>
+		<td class="coln">declare the SQL queries to cache</td>
+	</tr>
+	<tr>
+		<td class="col1"><a href="#def-81">invalid</a></td>
+		<td class="coln">trigger a cache refresh for a given query</td>
+	</tr>
+</table>
+<br>
+<table class="soft-table">
+	<tr>
+		<th colspan="2">LOCALE Object</th>
+	</tr>
+	<tr>
+		<td class="col1" style="width:80px"><a href="#def-90">set-lang</a></td>
+		<td class="coln">define the current language for translations</td>
+	</tr>
+</table>
+<br>
+<table class="soft-table">
+	<tr>
+		<th colspan="2">DEBUG Object</th>
+	</tr>
+	<tr>
+		<td class="col1" style="width:80px"><span class="new">New</span> <a href="#def-43">print</a></td>
+		<td class="coln">log a debug message</td>
+	</tr>
+	<tr>
+		<td class="col1"><span class="new">New</span> <a href="#def-44">probe</a></td>
+		<td class="coln">log a molded value</td>
+	</tr>
+</table>
+		</td>
+	</tr>
+</table>
+<br>
+<hr>
+
+<h3><a name="def-1"></a><small>Request:</small> CONTENT</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/content/<i>name</i></b>
+
+    <i>name</i> : name of an HTTP parameter passed in the request though GET or POST method.
+</pre>
+<h4>Description</h4>
+<div class="desctext">
+Gives access to the data sent by the HTTP client through a GET or POST request to the server. Values are always returned as <em>string!</em> values. <b>request/content</b> is a simple block! of name/value pairs filled just before the execution of the RSP page, so it can also be processed using a loop.
+<br><br>
+<u>Note</u>: Trying to use a name that doesn't match any parameter name sent in the request will result in an error!. If you're not sure about the presence of a given parameter in the request, you can use <b>find</b> or <b>select</b> to check its presence in <b>request/content</b> before accessing it.
+</div>
+<h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?id=5&mode=full</li>
+
+     test.rsp : &lt;% print [request/content/id request/content/mode] %&gt;
+
+  will output : 5 full
+
+    <li>HTTP request: GET /test.rsp?id=5&mode=full</li>
+
+     test.rsp : &lt;% print either find request/content 'type ["found"]["not found"] %&gt;
+
+  will output : not found
+
+
+    <li>HTTP request: GET /test.rsp?id=5&mode=full&action=save</li>
+
+     test.rsp : &lt;% probe request/content %&gt;
+
+  will output : [id "5" mode "full" action "save"]
+
+</pre>
+
+<h3><a name="def-2"></a><small>Request:</small> HEADERS</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/headers/<i>name</i></b>
+
+    <i>name</i> : name of an HTTP header passed in the request.
+</pre>
+
+
+<h4>Description</h4>
+<div class="desctext">
+Gives access to the headers sent by the HTTP client in the request. Values are always returned as <em>string!</em> values. <b>headers</b> is a simple block! of name/value pairs filled just before the execution of the RSP page, so it can also be processed using a loop.
+<br><br>
+<u>Note</u>: Trying to use a name that doesn't match any parameter name sent in the request will result in an error!. If you're not sure about the presence of a given parameter in the request, you can use <b>find</b> or <b>select</b> to check its presence in <b>request/headers</b> before accessing it.
+</div>
+<h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+                Host: domain.com
+                User-Agent: Mozilla
+                Connection: keep-alive
+
+     test.rsp : &lt;% print request/headers/user-agent %&gt;
+
+  will output : Mozilla
+
+    <li>HTTP request: GET /test.rsp</li>
+                Host: domain.com
+                User-Agent: Mozilla
+                Connection: keep-alive
+
+     test.rsp : &lt;%
+                    either value: select request/headers 'User-Agent [
+                    	print value
+                    ][
+                    	print "unknown"
+                    ]
+                %&gt;
+
+  will output : Mozilla
+
+</pre>
+
+<h3><a name="def-3"></a><small>Request:</small> METHOD</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/method</b>
+
+    returns a <i>word!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the HTTP method used in the request. The most used methods are HEAD, GET and POST.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;% probe request/method %&gt;
+
+  will output : GET
+</pre>
+
+<h3><a name="def-4"></a><small>Request:</small> POSTED</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/posted</b>
+
+    returns a <i>binary!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the data POST-ed by the client. Notice that other HTTP methods, like PUT can carry data.
+<br><br>
+<i>(Todo: explain how multipart data is handled)</i>
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: POST /test.rsp</li>
+                Host: domain.com
+
+                Hello World!
+
+     test.rsp : &lt;% probe to-string request/posted %&gt;
+
+  will output : "Hello World!"
+</pre>
+
+<h3><a name="def-5"></a><small>Request:</small> CLIENT-IP</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/client-ip</b>
+
+    returns a <i>tuple!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the IP address of the client sending the request.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: from 1.2.3.4</li>
+
+     test.rsp : &lt;% print request/client-ip %&gt;
+
+  will output : 1.2.3.4
+</pre>
+
+<h3><a name="def-6"></a><small>Request:</small> SERVER-PORT</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/server-port</b>
+
+    returns an <i>integer!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the server port-id receiving the request.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: http://domain.com:4000/test.rsp</li>
+
+     test.rsp : &lt;% print request/server-port %&gt;
+
+  will output : 4000
+</pre>
+
+<h3><a name="def-7"></a><small>Request:</small> TRANSLATED</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/translated</b>
+
+    returns a <i>file!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the full path to the resource in the filesystem.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: http://domain.com/test.rsp</li>
+
+     test.rsp : &lt;% probe request/translated %&gt;
+
+  will output : %/usr/local/domain.com/www/test.rsp
+</pre>
+
+<h3><a name="def-8"></a><small>Request:</small> CONFIG</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/config</b>
+
+    returns a <i>block!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the configuration options for the requested domain, loaded from the HTTP.CFG file.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: http://domain.com/test.rsp</li>
+
+     test.rsp : &lt;% probe request/config %&gt;
+
+  will output : [
+                    root-dir %/usr/local/domain.com/www/
+                    default [%index.rsp index.html]
+                ]
+</pre>
+
+<h3><a name="def-9"></a><small>Request:</small> WEB-APP</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/web-app</b>
+
+    returns an <i>string!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+If the requested resource is contained in a web-app, it returns the web-app name, else it returns <em>none</em>.
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: http://domain.com/myapp/test.rsp</li>
+
+     test.rsp : &lt;% probe request/web-app %&gt;
+
+  will output : "/myapp"
+</pre>
+
+<h3><a name="def-10"></a><small>Request:</small> PARSED</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/parsed</b>
+
+    returns an <i>object!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns an object containing the complete detailed information from the parsed HTTP request. Some of these information have shortcut accessors from the <em>request</em> object.
+<br><br>
+PARSED Object attributes :
+<br><br>
+<table class="soft-table-w">
+	<tr>
+		<th align="left">Attribute</th>
+		<th align="left">Description</th>
+		<th align="left">Type</th>
+	<tr>
+		<td class="col1">headers</td>
+		<td class="coln">HTTP request headers</td>
+		<td class="coln">block!</td>
+	</tr>
+	<tr>
+		<td class="col1">status-line</td>
+		<td class="coln">first line of the HTTP request</td>
+		<td class="coln">string!</td>
+	</tr>
+	<tr>
+		<td class="col1">method</td>
+		<td class="coln">HTTP method</td>
+		<td class="coln">word!</td>
+	</tr>
+	<tr>
+		<td class="col1">url</td>
+		<td class="coln">requested URL</td>
+		<td class="coln">string!</td>
+	</tr>
+	<tr>
+		<td class="col1">content</td>
+		<td class="coln">POST-ed data</td>
+		<td class="coln">binary! or none!</td>
+	</tr>
+	<tr>
+		<td class="col1">path</td>
+		<td class="coln">URL path part</td>
+		<td class="coln">string! or none!</td>
+	</tr>
+	<tr>
+		<td class="col1">target</td>
+		<td class="coln">URL resource part</td>
+		<td class="coln">string! or none!</td>
+	</tr>
+	<tr>
+		<td class="col1">arg</td>
+		<td class="coln">URL argument part (after # or ?)</td>
+		<td class="coln">string! or none!</td>
+	</tr>
+	<tr>
+		<td class="col1">ext</td>
+		<td class="coln">URL resource suffix part</td>
+		<td class="coln">word! or none!</td>
+	</tr>
+	<tr>
+		<td class="col1">version</td>
+		<td class="coln">HTTP request protocol version</td>
+		<td class="coln">string!</td>
+	</tr>
+	<tr>
+		<td class="col1">file</td>
+		<td class="coln">request's URI (path and target only)</td>
+		<td class="coln">string! or none!</td>
+	</tr>
+</table>
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request:  GET /myapp/test.rsp?id=123 HTTP/1.0</li>
+                 Host: domain.com
+                 User-Agent: Mozilla
+
+     test.rsp : &lt;% probe request/parsed %&gt;
+
+  will output : make object! [
+                    headers: [Host "domain.com" User-Agent "Mozilla"]
+                    status-line: "GET /myapp/test.rsp?id=123 HTTP/1.0^/^M"
+                    method: GET
+                    url: "/myapp/test.rsp?id=123"
+                    content: none
+                    path: "/myapp/"
+                    target: "test.rsp"
+                    arg: "?id=123"
+                    ext: .rsp
+                    version: "1.0"
+                    file: "/myapp/test.rsp"
+                ]
+</pre>
+
+<h3><a name="def-40"></a><small>Request:</small> QUERY-STRING</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>request/query-string</b>
+
+    returns an <i>string!</i> value.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Returns a re-composed query-string from the request parameters (REQUEST/CONTENT names and values). It you didn't altered the request parameters, it gives you the initial query-string received from the client.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: http://test.rsp?a=1&b=hello</li>
+
+     test.rsp : &lt;%
+                    print request/query-string
+                    request/content/b: none
+                    print request/query-string
+                %&gt;
+
+  will output : a=1&b=hello
+                a=1
+</pre>
+
+<h3><a name="def-11"></a><small>Session:</small> CONTENT</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>session/content/<i>name</i></b>
+    <b>session/content/<i>name</i>:</b> value
+
+    <i>name</i> : name of an existing session variable.
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+The CONTENT block allows access to all session values in read/write mode.
+The session variables <u>must be declared</u>, with SESSION/ADD before being used.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    session/add 'count 0
+                    session/content/count: session/content/count + 1
+                %&gt;
+
+    <li>HTTP request: GET /count.rsp</li>
+
+     count.rsp : &lt;%
+                    print session/content/count
+                %&gt;
+
+  will output : 1
+</pre>
+
+<h3><a name="def-12"></a><small>Session:</small> START</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>session/start</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Start a new session for the current client. If a session is already running, this function won't have any effect.
+<br><br>
+<u>Note</u>: the ON-SESSION-START event won't be called in this case.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    if not session/active? [
+                        session/start
+                        session/add 'count 1
+                    ]
+                %&gt;
+
+    <li>HTTP request: GET /count.rsp</li>
+
+     count.rsp : &lt;%
+                    either session/active? [
+                        print session/content/count
+                    ][
+                        print "No session"
+                    ]
+                %&gt;
+
+  will output : 1
+</pre>
+
+<h3><a name="def-13"></a><small>Session:</small> RESET</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>session/reset</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Reset the session environment in WebApps. session/<i>login?</i> is set to FALSE and the ON-SESSION-START event is called. It's useful for resetting the session variables while maintaining the session.
+
+<br><br>
+<u>Note</u>: if it's used outside of a WebApp context, it has no effect.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /change-user.rsp</li>
+
+     change-user.rsp : &lt;%
+                           session/reset
+                           response/redirect "login.rsp"
+                       %&gt;
+
+</pre>
+
+<h3><a name="def-14"></a><small>Session:</small> END</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>session/end</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Destroy the current session if exists. All variables and values associated are lost.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /logout.rsp</li>
+
+     logout.rsp : &lt;% session/end %&gt;
+
+</pre>
+
+<h3><a name="def-15"></a><small>Session:</small> ACTIVE?</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>session/active?</b>
+
+    returns a <i>logic!</i>value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Returns TRUE if a session is currently active for the current user, otherwise FALSE.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    if not session/active? [
+                        session/start
+                    ]
+                %&gt;
+
+</pre>
+
+<h3><a name="def-16"></a><small>Session:</small> ADD</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>session/add</b> <i>name</i> <i>value</i>
+
+    <i>name</i> : new word to add to the session (word!).
+    <i>value</i> : initial value of the word (any-value!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Creates a new variable in the session context. This variable and its value will persist while the session is active or until you remove it.
+
+<u>Note</u>: Remember that storing data in sessions takes resources and can have a negative impact on the performances of the RSP pages. Keep it as lightweight as possible.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    session/add 'hit 1
+                %&gt;
+
+    <li>HTTP request: GET /count.rsp</li>
+
+     count.rsp : &lt;%
+                    print session/content/hit: session/content/hit + 1
+                %&gt;
+
+  will output : 2
+
+</pre>
+
+<h3><a name="def-17"></a><small>Session:</small> REMOVE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>session/remove</b> <i>name</i>
+
+    <i>name</i> : word to remove from the session (word!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Removes a variable from the session context.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    if session/exists? 'hit [
+                        session/remove 'hit
+                        print "HIT variable removed"
+                    ]
+                %&gt;
+
+  will output : HIT variable removed  <i>(if 'hit was defined in the session)</i>
+
+</pre>
+
+<h3><a name="def-18"></a><small>Session:</small> EXISTS?</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>session/exists?</b> <i>name</i>
+
+    <i>name</i> : word to test (word!)
+    returns a <i>logic!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Returns TRUE if a variable is defined in the current session, otherwise FALSE.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    print session/exists? 'hit
+                %&gt;
+
+  will output : true  <i>(if 'hit is defined in the session)</i>
+
+</pre>
+
+<h3><a name="def-19"></a><small>Session:</small> ID</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>session/id</b>
+
+    returns a <i>string!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Returns the unique session ID. This ID is used to maintain the session alive and bind it to the user by passing it in a session cookie.
+<br><br>
+<u>Note</u>: if a session is started using SESSION/START, and in the same RSP, you try to read the ID property, it will return <i>none</i>.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    if session/active? [
+                        print session/id
+                    ]
+                %&gt;
+
+  will output : &lt;a_string_of_24_capital_letters&gt; <i>(if a session is active)</i>
+
+</pre>
+
+<h3><a name="def-20"></a><small>Session:</small> TIMEOUT</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>session/timeout</b>
+    <b>session/timeout:</b> new
+
+    <i>new</i> : new timeout value for the current session (time!)
+
+    returns a <i>time!</i> value.
+
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Sets or returns the session timeout value. This value define the maximum idle time before the session expires (idle time is defined as the time between two requests to the server from the same user).
+<br><br>
+<u>Note</u>: a session default timeout is defined by the 'timeout keyword in HTTPD.CFG config file in webapp or domain sections. If it's not explicitly defined anywhere, a default value of 20 minutes is used.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    if session/active? [
+                    	print ["Old value =" session/timeout]
+                        session/timeout: 01:00:00    ;-- set timeout to 1 hour
+                        print ["New value =" session/timeout]
+                    ]
+                %&gt;
+
+  will output : Old value = 00:20  <i>(if a session is active)</i>
+                New value = 01:00
+
+</pre>
+
+<h3><a name="def-21"></a><small>Global:</small> INCLUDE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>include</b> <i>filename.rsp</i>
+
+     <i>filename.rsp</i> : RSP file to execute (file!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Loads and executes an RSP file, the generated output will be append to the current response buffer. This is useful to share common RSP code between several pages. For example, you could include dynamic header and footer with RSP code in all your pages using this function.
+<br><br>
+<u>Note</u>: you can recursively include a maximum of 5 RSP files, more than that would be insane ;-). This prevents from infinite cycles issues.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /footer.rsp</li>
+
+     footer.rsp : &lt;span&gt;
+                    &lt;% include %time.rsp %&gt;
+                &lt;/span&gt;
+
+     time.rsp : &lt;%= now/time %&gt;
+
+  will output : &lt;span&gt;
+                    19:28:15
+                &lt;/span&gt;
+
+</pre>
+<div class="desctext">
+Obviously, this is an academic example, it's really useful when you need to share a lot of code.
+</div>
+
+<h3><a name="def-22"></a><small>Global:</small> INCLUDE-FILE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>include-file</b> <i>filename</i>
+
+     <i>filename</i> : static file to include (file!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Loads and includes a static file (usually, it's an HTML file) by appending its content to the response buffer. No processing is done on the file. This is useful to share common HTML parts between several pages. For example, you could include a static header and footer in all your pages using this function.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : ...HTML or RSP code...
+                &lt;% include-file %footer.inc %&gt;
+
+     footer.inc : &lt;/body&gt;
+                  &lt;/html&gt;
+
+  will output : ...HTML or RSP code...
+                &lt;/body&gt;
+                &lt;/html&gt;
+</pre>
+
+<h3><a name="def-23"></a><small>Global:</small> VALIDATE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>validate</b> <i>specs</i>
+    value: <b>validate/full</b> <i>specs</i>
+
+    <i>specs</i> : list of parameters with constraints (block!)
+
+    returns a <i>block!</i> or <i>none!</i> value.
+
+    <li><b><i>specs</i></b> dialect syntax (no refinement) organized in 2 columns:</li>
+
+           (1st col)     (2nd col)
+        [
+            <i>name</i>      <i>datatype!</i> or -
+            ...
+        ]
+
+    <li><b><i>specs</i></b> dialect syntax (<b>/full</b>) organized in 3 columns:</li>
+
+           (1st col)     (2nd col)         (3rd col)
+        [
+            <i>name</i>      <i>datatype!</i> or -      * or -
+            ...
+        ]
+
+    <li><b><i>specs</i></b> columns syntax:</li>
+
+        1st column : <b>word!</b>
+        2nd column : <b>-</b> or <i>a REBOL datatype!</i>
+
+      and optionally :
+
+        3rd column : <b>*</b> or <b>-</b>
+</pre>
+
+<h4>Description</h4><div class="desctext">
+
+It's often unsafe to access a request parameter by using the following : <i>request/content/name</i>, if <i>name</i> hasn't been passed in the request, this expression will raise an error!.<br><br>
+The VALIDATE function is a handy way to pre-process the REQUEST/CONTENT block of parameters received from the client. The provided dialect lets you validate parameters by :
+<ul>
+	<li>Ensuring that the parameter is present (by adding it with <i>none!</i> value, if required) </li>
+	<li>Casting the parameter to a given datatype</li>
+	<li>Adding a mandatory attribut</li>
+</ul>
+To define the required <i>specs</i> block, list all the parameters names you want to process, then define the target REBOL datatype, and optionally, add a mandatory attribut.
+<br><br>
+When the validation process is completed, the function returns a <i>none!</i> value indicating that all constraints are fulfilled, or a <i>block!</i> value listing all the parameter names that failed one or several tests.
+<br><br>
+<u>Note</u>: The REQUEST/CONTENT values could be modified (converted to the required datatype) in the process, so if you use VALIDATE partially on a few parameters, then later, apply again VALIDATE on the other parameters, be sure to make separated list of parameters, don't validate twice the same parameter, it might generate false validation results.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp?a=123&b=456</li>
+
+     test.rsp : &lt;%
+                    probe request/content
+                    probe validate [
+                        a  integer!
+                        b    -             ; minus means don't process, so, string! result
+                    ]
+                    probe request/content
+                %&gt;
+
+  will output : [a "123" b "456"]
+                none
+                [a 123 b "456"]
+
+     <li>HTTP request: GET /test.rsp?a=123&b=456</li>
+
+     test.rsp : &lt;%
+                    probe request/content
+                    probe validate [
+                        a  integer!
+                        b   word!
+                        c    -            ; c is not present, so it will be just added
+                    ]
+                    probe request/content
+                %&gt;
+
+  will output : [a "123" b "456"]
+                [b]
+                [a 123 b "456" c none]
+
+     <li>HTTP request: GET /test.rsp?a=123&b=456</li>
+
+     test.rsp : &lt;%
+                    probe request/content
+                    probe validate/full [
+                        a  integer!  *
+                        b  integer!  -
+                    ]
+                    probe request/content
+                %&gt;
+
+  will output : [a "123" b "456"]
+                none
+                [a 123 b 456]
+
+     <li>HTTP request: GET /test.rsp?b=456</li>
+
+     test.rsp : &lt;%
+                    probe request/content
+                    probe validate/full [
+                        a  integer!  *    ; a is not present, but mandatory !
+                        b  integer!  -
+                    ]
+                    probe request/content
+                %&gt;
+
+  will output : [b "456"]
+                [a]
+                [a none b 456]
+
+
+</pre>
+
+<h3><a name="def-24"></a><small>Global:</small> HTML-DECODE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>html-decode</b> <i>data</i>
+
+    <i>data</i> : HTML encoded text (string!, binary!)
+
+    returns a <i>string!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Processes a text buffer and converts HTML entities to characters. It returns a new string! value.
+<br><br>
+<u>Note</u>: HTML-DECODE current implementation only support entities defined in ISO-8859-1 (Latin1) encoding.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%= html-decode "&amp;lt;tag&amp;gt;" %&gt;
+
+  will output : &lt;tag&gt;
+</pre>
+
+<h3><a name="def-25"></a><small>Global:</small> HTML-ENCODE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>html-encode</b> <i>data</i>
+
+    <i>data</i> : normal text (string!, binary!)
+
+    returns a <i>string!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Processes a text buffer and converts all specials characters to HTML entities. It returns a new string! value.
+<br><br>
+<u>Note</u>: HTML-ENCODE current implementation only support entities defined in ISO-8859-1 (Latin1) encoding.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%= html-encode "&lt;tag&gt;" %&gt;
+
+  will output : &amp;lt;tag&amp;gt;
+
+   <li>HTTP request: GET /test.rsp</li>
+
+       test.rsp : &lt;%= html-decode html-encode "&lt;tag&gt;" %&gt;
+
+  will output : &lt;tag&gt;
+</pre>
+
+<h3><a name="def-26"></a><small>Global:</small> URL-ENCODE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>url-encode</b> <i>data</i>
+    value: <b>url-encode/all</b> <i>data</i>
+
+    <i>data</i> : URL or text that need to be passed in URL (string!)
+
+    returns a <i>string!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Processes a text buffer and converts all specials URL characters to hexadecimal values. It returns a new string! value. This encoding is required if you build an URL dynamically.
+<br><br>
+/ALL refinement will apply more aggressive encoding (all URL reserved characters will be encoded too).
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%=
+                    link: "http://domain.com/target.rsp?var=This is a test"
+                    url-encode link
+                %&gt;
+
+  will output : http://domain.com/target.rsp?var=This%20is%20a%20test
+
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%=
+                    link: "http://domain.com/target.rsp?var=This is a test"
+                    url-encode/all link
+                %&gt;
+
+  will output : http%3A%2F%2Fdomain.com%2Ftarget.rsp%3Fvar%3DThis%20is%20a%20test
+</pre>
+
+<h3><a name="def-27"></a><small>Global:</small> DO-SQL</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>do-sql</b> <i>db</i> <i>query</i>
+    value: <b>do-sql/flat</b> <i>db</i> <i>query</i>
+
+    <i>db</i> : a db connection name defined in the config file (word!)
+    <i>query</i> : the SQL query or cached query name to execute (string!, block! or word!)
+
+    returns a <i>block!</i> or <i>none!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+<u>Preliminary Notice</u>: The usage of DO-SQL is tight to the databases connections definitions specified in you HTTPD.CFG configuration file. If the databases section is not defined, DO-SQL would be useless. Here's an example of such configuration :
+</div>
+<pre>
+
+globals [
+    ...
+    databases [
+        bugs    postgres://root@localhost/bugs
+        forum   mysql://root:admin@localhost/forum
+        test    odbc://testdsn
+        ...
+    ]
+    ...
+]
+</pre>
+<div class="desctext">
+So, DO-SQL is a higher level function allowing you to access your databases in a consistant way, whatever database drivers you're using (from <a href="http://www.rebol.com/command.html">RT</a>, <a href="http://softinnov.org">Softinnov</a>, 3rd party...) as long as the driver is embedded in a REBOL scheme handler and supports the basic port operation (open, insert, copy,  pick, close).
+<br><br>
+The main principle of using DO-SQL is that all the connection's opening, re-opening and closing actions are taken in charge by the RSP engine. So, you can assume that all connections are always available and ready to use. DO-SQL will smartly handle the connections so that they will be opened only on the first use. It's all transparent for the RSP developer. By the way, the Cheyenne multi-processes architecture naturally generates a pool of databases connections, so using DO-SQL ensures that you have a clean and scalable database connection model.
+<br><br>
+DO-SQL supports direct querying using SQL statements defined as string or prepared statement using a block value specification (see your database driver's documentation). DO-SQL also supports cached query names provided by the DB-CACHE object.
+<br><br>
+DO-SQL returns a recordset of values resulting from the query or a <i>none!</i> value if the query hasn't produced any result (like SQL INSERT or UPDATE).
+<br><br>
+The /FLAT refinement is available for all drivers and will return a flat recordset (one block of all the records values).
+
+</div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    print do-sql 'bugs "show tables"
+                    print do-sql/flat 'bugs "show tables"
+                %&gt;
+
+  will output : [["table1"]["table2"]["table3"]...]
+                ["table1" "table2" "table3"...]
+
+     <li>HTTP request: GET /test.rsp</li>
+
+      test.rsp : &lt;%
+                     db-cache/define [
+                     	tables "show tables"
+                     ]
+                     ...
+                     print do-sql 'bugs 'tables
+                 %&gt;
+
+  will output : [["table1"]["table2"]["table3"]...]
+
+     <li>HTTP request: GET /add-user.rsp?name=John%20Doe&age=33</li>
+
+     add-user.rsp :
+                &lt;%
+                    either invalid: validate/full [
+                        name   -        *
+                        age    integer! -
+                    ][
+                        print ["Error: missing or incorrect parameter(s) " invalid]
+                    ][
+                        do-sql 'bugs ["INSERT INTO users VALUES (?,?)" name age]
+                        print ["New user added:" request/content/name]
+                    ]
+                %&gt;
+
+  will output : New user added: John Doe
+</pre>
+
+<h3><a name="def-91"></a><small>Global:</small> SAY</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>say</b> <i>text</i>
+
+    <i>text</i> : text to translate (string!)
+
+    returns a <i>string!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Translates the text passed in argument using the current language definition. If the corresponding translation is not found, the text is passed unchanged.
+<br><br>
+<u>Notes</u>:
+<ul>
+<li>The translation matching is case-sensitive !</li><br><br>
+<li>The default language is 'en (english). To define another language as default, use the 'default-lang directive in HTTPD.CFG file (e.g. default-lang 'fr)</li>
+</ul>
+
+ </div> <h4>Example</h4>
+<pre>
+in %catalogs/en/en.cat :
+
+     "Hello"
+     "we are in"
+     "January"
+     "February"
+     "March"
+     "April"
+     "May"
+     "June"
+     "July"
+     "August"
+     "September"
+     "October"
+     "November"
+     "December"
+
+in %catalogs/fr/fr.cat :
+
+     "Bonjour"
+     "nous sommes en"
+     "Janvier"
+     "Février"
+     "Mars"
+     "Avril"
+     "Mai"
+     "Juin"
+     "Juillet"
+     "Août"
+     "Septembre"
+     "Octobre"
+     "Novembre"
+     "Décembre"
+
+in %httpd.cfg :
+     ...
+     locales-dir %catalogs/
+     ...
+
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    print say "Hello"
+
+                    locale/set-lang 'fr
+
+                    print say "Hello"
+                    print reform [
+                        say "we are in"
+                        say pick system/locale/months now/month
+                    ]
+                %&gt;
+
+  will output : Hello
+                Bonjour
+                nous sommes en juillet
+</pre>
+
+<h3><a name="def-45"></a><small>Global:</small> ??</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>??</b> <i>word</i>
+
+    <i>word</i>: word value to log in trace file (word!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Log the word symbol and its MOLDed value to <b>%trace.log</b> debug file. It works like its REBOL mezzanine counterpart. This file is stored in your Cheyenne main folder.
+<br><br>
+<u>Note</u>: this command will work even if your webapp is in production state (means no DEBUG keyword in the webapp config section).
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?action=search</li>
+
+     test.rsp :
+                &lt;%
+                    either find request/content 'action [
+                        type: 1
+                        ...
+                    ][
+                        type: 0
+                        ...
+                    ]
+                    ?? type
+                %&gt;
+     will output in %trace.log :
+                ...
+                28/2-19:50:28.687-[DEBUG] type: 1
+                ...
+</pre>
+
+<h3><a name="def-28"></a><small>Response:</small> BUFFER</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    value: <b>response/buffer</b>
+    <b>response/buffer</b>: <i>data</i>
+
+    <i>data</i> : data to send to client (string!, binary!)
+
+    returns a <i>string!</i> value.
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Directly access the RESPONSE buffer. This buffer is normaly filled by all the HTML template code from the executed RSP and by all the printing REBOL functions used in RSP pages. This property allows you to do any pre or post-processing on the generated page. It also allows you to generate the resulting buffer using other method than executing RSP code.
+
+ </div> <h4>Example</h4>
+<pre>
+     <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                    image: make binary! 10'000
+                    img: draw 100x100 [line 0x0 99x99]
+                    save/png image img
+                    response/buffer: image
+                    response/set-header 'Content-type "image/png"
+                %&gt;
+
+  will output : &lt;binary data from the generated image&gt;
+
+</pre>
+
+<h3><a name="def-29"></a><small>Response:</small> SET-STATUS</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/set-status</b> <i>code</i>
+    <b>response/set-status/msg</b> <i>code</i> <i>message</i>
+
+    <i>code</i> : HTTP status return code (3 digits integer!).
+    <i>message</i> : Text message describing the status that will appear in
+                   the first line of the HTTP response. (String!)
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+Forces the HTTP return code and optionally, specify the text message for the returned status line. Note that, by default, Cheyenne will only use the following return codes : 200, 404, 501. You can override theses codes by using SET-STATUS.
+<br><br>
+The optional message is mostly useful in case of error codes, it should be displayed the client browser along with the error codes, giving you the opportunity to respond with a more accurate error message than the default one.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;% response/set-status 403 %&gt;
+
+  will return : HTTP/1.1 403 Forbidden
+                ...
+
+  <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;% response/set-status/msg 403 "Access Restricted"%&gt;
+
+  will return : HTTP/1.1 403 Access Restricted
+                ...
+</pre>
+
+<h3><a name="def-31"></a><small>Response:</small> SET-HEADER</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/set-header</b> <i>name</i> <i>value</i>
+
+    <i>name</i> : HTTP header name (word!)
+    <i>value</i> : Header value (string!, none!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+Define HTTP headers' values. Giving a <em>none!</em> value will ensure that the header won't be sent with the response. This can be useful in many cases, like outputting a binary content (Image, PDF,...) instead of HTML content.
+<br><br>
+Cheyenne defines its own HTTP headers for the response, but the user-defined headers will prevail over Cheyenne's default ones.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                   response/set-header 'Powered-by "REBOL"
+                %&gt;
+
+  will return : HTTP/1.1 200 OK
+                Date: Sun, 18 Feb 2007 15:15:12 GMT
+                Server: Cheyenne/0.9.9.0
+                Content-Type: text/html
+                Content-Length: 682
+                Expires: Thu, 01 Dec 1994 16:00:00 GMT
+                Connection: close
+                Pragma: no-cache
+                Cache-Control: no-cache, must-revalidate
+                Powered-by: REBOL
+
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;%
+                   response/set-header 'Server "cheyenne"
+                   response/set-header 'Cache-control none
+                   response/set-header 'Expires none
+
+                %&gt;
+
+  will return : HTTP/1.1 200 OK
+                Date: Sun, 18 Feb 2007 15:15:12 GMT
+                Server: cheyenne
+                Content-Type: text/html
+                Content-Length: 682
+                Connection: close
+                Pragma: no-cache
+</pre>
+
+<h3><a name="def-32"></a><small>Response:</small> END</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/end</b>
+</pre>
+
+
+<h4>Description</h4> <div class="desctext">
+
+Abort the RSP execution and send the response buffer back to the client.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?err=123</li>
+
+     test.rsp : &lt;html&gt;
+                &lt;body&gt;
+                &lt;% if find request/content 'err [
+                       print [
+                           "Error code:" request/content/err
+                           &lt;/body&gt;
+                           &lt;/html&gt;
+                       ]
+                       response/end
+                   ]
+                %&gt;
+                &lt;h1&gt; Displayed if no error&lt;/h1&gt;
+                ...
+                &lt;/body&gt;
+                &lt;/html&gt;
+
+  will return : &lt;html&gt;
+                &lt;body&gt;
+                Error code: 123
+                &lt;/body&gt;
+                &lt;/html&gt;
+</pre>
+
+<h3><a name="def-33"></a><small>Response:</small> RESET</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/reset</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Clears the response buffer.
+<br><br>
+Note: it doesn't break RSP execution.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?value=1</li>
+
+     hello.xml: &lt;say&gt;Hello&lt;/say&gt;
+
+     test.rsp : &lt;html&gt;
+                &lt;body&gt;
+                &lt;% switch/default select request/content 'value [
+                       1 [
+                             response/reset
+                             response/set-header 'Content-Type "text/xml"
+                             include-file %hello.xml
+                             response/end
+                         ]
+                       2 [
+                       	     print "Text..."
+                         ]
+                   ][
+                       ...
+                   ]
+                %&gt;
+                ...
+                &lt;/body&gt;
+                &lt;/html&gt;
+
+  will return : HTTP/1.1 200 OK
+                Content-Type: text/xml
+                Content-Length: 16
+                ...
+                &lt;say&gt;Hello&lt;/say&gt;
+</pre><div class="desctext">
+<i>
+In this example, RESET is used to clear the HTML already in the buffer,
+to be able to send back an image instead of HTML code.
+</i>
+</div>
+
+<h3><a name="def-34"></a><small>Response:</small> REDIRECT</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/redirect</b> <i>url</i>
+    <b>response/redirect/temp</b> <i>url</i>
+
+    <i>url</i> : Target URL (url!, string!).
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Returns a redirection code 301 to the client asking it to jump to the target URL. The /temp refinement produces a 302 return code, meaning that's a temporary redirection.
+<br><br>
+<u>Note</u>: it does automatically end the RSP execution.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?action=1</li>
+
+     test.rsp : &lt;%
+                    switch select request/content 'action [
+                        1 [response/redirect "/main.html"]
+                        2 [response/redirect "/login.rsp"]
+                        3 [response/redirect http://www.rebol.com]
+                    ]
+                %&gt;
+                &lt;html&gt;
+                &lt;body&gt;
+
+                ...
+                &lt;/body&gt;
+                &lt;/html&gt;
+
+  will return : HTTP/1.1 301 Moved Permanently
+                Location: /main.html
+                ...
+</pre>
+
+<h3><a name="def-35"></a><small>Response:</small> FORWARD</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/forward</b> <i>url</i>
+
+    <i>url</i> : Target URL (url!, string!).
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Stops the execution of the RSP and forwards the request to a new URL. RESPONSE/BUFFER will be cleaned before making the jump. The <i>url</i> argument have to be either a full URL with an explicit target or an absolute path to a target within the same host. All initial request parameters passed in GET or content passed in POST and all headers will be also forwarded to the new URL.
+<br><br>
+<u>Note</u>:
+<ul><li>
+Cheyenne allows a maximum of 3 forwards for the same requests. This is done to avoid being catched in an infinite forwarding loop.
+</li><br><br><li>
+Using FORWARD when the page is in not-buffered mode is forbidden and will raise an error!. Not-buffered mode is entered when RESPONSE/FLUSH is used.
+</li>
+</ul>
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /forward.rsp?var=1</li>
+
+     forward.rsp :
+                &lt;% response/forward "/test.rsp" %&gt;
+                &lt;html&gt;
+                &lt;body&gt;
+                    This part will never be sent to the client!
+                &lt;/body&gt;
+                &lt;/html&gt;
+
+
+     test.rsp : Result is &lt;%=request/content/var%&gt;
+
+  will output : Result is 1
+</pre>
+
+<h3><a name="def-37"></a><small>Response:</small> FLUSH</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/flush</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Sends the current response buffer back to the client. The response buffer is then reset and the RSP execution continues. It's a way to stream data to the client without waiting to end of RSP execution.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp :
+                &lt;table&gt;
+                    &lt;% loop 100 [ %&gt;
+                        &lt;tr&gt;&lt;td&gt;&lt;%= random 100 %&gt;&lt;/td&gt;&lt;/tr&gt;
+                    &lt;%
+                        response/flush
+                    ]%&gt;
+                &lt;/table&gt;
+
+  will return : HTTP/1.1 200 OK
+                ...
+                &lt;table&gt;
+                    &lt;tr&gt;&lt;td&gt;12&lt;/td&gt;&lt;/tr&gt;	  <-- sent after 1st flush
+                    &lt;tr&gt;&lt;td&gt;47&lt;/td&gt;&lt;/tr&gt;	  <-- sent after 2nd flush
+                    &lt;tr&gt;&lt;td&gt;23&lt;/td&gt;&lt;/tr&gt;	  <-- sent after 3rd flush
+                    ...                           ...
+                &lt;/table&gt;
+</pre>
+
+<h3><a name="def-41"></a><small>Response:</small> NO-LOG</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/no-log</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+By default, all requests generate an entry in the HTTP log file when the response is sent to the client. NO-LOG tells the engine to not write an entry in the log file for the current request only.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp :
+                &lt;% response/no-log %&gt;
+</pre>
+
+<h3><a name="def-42"></a><small>Response:</small> NO-COMPRESS</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>response/no-compress</b>
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+By default, RSP response output is compressed (using the deflate algorithm) before being sent back to the client, if the client supports such compression (declared by client using the Accept-Encoding header). NO-COMPRESS tells the engine to not compress output for the current request only.
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp :
+                &lt;% response/no-compress %&gt;
+                &lt;h1&gt;Hello world!&lt;/h1&gt;
+
+  will return : HTTP/1.1 200 OK
+                ...
+                &lt;h1&gt;Hello world!&lt;/h1&gt;
+
+     test2.rsp :
+                &lt;h1&gt;Hello world!&lt;/h1&gt;
+
+  will return : HTTP/1.1 200 OK
+                Content-Encoding: deflate
+                ...
+                F348CDC9C95728CF2FCA495104001D09045E
+
+</pre>
+
+<h3><a name="def-50"></a><small>Event:</small> ON-RSP-START</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-rsp-start</b> [DEPRECATED]
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Replaced by WORKER-LIBS config option keyword.
+</div>
+
+<h3><a name="def-51"></a><small>Event:</small> ON-RSP-END</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-rsp-end</b>  [DEPRECATED]
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Replaced by WORKER-LIBS config option keyword.
+</div>
+
+<h3><a name="def-52"></a><small>Event:</small> ON-APPLICATION-START</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-application-start</b>: does [...]
+
+    Defined in %<i>www/web-app</i>/app-init.r
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+This event will only be generated when used in a web application context.
+<br><br>
+Event called when the web application is first used in a given background process. It's a good place to load application-specific code and data (like a configuration or preferences file).
+
+</div> <h4>Example</h4>
+<pre>
+
+    on-application-start: does [
+        do %private/config.conf
+        do %private/helper.r
+        do %private/captcha.r
+        captcha/set-fonts-path %private/fonts/
+    ]
+
+</pre>
+
+<h3><a name="def-53"></a><small>Event:</small> ON-APPLICATION-END</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-application-end</b>: does [...]
+
+    Defined in %<i>www/web-app</i>/app-init.r
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+This event will only be generated when used in a web application context.
+<br><br>
+Event called when a background process die. This event allows you to unload, if required, some libraries and free some external dependencies that are specific to your application and usually initialized in ON-APPLICATION-START.
+<br><br>
+<u>Note</u>: REBOL will free almost all open resources for you, so, you should use this event only for closing or releasing resources that require specific handling.
+</div> <h4>Example</h4>
+<pre>
+
+    on-application-start: does [
+        libc: load/library %libc5.so
+    ]
+
+    on-application-end: does [
+        free libc
+    ]
+
+</pre>
+
+<h3><a name="def-54"></a><small>Event:</small> ON-SESSION-START</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-session-start</b>: does [...]
+
+    Defined in %<i>www/web-app</i>/app-init.r
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+This event will only be generated when used in a web application context.
+<br><br>
+Event called when the web application session is started. It's a good place to initialize all your session variables.
+<br><br>
+<u>Note</u>: The SESSION/START function won't generate this event, but SESSION/RESET will.
+</div> <h4>Example</h4>
+<pre>
+
+    on-session-start: does [
+        session/add 'user "guest"
+        session/add 'hits 1
+    ]
+
+</pre>
+
+<h3><a name="def-56"></a><small>Event:</small> ON-PAGE-START</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-page-start</b>: does [...]
+
+    Defined in %<i>www/web-app</i>/app-init.r
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+This event will only be generated when used in a web application context.
+<br><br>
+Event called just before a RSP is executed.
+</div> <h4>Example</h4>
+<pre>
+
+    on-page-start: does [
+        set 'start-time now/time/precise
+    ]
+
+</pre>
+
+<h3><a name="def-57"></a><small>Event:</small> ON-PAGE-END</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>on-page-end</b>: does [...]
+
+    Defined in %<i>www/web-app</i>/app-init.r
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+This event will only be generated when used in a web application context.
+<br><br>
+Event called just after a RSP has been executed.
+</div> <h4>Example</h4>
+<pre>
+
+    on-page-start: does [
+        set 'start-time now/time/precise
+    ]
+
+    on-page-end: has [pos elapsed][
+        if pos: find response/buffer "&lt;/body&gt;" [
+            elapsed: now/time/precise - start-time
+            insert pos reform ["&lt;br&gt;Processed in :" elapsed]
+    ]
+
+</pre>
+
+<h3><a name="def-80"></a><small>DB-Cache:</small> DEFINE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>db-cache/define</b> <i>db</i> <i>specs</i>
+
+    <i>db</i>: database connection name (word!)
+    <i>specs</i>: list of SQL queries to cache (block!)
+
+    <i>specs</i> syntax:
+    [
+         name (word!)    query (string!)
+          ...
+    ]
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Declares the list of SQL queries to be cached in memory for a given connection name. The database connection name have to match one of those defined in the "databases" section in the  HTTPD.CFG file.
+<br><br>
+<u>Note</u>: Currently, only static requests can be cached, this may be improved in future version to also cache dynamically composed queries.
+</div> <h4>Example</h4>
+<pre>
+
+  on-session-start: does [
+      db-cache/define 'bugs [
+          priorities  "SELECT id,label FROM priorities"
+          roles       "SELECT id,label FROM roles"
+          projects    "SELECT * FROM projects WHERE id > 1"
+          priv-proj   "SELECT id, name FROM projects WHERE private=1"
+          pub-proj    "SELECT id, name FROM projects WHERE private=0"
+      ]
+  ]
+
+    <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp :
+                &lt;%
+                    probe do-sql/flat 'bugs 'priorities
+                %&gt;
+
+  will output : ["none" "low" "medium" "high"]
+
+</pre>
+
+<h3><a name="def-81"></a><small>DB-Cache:</small> INVALID</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>db-cache/invalid</b> <i>db</i> <i>name</i>
+
+    <i>db</i>: database connection name (word!)
+    <i>name</i>: cached SQL query name or list of names (word!, block!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Forces the cache manager to refresh the query (or queries) next time they will be used. The database connection name have to match one of those defined in the "databases" section in the  HTTPD.CFG file.
+
+</div> <h4>Example</h4>
+<pre>
+
+    db-cache/invalid 'bugs 'priorities
+
+    db-cache/invalid 'bugs [
+        projects
+        priv-proj
+        pub-proj
+    ]
+
+</pre>
+
+<h3><a name="def-90"></a><small>Locale:</small> SET-LANG</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>locale/set-lang</b> <i>id</i>
+
+    <i>id</i>: language identifier (word!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Defines the current language for translations done by the <a href="#def-91">SAY</a> function or statically embedded using the #[...] notation. The language <i>id</i> format is the standard one used by web browsers and transmitted to servers using the 'Accept-Language HTTP header. These ids are formatted as xx or xx-yy. Examples: fr, en, fr-FR, en-US,...
+<br><br>
+<u>Note</u>: If this function is not called, the following sequence will be executed to determine the appropriate language :
+<ul>
+	<li>Use the <em>session/content/lang</em> value if defined</li>
+	<li>Use the language ID found in the Accept-Language header</li>
+	<li>Use the default language defined in HTTPD.CFG file</li>
+	<li>Use 'en (if 'en locale catalog file is not found, no translation will occur)</li>
+</ul>
+
+</div> <h4>Example</h4>
+<pre>
+ <li>HTTP request: GET /test.rsp</li>
+
+     test.rsp : &lt;% locale/set-lang 'fr %&gt;
+
+</pre>
+
+<div class="desctext">
+See the <a href="#def-91">SAY</a> function documentation for a complete example.
+</div>
+
+<h3><a name="def-43"></a><small>Debug:</small> PRINT</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>debug/print</b> <i>value</i>
+
+    <i>value</i>: value or message to log in trace file (any-value!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Log a message or an evaluated value to <b>%trace.log</b> debug file. This file is stored in your Cheyenne main folder.
+<br><br>
+<u>Note</u>: this command will work even if your webapp is in production state (means no DEBUG keyword in the webapp config section).
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?action=search</li>
+
+     test.rsp :
+                &lt;%
+                    if find request/content 'action [
+                        debug/print ["action :" request/content/action]
+                        ...
+                    ]
+                %&gt;
+     will output in %trace.log :
+                ...
+                28/2-19:50:28.687-[DEBUG] action : search
+                ...
+</pre>
+
+<h3><a name="def-44"></a><small>Debug:</small> PROBE</h3>
+
+<h4>Syntax</h4>
+<pre class="desc">
+    <b>debug/probe</b> <i>value</i>
+
+    <i>value</i>: value to log in trace file (any-value!)
+</pre>
+
+<h4>Description</h4> <div class="desctext">
+
+Log a MOLDed value to <b>%trace.log</b> debug file and returns the same value. This file is stored in your Cheyenne main folder.
+<br><br>
+<u>Note</u>: this command will work even if your webapp is in production state (means no DEBUG keyword in the webapp config section).
+
+ </div> <h4>Example</h4>
+<pre>
+    <li>HTTP request: GET /test.rsp?action=search</li>
+
+     test.rsp :
+                &lt;%
+                    if debug/probe found? find request/content 'action [
+                       debug/probe request/content
+                        ...
+                    ]
+                %&gt;
+     will output in %trace.log :
+                ...
+                28/2-19:50:28.687-[DEBUG] true
+                28/2-19:50:28.688-[DEBUG] [action "search"]
+                ...
+</pre>
+
+</body>
+</html>
+

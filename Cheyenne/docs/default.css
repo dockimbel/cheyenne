@@ -1,0 +1,37 @@
+pre {
+	font-family:FixedSys,Courier,sans-serif;
+	font-size:7pt;	
+}
+pre.code {
+	background-color:#FFFFE0;
+	color:#808080;
+}
+
+th {
+	background-color:#EEEEEE; 
+	font-family:Verdana,Arial,sans-serif;
+	font-size:13.4px;
+	font-weight:bold;
+}
+
+.col1 {
+	background-color:#E4EEFF; 
+	font-family:Verdana,Arial,sans-serif;
+	font-size:13.4px;
+	font-weight:bold;
+	text-align:left;
+}
+
+.coln {
+	background-color:#FFFFE0; 
+	font-family:Verdana,Arial,sans-serif;
+	font-size:13.4px;
+}
+
+.colnc {
+	background-color:#FFFFE0; 
+	font-family:Verdana,Arial,sans-serif;
+	font-size:13.4px;
+	text-align:center;
+}
+

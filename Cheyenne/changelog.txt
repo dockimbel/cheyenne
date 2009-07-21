@@ -1,0 +1,513 @@
+v0.9.20 - ??/??/2009
+
+	o RSP: databases definition can now be declared at webapp level allowing 
+	  multiple instances of a webapp to use the same virtual database name but,
+	  pointing to different real databases.
+	  
+	o Config keyword 'databases now allowed in webapp sections. If defined there,
+	  it takes precedence over the global section definition.
+	  
+	o Systray help message now includes HTTPd port number used by the running
+	  instance.
+	  
+	o RSP: session security improved by binding client's IP address to the session.
+	
+	o Fixed issue with loading %libc.so for Linux 64bits versions.
+	
+	o HTTPd: fix a long standing issue with IE5/6/7 extra CRLF sent randomly
+	  after POST data.
+	  
+	o RSP: fixed a session cookies collision issue with webapps using same domain root.
+	
+	o RSP: HTTP compression disabled on RSP runtime errors.
+	
+	o HTTPd: fixed an issue with matching domains when server runs on port <> 80.
+	
+
+v0.9.19 - 01/03/2009
+
+	o RSP: webapps config options are now correctly isolated per domains.
+	
+	o RSP: 'do native overloaded to bind automatically loaded scripts to 
+	  the current webapp context (if running in a webapp). If don't want to bind
+	  your script to the webapp, you can use :
+	  
+	  		do/global %file.r
+	  
+	o RSP: by default, all webapps are now in "production" mode. It means that
+	  script errors in RSP pages are now caught and logged on server side (no
+	  more REBOL errors, or broken pages sent to clients). Clients receive a default
+	  generic error message. If 'debug keyword is found in webapp config options,
+	  the error is passed to the client as in previous Cheyenne versions.
+	  
+	o Added 'error-page optional keyword in webapps definitions to set the 
+	  default error page for script errors. If not defined, a default internal
+	  error page will be used. Example: 
+	  
+	  		error-page "/myapp/sorry.html"
+	
+	o Config file parser: fixed an issue on locating errors in global context.
+	
+	o Regression fixed in %HTTPd.r when using REBOL 2.7.6+
+	
+	o Handling of virtual domains runnning on port <> 80 improved. Now you can
+	  specify in config file, a port number attached to virtual hosts like :
+	  		
+	  		my.site.com:8000 [...]
+	  		
+	  		or even using an IP address (beware: requires double quotes) :
+	  		
+	  		"1.2.3.4:8000" [...]
+	  		
+	o Minor typos fixed in RSP API doc (Oldes).
+	
+	o NT-Service? function now set to NONE for /Core (Oldes).
+	  
+	o For 4xx response code, the connection is now kept open (keepalive). That fixes 
+	  401 and 407 connection authentication issues.
+	  
+	o PHP support greatly improved (consider it beta). It should be now both stable
+	  and scalable. (FastCGI code still needs to be optimized for performances)
+	
+	o New 'channels keyword in extern-app configuration block indicating the number
+	  of supported parallel requests (default is 1). It has to be lesser or equal to
+ 	  the number of PHP processes (or threads).
+	  
+	o Improved mod-alias, 'alias option keyword rewrote, it now behaves like its Apache's
+	  equivalent :
+	  
+	  		alias "/path/to/target" %script
+	  		
+	o If 'alias keyword is used with CGI, SCRIPT_NAME parameter will now contain the
+	  alias path.
+	  
+	o Fixed missing seconds in log file timestamps when seconds are at zero.
+	
+	o Added a new config file keyword: 'disable-log. When used in a virtual host
+	  config block, it disables HTTP log files output for that virtual host.
+	
+	o Fixed mixed log file entries when serving multiple virtual hosts.
+	
+	o RSP: fixed two issues with DB cached queries synchronization.
+	
+	o RSP: after a request, response's buffer is now correctly reset to the default
+	  buffer.
+	  
+	o Mod-static: fixed badly formed redirection URL when parameters are present
+	  (Will).
+	
+	o Bug fixed in request internal forwarding clean-up code (Will).
+	
+	o RSP: fixed an issue with localization directories having the same path in
+	  different webapps (Will).
+	  
+	o RSP: an HTTP redirection in 'on-page-start won't evaluate the page script anymore.
+	
+	o CGI: mezz function READ-CGI now patched to be compatible with Cheyenne. That's
+	  the right way of reading POST data in REBOL CGI scripts.
+	  
+	o RSP: fixed a bug in session/add when setting a block! value.
+	
+	o Task-handler: fixed a network error on first packet read (high load + fast hardware).
+	
+	o Task-handler: TCP keepalive mode activated (workaround half-closed connections).
+	
+	o Task-master: 
+			o 'no-delay mode removed and replaced by 'keep-alive mode
+			o now forks a new process as soon as one dies (not waiting for a new request)
+			o fix a long standing bug in queued job module name mismatching (can happen under extreme load)
+			o minor code cleanup
+	
+	o Uniserve: 'no-delay TCP network mode now switched off for all connections. Fixes a
+	  stability issue on Vista and probably on UNIX with very high load.
+
+	o RSP: fix a bug in 'decode-multipart when there's no file received.
+	
+	o UniServe: new logger service. Now all info or error logs and debug messages from
+	  CGI/RSP scripts are written in %trace.log. Additionnaly, you can now log messages
+	  using :
+	  
+	  		- debug/print msg 		; msg [string!]
+	  		- debug/probe value 	; any mold-able value
+	  		- ?? word				; works like REBOL's '?? function
+	  		- ? msg					; alias for debug/print
+	  
+	o RSP: in debug mode, page generation time and SQL queries stats now added at bottom
+	  of pages.
+	  
+	o RSP: error in events from %app-init.r now logged.
+	
+	o RSP: fix a rare RSP freezing issue when an error occurs in %RSP.r (for example, by
+	  a user script that breaks RSP sandbox).
+	  
+	o RSP: sanboxing now protects from Exit/Return/Break calls made outside of a
+	  function context.
+	  
+	o RSP: %misc/rsp-init.r file removed.
+	
+	o RSP/CGI: New config keyword added in global sections : 'worker-libs. It lists the
+	  librairies to load when a worker process is started. An optional 'on-quit section can
+	  be added to call cleanup code when the process quits. Examples :
+	  
+	  		worker-libs [
+				%libs/mysql-protocols.r
+				...
+			]
+		or	
+			worker-libs [
+				%libs/mysql-protocols.r
+				...
+				on-quit [
+					%/libs/free-resources.r
+				]
+			]
+	
+	o Task-master: now you can reset all worker processes without stopping Cheyenne. This
+	  is usefull when you need to force non-RSP/CGI files reload (helper scripts, 3rd party
+	  librairies,...). 
+	  
+	  	Usage:
+	
+			Windows : tray icon -> Reset Workers
+		
+			UNIX : kill -USR1 <pid>	(<pid> is Cheyenne's main process ID)
+	 
+	 
+	 o Added a -w command line option to set the worker processes number. 
+	 
+	   	Usage:
+	   
+	  		$ cheyenne -w <n>		(n [integer!] : CGI/RSP processes number)
+	   
+	   Use -w 0 to help debug CGI/RSP code by resetting worker processes after each request.
+	   (it's like calling "Reset workers" after each request).
+
+
+	 o RSP: fixed a security issue allowing access to /webapp/private/ sub-folders content.
+	 
+	 o RSP/CGI: fix for HTTP 'Date header not being returned in some cases.(Will)
+	 
+	 o RSP Sessions: fixed an issue with init flag when saving sessions on disk.(Will)
+	 
+	 o RSP: now you can declare folders as valid login URL.(Will)
+	 
+	 	Ex: auth "/admin/login/"
+	 	
+	 o RSP: a new session word 'from has been added. It's set to the referring URL on login.
+	   After login, you can now redirect to the referring page (in case of session timeouts
+	   for example).(Will)
+	   
+	 o RSP: a webapp can now be called without the ending slash.(Will)
+	 
+	 o RSP: the root "/" webapp can now be declared (needs testing).(Will)
+	 	 
+	 o RSP: new 'SID-domain config keyword added allowing to share sessions between
+	   sub-domains.(Will)
+	 
+	 o RSP: now session ID can be passed as URL or POST data in addition to cookie.(Will)
+	 
+	 o New 'charset config keyword added. It allows to define specific charset sent through
+	   HTTP headers for 'text/htlm resources.(Will)
+	   
+	 o RSP: Added a new function no-log in Response object. Use it to avoid writing
+	   log info to disk for the current request.
+	   
+	   		Ex: response/no-log
+
+	 o New 'mod-expire module for HTTPd. Allow configuring 'Expires HTTP header. 
+	   See %Cheyenne/mods/mod-expire.r for more info.(Will)
+	   
+	 o RSP: fix in request/query-string allowing processing parameters values passed
+	   through 'validate filter.
+	   
+	 o RSP: output of RSP scripts is now compressed (using deflate) if the client
+	   supports it.
+	   
+	 o RSP: new method added to response object: 'no-compress. Use it to disable RSP
+	   output compression for the current response.
+	   
+	 o Default static files memory cache now set to 4Mb accepting files up to 64Kb.
+	   
+	 o Mod-static: fixed a bug in Last-Modified date forming when second = 0.
+	 
+	 
+
+v0.9.18 - 19/02/2008
+
+	o FastCGI: enhanced implementation to support POSTed data larger than 64K.
+	
+	o 'do-events now wrapped in a loop (improves uptime)
+	
+	o Fix for lower/uppercase log files issues.
+	
+	o Fix PHP-fastcgi idle connection timeout issue.
+
+	o Client connection will now be closed after sending a 405 response.
+	  (avoids processing useless data)
+  
+	o Log files access errors are now trapped (improves uptime).
+	
+	o Fix for premature event loop exiting (was introduced in previous release).
+	
+	o RSP: bug fixed in accessing ressources in /public sub-folders.
+	
+	o RSP: fix for databases connection URL loading from config file, now attempting
+	  to load from disk first, then if failed, from memory cache.
+	
+	o Fix for bad URLs like /path/file.ext/ crashing Cheyenne.
+	  (by fixing the buggy 'info? mezz)
+	
+	o UniServe: Added -q to slave processes command-line.
+
+	o Enhanced 'on-status-code support, can now be declared at domain or webapp level.
+	
+	o Fix for a security issue on Windows: /..%5C.. URL forms are now caught 
+	  preventing an attacker from getting files out of the www root directory.
+
+
+v0.9.17 - 20/12/2007
+
+	o Cheyenne can now run natively as NT-Service. Use the systray menu to 
+	  switch between service and user mode. (switching to service mode requires
+	  admin rights)
+	  
+	o Several new command-line options have been added :
+			
+			-u : (Windows only) uninstall Cheyenne service (alternative to systray menu)
+			-f %path/ : specify a working folder for Cheyenne's runtime files.
+			
+			Internal use (Windows only) :
+			
+			-s        : run as NT-service
+			-fromdesk : executable was started from a user desktop	
+	  
+	o cheyenne.r boot script refactored for cleaner and more modular approach.
+
+	o CGI handler was redefining 'read-io in a unfriendly permanent way. Now
+	  you should use 'cgi-read-io if you want to read the system/ports/input from CGI
+	  scripts.
+	
+	o Fixed an issue with FastCGI apps, now local file paths are absolute
+	  instead of relative.
+	 
+	o Major change in modules event functions prototype, now all module events
+	  are called with only one argument : 'req (the request objet). The HTTPd 
+	  context is also now reachable from module's context using 'service word.
+	  For example :
+	  		
+	  		service/conf => loaded configuration file
+	  
+	o RSP session timeouts can now be set per webapp or per session, from
+	  config file in webapps using the 'timeout keyword or from RSP code using
+	  the session/timeout property. The 'timeout keyword need a time! value.
+	  Example :
+	  		
+	  		timeout 00:30	; session timeout set to 30 minutes
+	  
+	o BugFix in REBOL CGI scripts header handler introduced in previous betas.
+	
+	o If a 'Content-Length header is not sent by the client in a POST or PUT
+	  request, now Cheyenne returns a "400 Bad Request" response.
+	  
+	o A new config file keyword 'post-mem-limit allows to define the threshold
+	  for disk-based temporary storage of POST/PUT data instead of buffering
+	  in memory (raw data of arbitrary size can now be sent with POST/PUT).
+	  
+	o New 'listen keyword in configuration file in 'globals section allows to
+	  define the HTTPd listen ports. If the -p command line option is used,
+	  it overrides the ports defined by 'listen.
+	  
+	o A new header 'Internal-Referer has been added to save the previous 
+	  requested URL when a request is internally forwarded.
+	  
+	o New config keyword in 'globals: 'set-mime allows to add new mime types.
+	  If the mime type is already defined, it will be replaced by the new definition.
+	  Syntax : 
+	  	
+	  		set-mime type/sub-type .extension 
+	  			or 
+	  		set-mime type/sub-type [.ext1 .ext2 ...]
+	  
+	o Fixed PHP support for non-Windows platforms. Added a new 'delay option in
+	  'extapp definition block to allow slower processes finish booting before trying
+	  to obtain a connection.(This may happen on slower machines). PHP support
+	  tested successfully on Windows, Linux and OSX using PHP 5.2.5.
+	  
+	o Minor additions to FastCGI protocol handler.
+	
+	o 'mod-userdir refactored :
+			- cleaner and shorter code.
+			- 'user and 'group keywords accept a name or integer ID.
+			- task-master's slave processes are now SETUID too.
+			
+	o Cheyenne doesn't check anymore for a valid system/license, but now just
+	  for the /Library component.
+	  
+	o Bug fixed (from online bugtracker) :
+	
+	#0010034 : Configuration: PHP execution stops working after a configuration reload  
+	#0010032 : CGI: posting large amount of data fails  
+	#0010026 : HTTP: protocol  http://domain.com/?a=1 get redirected to http://domain.com/?a=1/  
+
+		
+
+v0.9.16 - 12/07/2007
+	
+	o Localization framework added to RSP. API overview :
+	
+		- #[text] in static parts of RSP pages will be translated.
+		
+		- new function: say "data" : translate a string! value in the current
+		  language.
+		  
+		- session's new 'lang variable can set the current language.
+		
+		- new config file options to control default language and 
+		  locales resources folder.
+		
+	o Decode-cgi rewrote from scratch. Cleaner and 2-3 times faster than before.
+	
+	o RSP request params decoding rewrote. Now GET and POST parameters are unified
+	  in request/content.
+	  
+	o BugFix for encapping %misc/mime-types file.
+	
+	o File upload support redesigned. Now big files (user defined threshold) are
+	  directly written to disk in temporary files, instead of being held in memory.
+	  The temporary files are deleted once the request is completed. So now
+	  Cheyenne supports files upload up to 2Gb (R2 port! limitation).
+	  
+	o CGI execution extended to any scripts (not just REBOL). If found, the
+	  shebang line (#!) is honored (on all platforms). Several perl scripts
+	  added in %www/ folder as demo.
+	  
+	o Module's 'on-started event now fired only once, when multiple HTTPd instances
+	  are listening on more than one port.
+	  
+	o New module : mod-extapp for launching and managing external applications.
+	  Only the start and shutdown actions are currently supported. Load balancing
+	  will be included in future.
+	
+	o FastCGI protocol reliability improved and some bugs fixed.
+	
+	o RSP-API documentation updated.
+	
+
+v0.9.15 - 20/06/2007
+
+	o RConsole was not started by default in the previous release. Fixed
+	
+	o RSP: 'include function protection from infinite cycles changed. It's
+	  now based on a counter (5 maximum recursive includes). It's a little less
+	  cleaner than stack-based tracking but much more reliable (avoids matching
+	  paths and targets).
+	  
+	o HTML.r library rewritten from scratch. Now, faster and more conforming to 
+	  standards (Full range of Latin1 entities supported). Fixes URL-encode bugs.
+
+	o BugFix for command line parsing in encapped Cheyenne on Linux.
+	
+	o Fixed an issue with 'decode-multipart in RSP.r. File upload should work ok 
+	  again.
+	  
+	o Added a new global function : 'rsp-log value. Outputs values in console for 
+	  debugging RSP scripts. Works as 'probe.
+	  
+	o Reloading config file now supported. Running sessions and client connections
+	  survive to the reloading process (needs some additional testing). Activating
+	  config file reload is done using:
+	  
+	  		- (Windows) "Reload Config" menu option in systray icon.
+	  		- (UNIX)     kill -HUP pid
+	  		
+	o UNIX signals SIGINT,SIGQUIT,SIGTERM now caught to allow cleaner exit and last
+	  minute actions. Triggers the new 'on-quit event for HTTPd modules.
+	
+	o HTTPd internal events (not phases) refactored to be more cleaner. New module's
+	  events added:
+	
+			- 'on-started:	when Cheyenne starts.
+			- 'on-reload:   before a config file reload happens.
+			- 'on-reloaded: after a config file reload happens.
+			- 'on-quit:     when Cheyenne is about to stop and quit.
+			
+	o RSP sessions can now be made persistent (can survive to a server complete restart).
+	  This option is controlled by a new config keyword: 'persist. Usage is :
+	  	
+	        persist [sessions]    ; other flags can be added at will
+	        
+	o BugFix in session cookie handling for web-apps using 'auth mode. Now the cookie
+	  is sent on the 302 redirection to the login page avoiding the creation of a 
+	  "shadow session" that will never be used. 
+		  
+	o FastCGI is under heavy work so mod-fastcgi is commented in config file to avoid
+	  fastcgi startup. If you want to play with PHP, just uncomment the line.
+
+
+v0.9.14 - 09/06/2007
+
+	o response/forward improved : 
+		- fully supports URLs as argument (can now forward to another virtual host).
+		- URL validity check (must have an explicit target).
+		- protection against cycle.
+		
+	o Command line option -p extended, now you can specify several listen ports 
+	  separated by a comma (ex: -p 80,10443).
+	  
+	o New command line option -e : load and initialize Cheyenne without entering the
+	  event loop (needed for embedding Cheyenne in third party apps).
+	  
+	o Added a new experimental module: mod-embed. Purpose is to allow easy Cheyenne
+	  integration in third-party REBOL applications that require an embedded web
+	  server. (Uncomment mod-embed in httpd.cfg file to activate it)
+	  
+	o Added %embed-demo.r file to show a sample of the mod-embed usage and API.
+	  
+	o RSP: <% without %> eats all the memory. Fixed.
+	
+	o URL-encoded request values were not parsed correctly. Fixed.
+	
+	o RSP: fixed a typo in 'decode-params blocking the multipart data decoding and
+	  also a word ('type) leaking in GC.
+	
+	o UniServe's service startup refactored to be more flexible.
+		
+
+v0.9.13 - 06/06/2007
+
+	o Session cookie management refactored. Cookies are now cached in memory. 
+	  Fixes all issues related to timezone.
+	  
+	o HTTPd request pipeline refactored. It's now more reliable, little faster and 
+	  able to handle extreme situations (stressing with FasterFox). Several core parts
+	  of Cheyenne have been touched, so watch out for regressions.
+	  
+	o Added 'forward method to RSP's Response object (now possible thanks to the 
+	  new pipeline engine).
+	  
+	o Internal modules API changed : 'deferred? property removed (not needed 
+	  anymore with new pipeline).
+	  
+	o Added 'on-status-code option in config file (see example in %httpd.cfg).
+	  
+	o do-sql now catches internal errors, so they can be more easily located in 
+	  calling context.
+	  
+
+v0.9.12 - 04/06/2007
+
+	o do-sql function improved to support RT's DB drivers. /flat refinement is 
+	  supported now too. ODBC insert error fixed too.
+	
+	o RConsole prompt changed to "Server>"
+	
+	o CGI's 'path-info now returns the request URL.
+	
+	o Fixed a bug in RSP session destruction potentially corrupting the internal 
+	  session list and giving weird results or behaviour.
+	  
+	o Fixed a timezone computation bug that was setting incorrect expire times for 
+	  session cookies, resulting in unstable behaviour. All platforms except Windows.
+	  
+	o Small patch to parse-request-line func in HTTPd.r to be more 'mod-rewrite 
+	  friendly.

@@ -1,0 +1,513 @@
+<HTML>
+<HEAD><link rel="stylesheet" type="text/css" href="default.css"></HEAD>
+<BODY bgcolor="white">
+<BLOCKQUOTE><PRE><font face="Verdana,helvetica" size="2"><B>Cheyenne Developer's Guide
+
+       Author: SOFTINNOV / Nenad Rakocevic
+       Date: 12/02/2006
+       Version: 1.0
+       Comments: cheyenne@softinnov.com</B></FONT></PRE></BLOCKQUOTE>
+<HR><P><font face="Verdana,helvetica" size="4"><B>Table of Contents</B></FONT><BLOCKQUOTE>
+<A HREF="#sect1."><font face="Verdana,helvetica" size="2"><B>1. Extension Modules</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect1.1."><font face="Verdana,helvetica" size="2"><B>1.1. Processing Phases</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect1.2."><font face="Verdana,helvetica" size="2"><B>1.2. Phase Implementation</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect1.3."><font face="Verdana,helvetica" size="2"><B>1.3. Module Implementation</B></FONT></A><BR>
+<A HREF="#sect2."><font face="Verdana,helvetica" size="2"><B>2. Builtin modules</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.1."><font face="Verdana,helvetica" size="2"><B>2.1. Mod-Action</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.1.1."><font face="Verdana,helvetica" size="2">2.1.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.1.2."><font face="Verdana,helvetica" size="2">2.1.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.1.3."><font face="Verdana,helvetica" size="2">2.1.3. Words</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.2."><font face="Verdana,helvetica" size="2"><B>2.2. Mod-Alias</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.2.1."><font face="Verdana,helvetica" size="2">2.2.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.2.2."><font face="Verdana,helvetica" size="2">2.2.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.2.3."><font face="Verdana,helvetica" size="2">2.2.3. Words</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.3."><font face="Verdana,helvetica" size="2"><B>2.3. Mod-Fastcgi</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.3.1."><font face="Verdana,helvetica" size="2">2.3.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.3.2."><font face="Verdana,helvetica" size="2">2.3.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.3.3."><font face="Verdana,helvetica" size="2">2.3.3. Words</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.4."><font face="Verdana,helvetica" size="2"><B>2.4. Mod-RSP</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.4.1."><font face="Verdana,helvetica" size="2">2.4.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.4.2."><font face="Verdana,helvetica" size="2">2.4.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.4.3."><font face="Verdana,helvetica" size="2">2.4.3. Words</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.5."><font face="Verdana,helvetica" size="2"><B>2.5. Mod-SSI</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.5.1."><font face="Verdana,helvetica" size="2">2.5.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.5.2."><font face="Verdana,helvetica" size="2">2.5.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.5.3."><font face="Verdana,helvetica" size="2">2.5.3. Words</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.6."><font face="Verdana,helvetica" size="2"><B>2.6. Mod-Static</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.6.1."><font face="Verdana,helvetica" size="2">2.6.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.6.2."><font face="Verdana,helvetica" size="2">2.6.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.6.3."><font face="Verdana,helvetica" size="2">2.6.3. Words</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.7."><font face="Verdana,helvetica" size="2"><B>2.7. Mod-UserDir</B></FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.7.1."><font face="Verdana,helvetica" size="2">2.7.1. Description</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.7.2."><font face="Verdana,helvetica" size="2">2.7.2. Phases</FONT></A><BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="#sect2.7.3."><font face="Verdana,helvetica" size="2">2.7.3. Words</FONT></A><BR>
+</BLOCKQUOTE>
+<P><BR>
+<HR>
+<A NAME="sect1."></A>
+<H2><font face="Verdana,helvetica" size="4">1. Extension Modules</FONT></H2>
+<BLOCKQUOTE>
+<font face="Verdana,helvetica" size="2">Cheyenne internal architecture is built around a request processing pipeline similar
+to Apache's one. Each step in this pipeline is called a <b>phase</b>. So each
+request received by Cheyenne will pass through most of the <b>phases</b>. Cheyenne's
+HTTPd server just do the protocol related processing for each request and let
+<b>modules</b> do the useful job. This way of separating the protocol from the data
+processing and breaking down the processing in several steps, makes the server
+implementation very flexible and easily customizable.</FONT>
+<P>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect1.1."></A>
+<H3><font face="Verdana,helvetica" size="3">1.1. Processing Phases</FONT></H3>
+<BLOCKQUOTE>
+<font face="Verdana,helvetica" size="2">When Cheyenne receives a request, it parses and processes the request by calling
+the following phases :</FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><table bgcolor="#AAAAAA" align="center" border="0" cellspacing="0" cellpadding="0">
+<tr><td><table border="0" cellspacing="1" cellpadding="10">
+<tr>
+<th>#</th>
+<th align="left" width="130">Phase Name</th>
+<th align="left" width="300">Possible usage</th>
+<th align="left" width="300">HTTPd Service Actions</th>
+</tr><tr>
+<td class="colnc">1</td>
+<td class="col1"> -</td>
+<td class="coln"> -</td>
+<td class="coln"></FONT>
+<P>
+<UL>
+<LI><font face="Verdana,helvetica" size="2">Request object creation</FONT>
+<LI><font face="Verdana,helvetica" size="2">Request first line received and parsed
+</td>
+</tr><tr>
+<td class="colnc">2</td>
+<td class="col1"> url-translate</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Early URL or request method changes.
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">3</td>
+<td class="col1"> -</td>
+<td class="coln"> -</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Receiving and parsing HTTP request headers
+</td>
+</tr><tr>
+<td class="colnc">4</td>
+<td class="col1"> parsed-headers</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Trigger actions based on received headers.</FONT>
+<LI><font face="Verdana,helvetica" size="2">Early HTTP header changes.
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">5</td>
+<td class="col1"> -</td>
+<td class="coln"> -</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Domain name selection</FONT>
+<LI><font face="Verdana,helvetica" size="2">Domain configuration loaded in request object
+</td>
+</tr><tr>
+<td class="colnc">6</td>
+<td class="col1"> url-to-filename</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Map URL to filesystem.</FONT>
+<LI><font face="Verdana,helvetica" size="2">Set a default file if missing.</FONT>
+<LI><font face="Verdana,helvetica" size="2">Redirect to another URL.
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">7</td>
+<td class="col1"> -</td>
+<td class="coln"> -</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Receiving POSTed data
+</td>
+</tr><tr>
+<td class="colnc">8</td>
+<td class="col1"> filter-input</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Decode the received data. (uncrypt or uncompress)
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">9</td>
+<td class="col1"> access-check</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">File access checking.</FONT>
+<LI><font face="Verdana,helvetica" size="2">User authentication management.
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">10</td>
+<td class="col1"> set-mime-type</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Select the correct MIME type
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">11</td>
+<td class="col1"> make-response</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Send back the requested file.</FONT>
+<LI><font face="Verdana,helvetica" size="2">Build and send a response on-the-fly.</FONT>
+<LI><font face="Verdana,helvetica" size="2">Assign an external module to process the request (CGI, RSP,...).
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">12</td>
+<td class="col1"> task-part</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Process a streamed response from an external module
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">13</td>
+<td class="col1"> task-done</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Process a correct response from an external module
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">14</td>
+<td class="col1"> task-failed</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Process an error response from an external module
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">15</td>
+<td class="col1"> filter-output</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Encode the response data (crypt, compress,...)
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">16</td>
+<td class="col1"> reform-headers</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Last chance to set/change any HTTP header value
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">17</td>
+<td class="col1"> -</td>
+<td class="coln"> -</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">HTTP status line forming</FONT>
+<LI><font face="Verdana,helvetica" size="2">HTTP response header forming</FONT>
+<LI><font face="Verdana,helvetica" size="2">Response sent to client</FONT>
+<LI><font face="Verdana,helvetica" size="2">Close connection (if not pipelining)
+</td>
+</tr><tr>
+<td class="colnc">18</td>
+<td class="col1"> logging</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Log some informations on disk
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr><tr>
+<td class="colnc">19</td>
+<td class="col1"> clean-up</td>
+<td class="coln"></FONT>
+<LI><font face="Verdana,helvetica" size="2">Do some cleanup if required
+</td>
+<td class="coln"> &lt;= Phase calling</td>
+</tr></table></td></tr></table></FONT>
+</UL>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect1.2."></A>
+<H3><font face="Verdana,helvetica" size="3">1.2. Phase Implementation</FONT></H3>
+<BLOCKQUOTE>
+<font face="Verdana,helvetica" size="2">You can do any processing you need in a phase function. You're free to modify the request parameters, send the request in background to be process by an external module, etc...</FONT>
+<P>
+<font face="Verdana,helvetica" size="2">Here's a phase prototype function :</FONT>
+<P>
+<BLOCKQUOTE><PRE>phase: func [svc req conf][
+    if declined? [return none]
+    ...
+    if let-others [return false]
+    ...
+    true
+]</PRE></BLOCKQUOTE>
+<font face="Verdana,helvetica" size="2">('declined? and 'let-other would be, in this example, user-defined functions)</FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><u>Phase function arguments</u> :</FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><table bgcolor="#AAAAAA" align="center" border="0" cellspacing="0" cellpadding="0">
+<tr><td><table border="0" cellspacing="1" cellpadding="10">
+<tr>
+<th align="left" width="80">Argument</th>
+<th align="left" width="80">Type</th>
+<th align="left" width="500">Description</th>
+</tr><tr>
+<td class="col1"> svc</td>
+<td class="colnc"> object!</td>
+<td class="coln"> Reference to HTTPd context (uniserve/services/httpd)</td>
+</tr><tr>
+<td class="col1"> req</td>
+<td class="colnc"> object!</td>
+<td class="coln"> Request object. (See below for details)</td>
+</tr><tr>
+<td class="col1"> conf</td>
+<td class="colnc"> block!</td>
+<td class="coln"> Domain configuration script. (post-processed)</td>
+</tr></table></td></tr></table></FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><u>Request object</u> :</FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><table bgcolor="#AAAAAA" align="center" border="0" cellspacing="0" cellpadding="0">
+<tr><td><table border="0" cellspacing="1" cellpadding="10">
+<tr>
+<th align="left" width="80">Words</th>
+<th align="left" width="80">Sub words</th>
+<th align="center" width="80">Type</th>
+<th align="left" width="500">Description</th>
+</tr><tr>
+<td class="col1" rowspan=12 valign="top"> in</td>
+<td class="col1"> headers</td>
+<td class="colnc"> block!</td>
+<td class="coln"> List of [name [word!] value [string!]] header pairs</td>
+</tr><tr>
+<td class="col1"> status-line</td>
+<td class="colnc"> binary!</td>
+<td class="coln"> First line of the HTTP request</td>
+</tr><tr>
+<td class="col1"> method</td>
+<td class="colnc"> word!</td>
+<td class="coln"> Request's HTTP method</td>
+</tr><tr>
+<td class="col1"> url</td>
+<td class="colnc"> string!</td>
+<td class="coln"> Request's extracted URL</td>
+</tr><tr>
+<td class="col1"> content</td>
+<td class="colnc"> binary!<br>none!</td>
+<td class="coln"> POST-ed data</td>
+</tr><tr>
+<td class="col1"> path</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Extracted path of the URL</td>
+</tr><tr>
+<td class="col1"> target</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Extracted target ressource of the URL</td>
+</tr><tr>
+<td class="col1"> arg</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Extracted optional arguments of the URL (after # or ?)</td>
+</tr><tr>
+<td class="col1"> ext</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Extracted extension of the target</td>
+</tr><tr>
+<td class="col1"> version</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Request's HTTP protocol version</td>
+</tr><tr>
+<td class="col1"> file</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Complete file name with path for the requested ressource</td>
+</tr><tr>
+<td class="col1"> translated</td>
+<td class="colnc"> -</td>
+<td class="coln"> <i>(not used)</i></td>
+</tr><tr>
+<td class="col1" rowspan=6 valign="top"> out</td>
+<td class="col1"> headers</td>
+<td class="colnc"> block!</td>
+<td class="coln"> List of [name [word!] value [string!]] header pairs</td>
+</tr><tr>
+<td class="col1"> status-line</td>
+<td class="colnc"> string!<br>none!</td>
+<td class="coln"> Response header first line</td>
+</tr><tr>
+<td class="col1"> content</td>
+<td class="colnc"> binary!<br>none!</td>
+<td class="coln"> Response's body</td>
+</tr><tr>
+<td class="col1"> code</td>
+<td class="colnc"> integer!<br>none!</td>
+<td class="coln"> Response HTTP status code (1xx-5xx)</td>
+</tr><tr>
+<td class="col1"> mime</td>
+<td class="colnc"> lit-pat!<br>none!</td>
+<td class="coln"> Response mime type</td>
+</tr><tr>
+<td class="col1"> header-sent?</td>
+<td class="colnc"> logic!</td>
+<td class="coln"> True if HTTP header has already been sent (streamed mode)</td>
+</tr><tr>
+<td class="col1"> state</td>
+<td class="col1"> -</td>
+<td class="colnc"> word!</td>
+<td class="coln"> HTTPd service internal state of the request</td>
+</tr><tr>
+<td class="col1"> handler</td>
+<td class="col1"> -</td>
+<td class="colnc"> word!<br>none!</td>
+<td class="coln"> Handler's name for external processing (task-master related)</td>
+</tr><tr>
+<td class="col1"> locals</td>
+<td class="col1"> -</td>
+<td class="colnc"> -</td>
+<td class="coln"> <i>(not used)</i></td>
+</tr><tr>
+<td class="col1"> cfg</td>
+<td class="col1"> -</td>
+<td class="colnc"> block!</td>
+<td class="coln"> Reference to configuration data applied to this request</td>
+</tr><tr>
+<td class="col1"> file-info</td>
+<td class="col1"> -</td>
+<td class="colnc"> object!<br>none!</td>
+<td class="coln"> Ressource file informations returned by REBOL's <b>info?</b> function</td>
+</tr><tr>
+<td class="col1"> vhost</td>
+<td class="col1"> -</td>
+<td class="colnc"> word!</td>
+<td class="coln"> Virtual host name ('default if none)</td>
+</tr><tr>
+<td class="col1"> deferred?</td>
+<td class="col1"> -</td>
+<td class="colnc"> logic!</td>
+<td class="coln"> Flag to set to inform that a request needs an external processing</td>
+</tr></table></td></tr></table></FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><u>Phase return codes</u> :</FONT>
+<P>
+<font face="Verdana,helvetica" size="2"><table bgcolor="#AAAAAA" align="center" border="0" cellspacing="0" cellpadding="0">
+<tr><td><table border="0" cellspacing="1" cellpadding="10">
+<tr>
+<th align="left" width="80">Value</th>
+<th align="left" width="500">Description</th>
+</tr><tr>
+<td class="col1"> None</td>
+<td class="coln"> Decline the request and don't do any processing.</td>
+</tr><tr>
+<td class="col1"> False</td>
+<td class="coln"> Request processed. Let other modules process it too (for the current phase).</td>
+</tr><tr>
+<td class="col1"> True</td>
+<td class="coln"> Request processed. Prevent other modules from processing this request (for the current phases).</td>
+</tr></table></td></tr></table></FONT>
+<P>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect1.3."></A>
+<H3><font face="Verdana,helvetica" size="3">1.3. Module Implementation</FONT></H3>
+<BLOCKQUOTE>
+<font face="Verdana,helvetica" size="2">Here's a typical phase implementation :</FONT>
+<P>
+<font face="Verdana,helvetica" size="2">url-translate: func</FONT>
+<P>
+</BLOCKQUOTE>
+<P><BR>
+<HR>
+<A NAME="sect2."></A>
+<H2><font face="Verdana,helvetica" size="4">2. Builtin modules</FONT></H2>
+<BLOCKQUOTE>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.1."></A>
+<H3><font face="Verdana,helvetica" size="3">2.1. Mod-Action</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.1.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.1.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.1.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.1.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.1.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.1.3. Words</FONT></H4>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.2."></A>
+<H3><font face="Verdana,helvetica" size="3">2.2. Mod-Alias</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.2.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.2.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.2.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.2.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.2.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.2.3. Words</FONT></H4>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.3."></A>
+<H3><font face="Verdana,helvetica" size="3">2.3. Mod-Fastcgi</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.3.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.3.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.3.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.3.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.3.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.3.3. Words</FONT></H4>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.4."></A>
+<H3><font face="Verdana,helvetica" size="3">2.4. Mod-RSP</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.4.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.4.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.4.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.4.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.4.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.4.3. Words</FONT></H4>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.5."></A>
+<H3><font face="Verdana,helvetica" size="3">2.5. Mod-SSI</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.5.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.5.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.5.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.5.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.5.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.5.3. Words</FONT></H4>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.6."></A>
+<H3><font face="Verdana,helvetica" size="3">2.6. Mod-Static</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.6.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.6.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.6.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.6.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.6.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.6.3. Words</FONT></H4>
+</BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.7."></A>
+<H3><font face="Verdana,helvetica" size="3">2.7. Mod-UserDir</FONT></H3>
+<BLOCKQUOTE>
+<P><BR>
+<A NAME="sect2.7.1."></A>
+<H4><font face="Verdana,helvetica" size="2">2.7.1. Description</FONT></H4>
+<P><BR>
+<A NAME="sect2.7.2."></A>
+<H4><font face="Verdana,helvetica" size="2">2.7.2. Phases</FONT></H4>
+<P><BR>
+<A NAME="sect2.7.3."></A>
+<H4><font face="Verdana,helvetica" size="2">2.7.3. Words</FONT></H4>
+<P></BLOCKQUOTE><HR><CENTER><FONT face="arial,helvetica" size="1">Copyright 2004-2006 SOFTINNOV All Rights Reserved.<BR>Formatted with REBOL Make-Doc 0.9.6.1 on 8-Oct-2006 at 22:26:48</FONT></CENTER><P>
+</BODY></HTML>
