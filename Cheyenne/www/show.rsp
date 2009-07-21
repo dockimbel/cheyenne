@@ -16,7 +16,7 @@
 <H4>Request headers :</H4>
 <UL><%
 	foreach [name value] request/headers [
-		print [<LI><B> name ":"</B> mold value </LI>]
+		print [<LI><B> name ":"</B> html-encode mold value </LI>]
 	]
 %></UL>
 <H4>Request variables :</H4>
@@ -25,7 +25,7 @@
 		print "<LI>No variable passed</LI>"
 	][
 		foreach [name value] request/content [
-			print [<LI><B> name ":"</B> mold value </LI>]
+			print [<LI><B> name ":"</B> html-encode mold value </LI>]
 		]
 	]
 %></UL>
@@ -37,13 +37,14 @@
 			print "<LI>No session variables</LI>"
 		][
 			foreach [name value] session/content [
-				print [<LI><B> name ":"</B> mold value </LI>]
+				print [<LI><B> name ":"</B> html-encode mold value </LI>]
 			]
 		]
 %></UL>
 <%][%>
 	<UL><LI>No session</LI></UL>
 <%]%>
+
 
 </FONT>
 </BODY>
