@@ -1,6 +1,12 @@
 UniServe ChangeLog:
 ------------------
 
+
+0.9.34  12/02/2009
+
+	o IN patching code fixed for Encmdview 2.7.6
+
+
 0.9.33  12/02/2009
 
 	o On-error events now processed through 'fire-event allow logging

@@ -23,8 +23,10 @@ unless value? 'parse-url [do-cache uniserve-path/libs/url.r]
 
 either encap? [
 	; --- patch for 'in function to accept port! datatype
-	clear ti: third :in
-	append ti [object [object! port!] word [any-word!]]
+	if not find select ti: third :in 'object port! [
+		clear ti
+		append ti [object [object! port!] word [any-word!]]
+	]
 	launch*: :launch
 	; ---
 ][

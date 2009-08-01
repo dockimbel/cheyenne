@@ -23,6 +23,10 @@ v0.9.20 - ??/??/2009
 	
 	o HTTPd: fixed an issue with matching domains when server runs on port <> 80.
 	
+	o Uniserve: fixed an encap 2.7.6 crashing issue.
+	
+	o Boot: fixed tray display message for listening ports.
+	
 
 v0.9.19 - 01/03/2009
 

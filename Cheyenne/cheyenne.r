@@ -167,13 +167,7 @@ cheyenne: make log-class [
 			launch-service				; -- launch service thread
 			do-cache %misc/admin.r
 		][
-			do-cache %misc/system.r		; -- install tray icon
-			if OS-Windows? [
-				set-tray-help-msg rejoin [
-					"Cheyenne is listening on port: " mold any [port-id 80]
-				]
-			]
-			open-system-events
+			do-cache %misc/system.r		; -- install tray icon for Windows
 		]
 
 		do-cache uniserve-path/services/task-master.r		
@@ -205,6 +199,16 @@ cheyenne: make log-class [
 				port-id: select services/httpd/conf/globals 'listen
 				port-id: to-block port-id
 			]
+			
+			if OS-Windows? [
+				if not service? [
+					set-tray-help-msg rejoin [
+						"Cheyenne is listening on port: " mold any [port-id 80]
+					]
+				]
+				open-system-events
+			]
+			
 			foreach p any [port-id [80]][control/start/only 'HTTPd p]
 			
 			control/start/only 'task-master none
