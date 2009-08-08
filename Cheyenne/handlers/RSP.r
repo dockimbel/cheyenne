@@ -187,7 +187,7 @@ install-module [
 		if not list: select apps-db request/headers/host [
 			repend apps-db [request/headers/host list: make block! 1]
 		]
-		if not list: select apps-db request/web-app [
+		if not list: select list request/web-app [
 			repend apps-db [request/web-app list: copy/deep defs]
 		]
 		list
