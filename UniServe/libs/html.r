@@ -1,8 +1,8 @@
 REBOL [
 	Title: "URL and HTML codecs library"
 	Author: "SOFTINNOV / Nenad Rakocevic"
-	Version: 2.0.0
-	Date: 11/06/2007
+	Version: 2.0.1
+	Date: 15/08/2009
 ]
 
 set 'convert func [
