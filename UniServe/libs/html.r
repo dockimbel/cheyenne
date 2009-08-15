@@ -7,26 +7,28 @@ REBOL [
 
 set 'convert func [
 	"Rule-based string series conversion. Returns a new series."
-	series [any-string!] "series to change (unmodified)"
+	series [any-string!] "input string (unmodified)"
 	rule [block!] "matching patterns described by a PARSE rule"
 	body [block!] {
 		Body evaluated on matched pattern. 
 		VALUE word refers to the matched pattern.
 		OUT word refers to the new series.
-		Have to return the new converted value.
+		You have to return the new converted value.
+		
+		Do not use '__s and '__e words in the body.
 	}
-	/local out s e value
+	/local out value __s __e 
 ][
 	out: make string! length? series
 	bind body 'out
 	parse/all series [
-		s: any [
-			e: copy value rule (
-				insert/part tail out s e
+		__s: any [
+			__e: copy value rule (
+				insert/part tail out __s __e
 				insert tail out do body
-			) s: | skip
-		] e:
-		(insert/part tail out s e)
+			) __s: | skip
+		] __e:
+		(insert/part tail out __s __e)
 	]
 	out
 ]
@@ -99,7 +101,7 @@ context [
 		]
 	]
 	
-	set 'url-encode func [data [string!] /all /local chars][
+	set 'url-encode func [data [string! url!] /all /local chars][
 		chars: pick url-not-allowed to logic! all
 		convert data [chars][
 			reduce [#"%" skip to-hex to integer! to char! value 6]
