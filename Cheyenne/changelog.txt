@@ -27,6 +27,21 @@ v0.9.20 - ??/??/2009
 	
 	o Boot: fixed tray display message for listening ports.
 	
+	o RSP: fixed an issue in databases ports isolation per domain (was a typo).
+	
+	o RSP: response/redirect default HTTP code is now 303 (was 301) to fix some browser
+	  caching issues. New refinements are also added :
+	  
+		response/redirect => 303			; HTTP1.1 moved temporary (POST=>303=>GET)
+		response/redirect/temp => 302		; HTTP1.0 compatible moved temporary
+		response/redirect/thru => 307		; HTTP1.1 moved temporary with same method (POST=>307=>POST)
+		reponse/redirect/last => 301		; HTTP1.0&1.1 moved permanently
+		  
+	o RSP/CGI: default no caching headers changed to:
+	
+		Pragma: no-cache
+	   	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	
 
 v0.9.19 - 01/03/2009
 

@@ -61,7 +61,11 @@ install-HTTPd-extension [
 		if req/out/code = 200 [
 			roh: req/out/headers
 			unless find roh 'Cache-Control [
-				h-store roh 'Cache-Control "private, max-age=0"
+				;h-store roh 'Cache-Control "private, max-age=0"
+				h-store roh 'Cache-Control "no-cache, no-store, max-age=0, must-revalidate"
+			]
+			unless find roh 'Pragma [
+				h-store roh 'Pragma "no-cache"
 			]
 			unless find roh 'Expires [
 				h-store roh 'Expires "-1"

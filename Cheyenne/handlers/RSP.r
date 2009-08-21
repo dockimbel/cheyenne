@@ -610,11 +610,11 @@ install-module [
 			buffer: buffer*
 			clear buffer
 		]
-		redirect: func [url [string! url!] /temp][
+		redirect: func [url [string! url!] /temp /thru /last][
 			either debug-banner/active? [
 				debug-banner/make-redirect-page url
 			][
-				set-status any [all [temp 302] 301]
+				set-status any [all [temp 302] all [thru 307] all [last 301] 303]
 				set-header 'Location form url
 			]
 			end
