@@ -1717,7 +1717,7 @@ Abort the RSP execution and send the response buffer back to the client.
 
 Clears the response buffer.
 <br><br>
-Note: it doesn't break RSP execution.
+<u>Note</u>: it doesn't break RSP execution.
 
  </div> <h4>Example</h4>
 <pre>
@@ -1762,7 +1762,7 @@ to be able to send back an image instead of HTML code.
 <h4>Syntax</h4>
 <pre class="desc">
     <b>response/redirect</b> <i>url</i>
-    <b>response/redirect/temp</b> <i>url</i>
+    <b>response/redirect/strict</b> <i>url</i>
     <b>response/redirect/thru</b> <i>url</i>
     <b>response/redirect/last</b> <i>url</i>
 
@@ -1771,9 +1771,9 @@ to be able to send back an image instead of HTML code.
 
 <h4>Description</h4> <div class="desctext">
 
-Returns a HTTP redirection code 303 to the client asking it to jump to the target URL.
+Returns a HTTP redirection code 302 to the client asking it to jump to the target URL using a GET or HEAD method.
 <br><br>
-The <b>/temp</b> option produces a 302 return code, meaning that's a temporary redirection. A GET request will be issued by the client for retrieving the target URL.
+The <b>/strict</b> option produces a 303 return code, meaning that's a temporary redirection. A GET request will be issued by the client for retrieving the target URL.
 <br><br>
 The <b>/thru</b> option will return a HTTP code 307 asking the client to use the same HTTP method for requesting the target URL. An initial POST request will result, after the redirection, in a POST request to the target URL (as required by the HTTP v1.1 protocol).
 <br><br>
@@ -1799,7 +1799,7 @@ The <b>/last</b> option will return a HTTP code 301 meaning that the resource ha
                 &lt;/body&gt;
                 &lt;/html&gt;
 
-  will return : HTTP/1.1 303 Moved Permanently
+  will return : HTTP/1.1 302 Moved Permanently
                 Location: /main.html
                 ...
 </pre>
