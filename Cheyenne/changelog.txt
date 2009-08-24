@@ -29,11 +29,11 @@ v0.9.20 - ??/??/2009
 	
 	o RSP: fixed an issue in databases ports isolation per domain (was a typo).
 	
-	o RSP: response/redirect default HTTP code is now 303 (was 301) to fix some browser
+	o RSP: response/redirect default HTTP code is now 302 (was 301) to fix some browser
 	  caching issues. New refinements are also added :
 	  
-		response/redirect => 303			; HTTP1.1 moved temporary (POST=>303=>GET)
-		response/redirect/temp => 302		; HTTP1.0 compatible moved temporary
+		response/redirect => 302			; HTTP1.0 compatible moved temporary
+		response/redirect/strict => 303		; HTTP1.1 moved temporary (POST=>303=>GET)
 		response/redirect/thru => 307		; HTTP1.1 moved temporary with same method (POST=>307=>POST)
 		reponse/redirect/last => 301		; HTTP1.0&1.1 moved permanently
 		  

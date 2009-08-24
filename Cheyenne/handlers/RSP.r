@@ -614,7 +614,7 @@ install-module [
 			either debug-banner/active? [
 				debug-banner/make-redirect-page url
 			][
-				set-status any [all [temp 302] all [thru 307] all [last 301] 303]
+				set-status any [all [strict 303] all [thru 307] all [last 301] 302]
 				set-header 'Location form url
 			]
 			end
