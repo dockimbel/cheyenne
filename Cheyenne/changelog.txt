@@ -41,6 +41,12 @@ v0.9.20 - ??/??/2009
 	
 		Pragma: no-cache
 	   	Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+	   	
+	o RSP: fix for scripts not returning any data (test.rsp: <% 1 %>)
+	
+	o RSP: words in sandbox context renamed to lower the risk of collision with
+	  user script words.
+
 	
 
 v0.9.19 - 01/03/2009

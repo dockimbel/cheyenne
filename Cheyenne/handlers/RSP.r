@@ -199,10 +199,10 @@ install-module [
 		verbose: 0
 
 		sandbox: context [
-			txt: func [s o][
+			__txt: func [s o][
 				insert/part tail response/buffer at current s o
 			]
-			cat: []
+			__cat: []
 		]
 
 		compile: func [entry /no-lang /local out value s e word id ctx][
@@ -217,7 +217,7 @@ install-module [
 					end break
 					| "#[" copy value to #"]" skip (
 						append out reform [
-							" prin any [pick cat"
+							" prin any [pick __cat"
 							locale/id? value
 							mold value #"]"
 						]
@@ -227,21 +227,22 @@ install-module [
 							if value [repend out [value #" "]]
 						)
 					| s: copy value [any [e: "<%" :e break | e: "#[" :e break | skip]] e: (
-						append out reform [" txt" index? s offset? s e #" "]
+						append out reform [" __txt" index? s offset? s e #" "]
 					)
 				]
 			]
 			unless no-lang [locale/set-lang id]
 			if error? try [out: load out][
 				out: reduce ['load out]
-			]			
+			]
+			if not block? out [out: reduce [out]]
 			if all [
 				value? 'request
 				object? :request
 				ctx: find apps request/web-app
 			][
 				out: bind out third ctx
-			]
+			]		
 			poke entry 3 out: does bind out sandbox	
 			:out
 		]
@@ -378,7 +379,7 @@ install-module [
 				repend cats [id current: make hash! load file]
 			]
 			lang: id
-			engine/sandbox/cat: current
+			engine/sandbox/__cat: current
 			true
 		]
 		get-path: does [
