@@ -611,7 +611,7 @@ install-module [
 			buffer: buffer*
 			clear buffer
 		]
-		redirect: func [url [string! url!] /temp /thru /last][
+		redirect: func [url [string! url!] /strict /thru /last][
 			either debug-banner/active? [
 				debug-banner/make-redirect-page url
 			][
