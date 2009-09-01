@@ -30,7 +30,7 @@ REBOL [
 				<allowed>		; specific point(s) in time or duration(s) allowed
 				<NOT forbidden>	; specific point(s) in time or duration(s) forbidden
 				<FROM moment>	; starting point
-				<AT moment>		; fix time for each event (only date changes)
+				<AT time>		; fix time for each event (only date changes)
 				<t TIMES>		; limit the number of event occurences
 				DO action		; job to execute
 		  with
@@ -48,6 +48,7 @@ REBOL [
 					   of theses options.
 			<forbidden>: same options as <allowed>.
 			<moment>: date! or time! value.
+			<time>: time! value.
 			<t>: integer! value.
 			action: file!|url!|block!|function!|word! value to be evaluated when
 			        event is fired.
