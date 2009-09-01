@@ -1,6 +1,10 @@
 UniServe ChangeLog:
 ------------------
 
+0.9.35  31/08/2009
+
+	o Integration with scheduler lib event loop .
+	
 
 0.9.34  12/02/2009
 

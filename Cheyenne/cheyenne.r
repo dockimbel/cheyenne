@@ -92,6 +92,7 @@ set-cache [
 			%idate.r
 			%cookies.r
 			%url.r
+			%scheduler.r
 		]
 		%services/ [
 			%logger.r
@@ -161,6 +162,7 @@ cheyenne: make log-class [
 		if flag? 'custom-port [port-id: args/port-id]
 		if flag? 'verbose [verbosity: args/verbosity]
 		
+		do-cache uniserve-path/libs/scheduler.r
 		do-cache uniserve-path/uni-engine.r
 
 		either service?: all [OS-Windows? flag? 'service][

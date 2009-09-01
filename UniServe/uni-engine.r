@@ -3,9 +3,9 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "@ 2002-2009 SOFTINNOV"
 	Email: nr@softinnov.com
-	Date: 12/02/2009
+	Date: 31/08/2009
 	File: %uni-engine.r
-	Version: 0.9.33
+	Version: 0.9.35
 	Purpose: "Multi-protocol asynchrone client/server framework"
 	License: {
 		BSD License, read the complete text in %docs/license.txt
@@ -124,6 +124,7 @@ uniserve: make log-class [
 	check-expired: has [res pl][
 		remove-each port spwl [
 			if res: all [
+				port? port
 				object? pl: port/locals
 				in pl 'expire
 				pl/expire
@@ -403,7 +404,10 @@ uniserve: make log-class [
 			] log-err
 			pl/stop: ctx/stop-at
 		]
-		if :err = 'stop-events [flag-stop: on]
+		if :err = 'stop-events [
+			if value? 'scheduler [scheduler/flag-exit: on]
+			flag-stop: on
+		]
 	]
 	
 	open-dns: func [host local-ctx callback /local dns][

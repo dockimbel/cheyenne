@@ -46,7 +46,18 @@ v0.9.20 - ??/??/2009
 	
 	o RSP: words in sandbox context renamed to lower the risk of collision with
 	  user script words.
-
+	  
+	o New option keyword 'jobs in global section for specifying CRON-like jobs.
+	  Example (see http://softinnov.org/rebol/scheduler.shtml) :
+	  
+	  	jobs [
+	  		every 5 s do [prin "."]
+	  		every day at 8:00 do %backup.r
+	  		every month on #1 at 2:00 do http://softinnov.org/update.rsp
+		]
+		
+	o Fix for a rare freezing issue on quitting Cheyenne.
+		
 	
 
 v0.9.19 - 01/03/2009

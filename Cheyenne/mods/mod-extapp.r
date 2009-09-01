@@ -43,7 +43,9 @@ install-HTTPd-extension [
 						reduce [make app! [pid: ret/2]]
 					]
 					if number? delay: select spec 'delay [
-						wait delay					
+						scheduler/stop
+						wait delay
+						scheduler/start
 					]
 				][
 					log/error reform [

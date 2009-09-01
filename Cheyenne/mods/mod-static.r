@@ -339,6 +339,11 @@ install-HTTPd-extension [
 		]
 		
 		;--- Set a given charset globally, per domain or per webapp
-		charset: [word!] in [globals main] 
+		charset: [word!] in [globals main]
+		
+		;--- Define a set of recurring jobs to do
+		jobs: [block!] in globals do [
+			scheduler/plan/new args/1
+		]
 	]
 ]

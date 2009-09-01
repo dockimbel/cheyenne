@@ -51,6 +51,7 @@ make log-class [
 		]
 		quit [
 			uniserve/services/httpd/on-quit
+			close sys
 			quit
 		]
 	]
@@ -69,6 +70,7 @@ make log-class [
 			write/direct/no-wait udp://127.0.0.1:10000 "W"
 		]
 		quit [
+			close sys
 			quit
 		]
 	]
