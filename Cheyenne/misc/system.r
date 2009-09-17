@@ -51,7 +51,9 @@ make log-class [
 		]
 		quit [
 			uniserve/services/httpd/on-quit
+			cheyenne/on-quit
 			close sys
+			uniserve/flag-stop: on
 			quit
 		]
 	]
@@ -66,12 +68,12 @@ make log-class [
 		reload  [
 			write/direct/no-wait udp://127.0.0.1:10000 "R"
 		]
-		reload  [
+		reset  [
 			write/direct/no-wait udp://127.0.0.1:10000 "W"
 		]
 		quit [
 			close sys
-			quit
+			throw 'quit
 		]
 	]
 	

@@ -75,8 +75,7 @@ uniserve: make log-class [
 			unless find list: port/async-modes 'write [
 				set-modes port head change/only at [async-modes: none] 2 union list [write]
 			]
-			; --- temporary deactivated
-			;on-write port
+			if in self 'write-server [on-write port]
 			if verbose > 4 [log/info ["output =>^/" mold :data]]
 			true
 		]
@@ -109,7 +108,7 @@ uniserve: make log-class [
 		set-peer: func [port][server: peer: port]
 		on-init-port: on-close-server: events: service: server: 
 		on-connected: on-failed: none
-		connect-retries: 10
+		connect-retries: 10	
 	]
 	
 	touch: func [port /local timeout][
@@ -373,14 +372,14 @@ uniserve: make log-class [
 		clear pl/write-queue
 	]
 
-	fire-event: func [port name /init /arg value /arg2 value2 /arg3 value3 /local ctx pl err log-err][
+	fire-event: func [port name /init /arg v /arg2 v2 /arg3 v3 /local ctx pl err log-err][
 		if verbose > 1 [
 			log/info rejoin [
 				"calling >" name "<" any [
 					all [
 						arg 
-						series? value
-						join " with " mold to-string copy/part value 50
+						series? v
+						join " with " mold to-string copy/part v 50
 					] ""
 				]
 			]
@@ -391,7 +390,7 @@ uniserve: make log-class [
 		]
 		either init [
 			if error? set/any 'err try [
-				catch/name [do select reduce port/user-data :name value value2 value3 none] 'uniserve
+				catch/name [do select reduce port/user-data :name port v v2 v3 none] 'uniserve
 			] log-err
 		][
 			pl: port/locals
@@ -400,7 +399,7 @@ uniserve: make log-class [
 			if ctx/events [set ctx/events pl/events]
 			ctx/set-peer port		
 			if error? set/any 'err try [
-				catch/name [ctx/:name value value2 value3 none] 'uniserve
+				catch/name [ctx/:name v v2 v3 none] 'uniserve
 			] log-err
 			pl/stop: ctx/stop-at
 		]
@@ -489,10 +488,10 @@ uniserve: make log-class [
 				if verbose > 2 [
 					log/info "opening connection failed...retrying"
 				]
-				poke port/locals 2 port/locals/2 - 1
+				port/locals/2: port/locals/2 - 1
 				if zero? port/locals/2 [			
 					if verbose > 1 [log/info "Host not responding!"]
-					remove find spwl port					
+					remove find spwl port
 					fire-event/init/arg port 'on-error 'connect-failed
 				]
 			][
@@ -544,7 +543,7 @@ uniserve: make log-class [
 			remove find port/async-modes 'write
 		][
 			on-write port
-		]
+		]	
 		flag-stop
 	]
 	

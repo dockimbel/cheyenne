@@ -3,7 +3,9 @@ UniServe ChangeLog:
 
 0.9.35  31/08/2009
 
-	o Integration with scheduler lib event loop .
+	o Integration with scheduler lib event loop
+	o On-write fired in 'write-peer for client ports
+	o On-error handler now takes the port as first argument (all protocols/services updated)
 	
 
 0.9.34  12/02/2009

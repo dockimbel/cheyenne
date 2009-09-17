@@ -73,9 +73,9 @@ encap-fs: context [
 			append out "^/]"
 			write %.cache.efs out
 		]
-		exists?-cache: :exists?
-		do-cache: func [file][do load file]
-		load-cache: load-cache-binary: :load
-		read-cache: :read
+		set 'exists?-cache :exists?
+		set 'do-cache func [file][do load file]
+		set 'load-cache load-cache-binary: :load
+		set 'read-cache :read
 	]
 ]

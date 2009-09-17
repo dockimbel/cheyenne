@@ -13,10 +13,11 @@ install-service [
 	
 	trace-file: join system/options/path %trace.log
 	error-file: join system/options/path %error.log
-	
-	add-head: func [value][head insert value debase/base to-hex length? value 16]
-	
-	on-new-client: does [stop-at: 4]
+		
+	on-new-client: does [
+		if client/remote-ip <> 127.0.0.1 [close-client]
+		stop-at: 4
+	]
 	
 	process: func [data /local file][
 		file: get pick [error-file trace-file] data/1 = #"E"
@@ -31,7 +32,7 @@ install-service [
 			stop-at: 4
 		][
 			client/user-data: 'head
-			stop-at: 1 + to integer! data 4
+			stop-at: 1 + to integer! data
 		]
 	]
 ]

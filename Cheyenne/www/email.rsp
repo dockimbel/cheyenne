@@ -1,0 +1,70 @@
+<%
+	invalid: validate/full [
+		id		integer! -
+		to		- 		 *
+		subject	-		 *
+		msg		-		 *
+		file	-	 	-
+	]
+	param: request/content
+	
+	if not invalid [	
+		param/id: send-email [
+			from: 	 ["Cheyennne" noreply@cheyenne-server.org]
+			to:   	 param/to
+			subject: param/subject
+			attach:  param/file
+		] param/msg
+	]
+%>
+<html>
+<head><title>Email Form</title></head>
+<body>
+<%either param/id [%>
+	<br>...sending progress: <%=mold res: email-info? param/id%>
+	<input type="button" value=" Refresh " onclick="window.location='email.rsp?id=<%=param/id%>'">
+	<% 
+	if res/1 = 'done [%>
+<br>
+Ok, email(s) sent!
+<br><br>
+Click <a href="email.rsp">here</a> to post a new one.
+  <%]
+ ][%>
+<h1>Email sending demo</h1>
+<form method="POST" enctype="multipart/form-data" action="show.rsp">
+<table cellpadding="0" cellspacing="0">
+	<tr>
+		<td>To</td>
+		<td>
+			<input type="text" size="40" name="to">
+		</td>
+	</tr><tr>
+		<td>Subject</td>
+		<td>
+			<input type="text" size="40" name="subject">
+		</td>
+	</tr><tr>
+		<td>Message</td>
+		<td>
+			<textarea name="msg" cols="50" rows="8"></textarea>
+		</td>
+	</tr><tr>
+		<td>Attached</td>
+		<td>
+			<input type="file" name="file" size="16">
+		</td>
+	</tr><tr>
+		<td>&nbsp;</td>
+		<td>
+			<input type="submit" value="Send">
+		</td>
+	</tr>
+</table>
+</form>
+<%]%>
+</body>
+</html>
+
+
+

@@ -58,6 +58,24 @@ v0.9.20 - ??/??/2009
 		
 	o Fix for a rare freezing issue on quitting Cheyenne.
 		
+	o RSP: fixed broken global words protection.
+	
+	o HTTP: Date headers are now in UTC format.
+	
+	o "Reset Workers" menu wasn't working in service mode. Fixed now. (Thanks Will)
+	
+	o SVN r4: regression bug on system port for UNIX fixed. (Thanks Will)
+	
+	o HTTPd: multipart file uploading code refactored. Fixes many bugs with
+	  file uploading.
+	  
+	o Email async sending sub-system (MTA) added . 
+	
+	o RSP: added two new function for email support: 'send-email and 'email-info?
+	
+	o Cheyenne: main process ID is now exported in /tmp/cheyenne.pid on start and
+	  deleted on quit. (All platforms except Windows).
+	
 	
 
 v0.9.19 - 01/03/2009

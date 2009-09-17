@@ -9,6 +9,7 @@ do-cache uniserve-path/libs/html.r
 do-cache uniserve-path/libs/headers.r
 do-cache uniserve-path/libs/decode-cgi.r
 do-cache uniserve-path/libs/url.r
+do-cache uniserve-path/libs/email.r
 
 install-module [
 	name: 'RSP
@@ -354,9 +355,9 @@ install-module [
 ;		set 'debug? does [active?]
 ;		set 'show-debug does [active?: yes]
 	]
-
+	
 	;--- public API ---
-
+	
 	set 'set-protected func [w [word!] value][
 		unprotect :w
 		set :w :value
@@ -786,15 +787,9 @@ install-module [
 		][*do value]
 	]
 
-	protect [
-		do-sql db-cache request response session include
-		include-file validate locale say do
-	]
-
 	;--- end of public API ---
 	
-	set 'lf #"^/"
-	protect 'lf
+	lf: #"^/"
 	nl: [crlf | cr | lf]
 	crlfx2: join crlf crlf
 	dquote: #"^""
@@ -814,7 +809,7 @@ install-module [
 	;	- doesn't support multipart/mixed encoding yet
 	;	- doesn't parse all optional headers
 	
-	decode-multipart: func [data /local bound list name filename value pos][
+	decode-multipart: func [data /local bound list name filename value pos][	
 		list: make block! 2
 		attempt [
 			parse/all request/headers/Content-type [
@@ -827,7 +822,7 @@ install-module [
 					bound nl some [
 						thru {name="} copy name to dquote skip
 						[#";" thru {="} copy filename to dquote | none]
-						thru crlfx2 copy value to bound (
+						thru crlfx2 copy value [to bound | to end] (
 							insert tail list name
 							trim/tail value ; -- delete ending crlf
 							if all [
@@ -1069,5 +1064,9 @@ install-module [
 		]
 	]
 	if libs [safe-exec-files libs]
-	
+]
+
+protect [
+	do-sql db-cache request response session include
+	include-file validate locale say do
 ]

@@ -40,7 +40,7 @@ install-HTTPd-extension [
 			not find roh 'Expires
 			seconds: select/only expires req/out/mime
 			time: now
-			h-store req/out/headers 'Expires to-GMT-idate (time + to time! seconds)
+			h-store req/out/headers 'Expires to-GMT-idate/UTC (time + to time! seconds)
 			;http://blog.pluron.com/2008/07/why-you-should.html
 			h-store req/out/headers 'Cache-Control rejoin ["public, max-age=" seconds]
 			not find roh 'Last-Modified

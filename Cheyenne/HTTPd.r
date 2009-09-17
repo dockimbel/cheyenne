@@ -341,58 +341,67 @@ install-service [
 		tmp/port: open/mode name [binary direct no-wait write new]
 	]
 	
-	process-bounded-content: func [req data /local bound s e wrt? tmp][
+	bufferize: func [tmp data /local pos][
+		either 512 >= length? data [
+			tmp/buffer: copy data
+			pos: data
+		][
+			tmp/buffer: copy pos: skip tail data -512				
+		]
+		pos
+	]
+	
+	stream-to-disk: func [req data /local tmp pos][
 		tmp: req/tmp
-		bound: tmp/bound
-		if tmp/buffer [
-			insert data tmp/buffer
-			wrt?: yes
+		either pos: find data tmp/bound [			;-- search file end marker		
+			insert/part tmp/port data skip pos -2 	;-- skip CRLF
+			close tmp/port
+			tmp/port: none		
+			stream-to-memory req pos				;-- found, switch to memory
+		][											
+			insert/part tmp/port data bufferize tmp data
 		]
-		parse/all data [
-			some [
-				s: to bound e: (
-					if e <> s [
-						either wrt? [
-							insert/part tmp/port s skip e -2
-						][
-							insert/part tail req/in/content s e
-						]
-					]
-				)
-				s: bound [
-					"--" to end s: break 
-					| thru crlfcrlf e: (
-						insert/part tail req/in/content s e
-						if wrt?: to logic! find/part s "Content-Type" e [
-							open-tmp-file tmp req/in/content
-						]	
-					)
-				]
+	]
+	
+	stream-to-memory: func [req data /local tmp pos][
+		tmp: req/tmp
+		parse/all data [							;-- search file 
+			any [
+				thru tmp/bound 
+				opt ["--" (append req/in/content data exit)]
+				thru {name="} thru {"}
+				opt [ {; filename="} thru crlfcrlf pos: break]
 			]
 		]
-		tmp/buffer: either tail? s [none][
-			either all [head? s wrt?][	
-				insert tmp/port data
-				tmp/buffer: ""
-			][
-				copy s
-			]
+		either pos [								;-- found, switch to disk
+			insert/part tail req/in/content data pos 
+			open-tmp-file tmp req/in/content
+			stream-to-disk req pos
+		][
+			insert/part tail req/in/content data bufferize tmp data
 		]
 	]
 	
 	process-content: func [req data /local tmp][
-		either req/tmp/bound [
-			process-bounded-content req data
+		tmp: req/tmp
+		either tmp/bound [							;-- multipart/form-data
+			if tmp/buffer [
+				insert data tmp/buffer
+				tmp/buffer: none
+			]			
+			either tmp/port [
+				stream-to-disk req as-string data
+			][
+				stream-to-memory req as-string data
+			]
 		][
-			tmp: req/tmp
-			unless tmp/port [
+			unless tmp/port [						;-- raw mode
 				append req/in/content "file="
 				open-tmp-file tmp req/in/content
 			]
 			insert tmp/port data
 		]
 	]
-
 	
 	chunk-encode: func [data /local size len str][
 		either empty? data [str: "0" len: 1][
@@ -401,7 +410,7 @@ install-service [
 			if size > to integer! size [size: size - 1]
 			len: subtract length? str size
 		]
-		insert data join copy at str len crlf
+		insert data join copy at str len crlf	; TBD: use insert/part
 		head insert tail data crlf
 	]
 	
@@ -443,7 +452,7 @@ install-service [
 		unless req/out/code [do-phase req 'access-check]
 		unless req/out/code [do-phase req 'set-mime-type]
 		unless req/out/code [do-phase req 'make-response]	
-		either req/out/forward [	;-- early check for earlier forward
+		either req/out/forward [				;-- early check for earlier forward
 			do-request req	
 		][
 			process-queue
@@ -461,7 +470,7 @@ install-service [
 		new/in: ni: req/in
 		new/loops: req/loops + 1
 		h-store new/in/headers 'Internal-Referer url-encode req/in/url
-		ni/file: none						; fix 30/11/2008 (Will)
+		ni/file: none							; fix 30/11/2008 (Will)
 		if url? line: req/out/forward [
 			url: parse-url line
 			if url/port-id [repend url/host [":" url/port-id]]
@@ -669,11 +678,12 @@ install-service [
 				do-phase req 'filter-input
 			]
 			stream-in [
-				process-content req data
+				process-content req data				
 				len: req/tmp/remains: req/tmp/remains - stop-at
-				if stop-at > len [stop-at: len]
-				either zero? stop-at [
-					attempt [close req/tmp/port]
+				if stop-at > len [stop-at: len]				
+				either zero? stop-at [				
+					if req/tmp/port [attempt [close req/tmp/port]]
+					req/tmp/port: none
 					do-phase req 'filter-input
 				][exit]
 			]

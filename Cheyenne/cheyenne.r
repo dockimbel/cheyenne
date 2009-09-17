@@ -93,16 +93,22 @@ set-cache [
 			%cookies.r
 			%url.r
 			%scheduler.r
+			%email.r
 		]
 		%services/ [
 			%logger.r
+			%MTA.r
 			%RConsole.r
 			%task-master.r
 			%task-master/ [
 				%task-handler.r
 			]
 		]
-		%protocols/FastCGI.r
+		%protocols/ [
+			%FastCGI.r
+			%SMTP.r
+			%dig.r
+		]
 	]
 ]
 
@@ -141,6 +147,7 @@ cheyenne: make log-class [
 	
 	value: none
 	data-dir: system/options/path
+	pid-file: %/tmp/cheyenne.pid
 	
 	sub-args: ""
 	args: []
@@ -175,7 +182,10 @@ cheyenne: make log-class [
 		do-cache uniserve-path/services/task-master.r		
 		do-cache uniserve-path/services/RConsole.r	
 		do-cache uniserve-path/services/logger.r
+		do-cache uniserve-path/services/MTA.r
 		do-cache uniserve-path/protocols/FastCGI.r
+		do-cache uniserve-path/protocols/SMTP.r
+		do-cache uniserve-path/protocols/dig.r
 		do-cache %HTTPd.r
 
 		within uniserve [
@@ -184,7 +194,7 @@ cheyenne: make log-class [
 				services/task-master/port-id: ((port-id/1 + 2000) // 64512) + 1024
 ; TDB: should do the same for Logger and RConsole service !!
 			]
-			verbose: 						any [all [verbosity verbosity - 1] 0]
+			verbose: 						any [all [verbosity verbosity] 0]
 			services/httpd/verbose: 		any [verbosity 0]
 			services/task-master/verbose: 	any [all [2 < any [verbosity 0] verbosity - 1] 0]
 			shared/pool-start: 				any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
@@ -194,6 +204,7 @@ cheyenne: make log-class [
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
 			control/start/only 'RConsole none
 			control/start/only 'Logger none
+			control/start/only 'MTA none
 			if service? [control/start/only 'admin none]
 
 			all [
@@ -208,8 +219,8 @@ cheyenne: make log-class [
 						"Cheyenne is listening on port: " mold any [port-id 80]
 					]
 				]
-				open-system-events
 			]
+			open-system-events
 			
 			foreach p any [port-id [80]][control/start/only 'HTTPd p]
 			
@@ -223,6 +234,7 @@ cheyenne: make log-class [
 			uniserve/flag-stop
 		]
 		if verbose > 0 [log/info "exit from event loop"]
+		halt
 	]
 	
 	do-bg-process-app: does [
@@ -316,7 +328,12 @@ cheyenne: make log-class [
 		
 		parse-cmd-line
 		
-		unless flag? 'bg-process [do-cache %misc/os.r] ; -- can't use any OS calls before that
+		unless flag? 'bg-process [
+			do-cache %misc/os.r			 				; -- can't use any OS calls before that
+			if not OS-Windows? [
+				attempt [write pid-file process-id?]
+			]
+		]
 			
 		logger/level: either flag? 'verbose [
 			logger/level: either flag? 'no-screen [
@@ -362,6 +379,10 @@ cheyenne: make log-class [
 				halt
 			]
 		]
+	]
+	
+	on-quit: does [
+		if not OS-Windows? [attempt [delete pid-file]]
 	]
 ]
 

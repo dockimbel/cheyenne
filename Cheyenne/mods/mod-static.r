@@ -168,7 +168,7 @@ install-HTTPd-extension [
 		h-store
 			req/out/headers 
 			'Last-Modified 
-			to-GMT-idate req/file-info/date: mdate
+			to-GMT-idate/UTC req/file-info/date: mdate
 		false
 	]
 
@@ -233,7 +233,7 @@ install-HTTPd-extension [
 		][
 			h-store roh 'Content-Type join "text/html; charset=" cs
 		]
-		h-store roh 'Date to-GMT-idate now
+		h-store roh 'Date to-GMT-idate/UTC now
 		false
 	]
 
