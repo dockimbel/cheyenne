@@ -1,4 +1,34 @@
 <%
+;================= Email API quick syntax ==================
+;		id: send-email [
+;		(*) from: 		 email! | ["name" email!]
+;		(*)	to: 		 email! | ["name" email!] | [email! | ["name" email!]...]
+;			cc: 		 email! | ["name" email!] | [email! | ["name" email!]...]
+;			bcc:		 email! | ["name" email!] | [email! | ["name" email!]...]
+;		(*)	subject:
+;			...any other header
+;
+; -- pseudo headers
+;			attach: 		%file | [%files] | [... [filename data]]
+;			charset: 		"ISO-8859-1"
+;			report: [
+;				to:		 email! | ["name" email!]	; if target different from emitter
+;				from: 	 email! | ["name" email!]	; customize emitter
+;				subject: string!					; if not defined a default one will be provided
+;				body:	 string! | word!			; custom message with tags ($TARGET$,$ERROR$)
+;			]
+;		] body 	
+;
+;	(*): mandatory headers
+;
+;		email-info? id
+;		== [
+;			pending |
+;			done |
+;			error [email! "error message"...] 
+;		]
+;============================================================
+
 	invalid: validate/full [
 		id		integer! -
 		to		- 		 *
