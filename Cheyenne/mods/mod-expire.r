@@ -44,7 +44,7 @@ install-HTTPd-extension [
 			;http://blog.pluron.com/2008/07/why-you-should.html
 			h-store req/out/headers 'Cache-Control rejoin ["public, max-age=" seconds]
 			not find roh 'Last-Modified
-			h-store req/out/headers 'Last-Modified to-GMT-idate time
+			h-store req/out/headers 'Last-Modified to-GMT-idate/UTC time
 		]
 		false
 	]
