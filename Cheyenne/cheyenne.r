@@ -194,7 +194,7 @@ cheyenne: make log-class [
 				services/task-master/port-id: ((port-id/1 + 2000) // 64512) + 1024
 ; TDB: should do the same for Logger and RConsole service !!
 			]
-			set-verbose verbosity
+			set-verbose any [verbosity 0]
 			
 			shared/pool-start: 				any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
 			shared/pool-max: 				any [all [flag? 'debug 0] all [flag? 'workers args/workers] 8]
