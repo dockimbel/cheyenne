@@ -1,7 +1,7 @@
 REBOL [
 	Title: "Email sending library"
 	Author: "SOFTINNOV / Nenad Rakocevic"
-	Version: 1.0.0
+	Version: 1.1.0
 ]
 
 email: context [
@@ -14,14 +14,68 @@ email: context [
 		X-Rebol: none
 		attach: charset: report: none
 	]
-	nue: second get in net-utils 'export	;-- patch net-utils/export
-	nue/16/5/5/5: 'crlf
-
-	bab: second :build-attach-body			;-- patch build-attach-body
-	bab/8/6/7: 'crlf
-	s: none
-	parse bab rule: [some [[set s string! (replace/all s "^/" crlf)] | into rule | skip]]
-	ctype: bab/13/4/2	
+	
+	export: func [obj [object!] /local out][
+		out: make string! 512
+		foreach [n v] third obj [if v [repend out [n ": " v crlf]]]
+		out
+	]
+	
+	make-mime-header: func [file][
+		export context [
+			Content-Type: join {application/octet-stream; name="} [file {"}]
+			Content-Transfer-Encoding: "base64"
+			Content-Disposition: join {attachment; filename="} [file {"^M^/}]
+		]
+	]
+	
+	break-lines: func [msg data /local num][
+		num: 72
+		while [not tail? data] [
+			insert/part tail msg data num
+			insert tail msg crlf
+			;append msg join copy/part data num crlf
+			data: skip data num
+		]
+		msg
+	]
+	
+	build-attach-body: func [
+		body [string!]
+		files [block!] {List of files to send [%file1.r [%file2.r "data"]]}
+		boundary [string!]
+		ctype
+		/local file	val
+	][
+		if not empty? files [
+			insert body reduce [boundary ctype]
+			append body "^M^/^M^/"
+			if not parse files [
+				some [
+					(file: none)
+					[
+						set file file! (val: read/binary file)
+						| into [
+							set file file!
+							set val skip ;anything allowed
+							to end
+						]
+					] (
+						if file [
+							repend body [
+								boundary "^M^/"
+								make-mime-header any [find/last/tail file #"/" file]
+							]
+							val: either any-string? val [val] [mold :val]
+							break-lines body enbase val
+						]
+					)
+				]
+			] [net-error "Cannot parse file list."]
+			append body join boundary "--^M^/"
+		]
+		body
+	]
 
 	not-ascii7: charset [#"^(00)" - #"^(1F)" #"^(80)" - #"^(ff)"]
 	not-ascii7-strict: union not-ascii7 charset " "
@@ -110,20 +164,19 @@ email: context [
 		either h/attach [
 			bound: rejoin ["--__REBOL--CHEYENNE--RSP--" checksum form now/precise "__"]
 			h/MIME-Version: "1.0"
-			h/Content-Type: join "multipart/mixed; boundary=" [{"} skip bound 2 {"}]
-			append clear ctype rejoin [
+			h/Content-Type: join "multipart/mixed; boundary=" [{"} skip bound 2 {"}] 
+			h/Content-Transfer-Encoding: none
+			msg: build-attach-body msg blockify h/attach bound rejoin [
 				{^M^/Content-Type: text/plain; charset="} charset-str {"^M^/}
 				{Content-Transfer-Encoding: 8bit^M^/}
 			]
-			h/Content-Transfer-Encoding: none
-			msg: build-attach-body msg blockify h/attach bound
 			insert msg crlf
 			h/attach: none
 		][
 			h/Content-Type: rejoin [ {text/plain; charset="} charset-str {"}]
 		]
 
-		msg: head insert tail h: net-utils/export h msg
+		msg: head insert tail h: export h msg
 		replace/all msg "^/." "^/.."
 		name: make-filename			
 		write/binary root/:name msg

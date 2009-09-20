@@ -1,6 +1,12 @@
 UniServe ChangeLog:
 ------------------
 
+0.9.36  20/09/2009
+	
+	o Set-verbose function added. Allows setting verbose level for all services
+	  and protocols at the same time.
+	
+
 0.9.35  31/08/2009
 
 	o Integration with scheduler lib event loop

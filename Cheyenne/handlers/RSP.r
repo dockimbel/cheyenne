@@ -823,7 +823,7 @@ install-module [
 						thru {name="} copy name to dquote skip
 						[#";" thru {="} copy filename to dquote | none]
 						thru crlfx2 copy value [to bound | to end] (
-							insert tail list name
+							insert tail list to word! name
 							trim/tail value ; -- delete ending crlf
 							if all [
 								#"%" = pick value 1

@@ -75,6 +75,9 @@ v0.9.20 - ??/??/2009
 	
 	o Cheyenne: main process ID is now exported in /tmp/cheyenne.pid on start and
 	  deleted on quit. (All platforms except Windows).
+	  
+	o Cheyenne: logs verbosity handling refactored. Now verbosity is more consistent
+	  across all modules.
 	
 	
 

@@ -712,6 +712,12 @@ uniserve: make log-class [
 		true
 	]
 	
+	set-verbose: func [level [integer!]][
+		foreach [n ctx] union services protocols [
+			if in ctx 'verbose [ctx/verbose: level]
+		]
+	]
+	
 	boot: func [
 		/no-wait	
 		/no-loop	; DEPRECATED: use /no-wait instead

@@ -143,7 +143,7 @@ set 'info? func [
 
 cheyenne: make log-class [
 	name: 'boot
-	verbose: 1
+	verbose: 0
 	
 	value: none
 	data-dir: system/options/path
@@ -165,9 +165,9 @@ cheyenne: make log-class [
 		do bind body in obj 'self
 	]
 	
-	do-cheyenne-app: has [port-id verbosity service? home][	
+	do-cheyenne-app: has [port-id vlevel service? home verbosity][	
 		if flag? 'custom-port [port-id: args/port-id]
-		if flag? 'verbose [verbosity: args/verbosity]
+		if flag? 'verbose [verbosity: verbose: args/verbosity]
 		
 		do-cache uniserve-path/libs/scheduler.r
 		do-cache uniserve-path/uni-engine.r
@@ -194,9 +194,8 @@ cheyenne: make log-class [
 				services/task-master/port-id: ((port-id/1 + 2000) // 64512) + 1024
 ; TDB: should do the same for Logger and RConsole service !!
 			]
-			verbose: 						any [all [verbosity verbosity] 0]
-			services/httpd/verbose: 		any [verbosity 0]
-			services/task-master/verbose: 	any [all [2 < any [verbosity 0] verbosity - 1] 0]
+			set-verbose verbosity
+			
 			shared/pool-start: 				any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
 			shared/pool-max: 				any [all [flag? 'debug 0] all [flag? 'workers args/workers] 8]
 			shared/job-max: 				1000	;-- CGI/RSP requests queue size
@@ -300,12 +299,11 @@ cheyenne: make log-class [
 						set-flag 'workers
 						if zero? value [set-flag 'debug]
 						repend args ['workers abs value]
+					)			
+					| #"-" copy value some #"v" (
+						set-flag 'verbose repend args ['verbosity length? value]
+						propagate join " -" value
 					)
-; cleanup this mess !					
-					| "-vvvvv"	(set-flag 'verbose repend args ['verbosity 5] propagate " -vvvvv")
-					| "-vvv"	(set-flag 'verbose repend args ['verbosity 4] propagate " -vvv")
-					| "-vv"		(set-flag 'verbose repend args ['verbosity 2] propagate " -vv")
-					| "-v"		(set-flag 'verbose repend args ['verbosity 1] propagate " -v")
 					| skip
 				]
 			]
