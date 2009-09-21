@@ -178,14 +178,13 @@ cheyenne: make log-class [
 		][
 			do-cache %misc/system.r		; -- install tray icon for Windows
 		]
+		
 
 		do-cache uniserve-path/services/task-master.r		
 		do-cache uniserve-path/services/RConsole.r	
 		do-cache uniserve-path/services/logger.r
 		do-cache uniserve-path/services/MTA.r
 		do-cache uniserve-path/protocols/FastCGI.r
-		do-cache uniserve-path/protocols/SMTP.r
-		do-cache uniserve-path/protocols/dig.r
 		do-cache %HTTPd.r
 
 		within uniserve [
@@ -206,12 +205,18 @@ cheyenne: make log-class [
 			control/start/only 'MTA none
 			if service? [control/start/only 'admin none]
 
+			share [dns-server: select services/httpd/conf/globals 'dns-server]
+
+			do-cache uniserve-path/protocols/SMTP.r
+			do-cache uniserve-path/protocols/dig.r
+			
+			set-verbose any [verbosity 0]		;-- for SMTP and dig protocols
+			
 			all [
 				not port-id
 				port-id: select services/httpd/conf/globals 'listen
 				port-id: to-block port-id
 			]
-			
 			if OS-Windows? [
 				if not service? [
 					set-tray-help-msg rejoin [
@@ -300,7 +305,7 @@ cheyenne: make log-class [
 						if zero? value [set-flag 'debug]
 						repend args ['workers abs value]
 					)			
-					| #"-" copy value some #"v" (
+					| #"-" copy value 1 5 #"v" (
 						set-flag 'verbose repend args ['verbosity length? value]
 						propagate join " -" value
 					)

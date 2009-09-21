@@ -345,5 +345,8 @@ install-HTTPd-extension [
 		jobs: [block!] in globals do [
 			scheduler/plan/new args/1
 		]
+		
+		;--- Force user defined DNS server(s)
+		dns-server: [tuple! | block!] in globals
 	]
 ]

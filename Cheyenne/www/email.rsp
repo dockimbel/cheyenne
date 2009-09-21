@@ -66,7 +66,7 @@
 <head><title>Email Form</title></head>
 <body>
 <%either param/id [%>
-	<br>...sending progress: <%=mold res: email-info? param/id%>
+	<br>...sending progress: <%=mold res: email-info? param/id%><br>
 	<input type="button" value=" Refresh " onclick="window.location='email.rsp?id=<%=param/id%>'">
 	<% 
 	if res/1 = 'done [%>

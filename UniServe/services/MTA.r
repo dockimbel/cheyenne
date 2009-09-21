@@ -16,10 +16,10 @@ install-service [
 	max-reports: 100					;-- maximum number of reports
 	random/seed now/time/precise
 
-	email-class: context [
+	job-class: context [
 		id: start: none
 		state: [pending]
-		retry: 3
+		retry: [mx [4 [5 sec]] smtp [4 [15 mn]]]
 		from: to: body: report: none
 	]
 	
@@ -91,6 +91,8 @@ Cause:   $ERROR$
 		name: make-filename			
 		write/binary root/:name body
 		
+		if verbose > 0 [log/info ["Sending error report to " dst]]
+		
 		process reduce [
 			any [all [from either block? from [from/2][from]] admin@noreply.com]
 			reduce [dst]
@@ -101,6 +103,8 @@ Cause:   $ERROR$
 	]
 
 	send-email: func [job [object!] mx [tuple!] dst [email!]][
+		if verbose > 0 [log/info ["job: " job/id " MX: " mx]]
+		
 		open-port/with join smtp:// [mx slash dst][
 			on-sent: func [p /local job][
 				if verbose > 0 [log/info ["email sent to " p/target]]
@@ -112,16 +116,63 @@ Cause:   $ERROR$
 				try-clean-file job
 			]
 			on-error: func [p reason][
-				if verbose > 1 [log/warn ["SMTP Error: " mold reason]]
-				if word? reason [reason: "mail server unreachable"]
-				report-error p/job p/target reason
+				if verbose > 1 [log/warn ["SMTP Error: " form reason]]				
+				either any [
+					zero? p/job/retry/smtp/1: p/job/retry/smtp/1 - 1
+					all [string? reason not find/part reason "45" 2]	;-- possible greylisting
+				][
+					if verbose > 1 [log/info ["job " p/job/id " failed, sending report"]]
+					if word? reason [reason: "mail server unreachable"]
+					report-error p/job p/target reason
+				][
+					either word? reason [
+						if verbose > 2 [log/info "trying with another MX"]
+						p/job/retry/smtp/1: 4						;-- reset SMTP failure counter
+						get-mx to-email p/target p/job				;-- try with another MX at once
+					][
+						if verbose > 2 [log/info ["retrying with same MX in " mold/only p/job/retry/smtp/2]]
+						scheduler/plan compose/only/deep only [
+							in (p/job/retry/smtp/2) do [send-email (p/job) (p/host) (p/target)]
+						]
+					]
+				]
+				
 			]
 		] compose [job: (job)]
+	]
+	
+	get-mx: func [dst [email!] job][
+		open-port/with join dig:// dst/host [
+			on-mx: func [p ip][
+				send-email p/job ip p/dst							;-- got MX, now send email
+			]
+			on-error: func [p reason][			
+				if verbose > 1 [log/warn ["MX error: " form reason]]
+				either any [
+					string? reason
+					zero? job/retry/mx/1: job/retry/mx/1 - 1 		;-- count failures
+				][
+					if verbose > 1 [
+						either positive? p/job/id [
+							log/info reform ["job" p/job/id "failed, sending report"]
+						][
+							log/warn reform ["sending report to" p/dst "failed...giving up"]
+						]
+					]
+					report-error p/job p/dst reason					;-- max retries reached or unknown domain
+				][													
+					if verbose > 2 [log/info "Retrying MX query on DNS server(s)"]
+					scheduler/plan compose/only/deep [
+						in (job/retry/mx/2) do [get-mx (p/dst) (p/job)]		;-- try again later
+					]
+				]
+			]
+		] compose [job: (job) dst: (dst)]
 	]
 
 	process: func [spec [block!] /local job][
 		gc-jobs
-		job: make email-class [
+		job: make job-class [
 			from:	spec/1
 			to:		spec/2
 			body:	spec/3
@@ -130,18 +181,7 @@ Cause:   $ERROR$
 			start:	now
 		]
 		if positive? job/id [append queue job]
-		foreach dst job/to [
-			open-port/with join dig:// dst/host [
-				on-mx: func [p ip][		
-					send-email p/job ip p/dst
-				]
-				on-error: func [p reason][			
-					if verbose > 1 [log/error ["mx error" mold reason]]
-					p/job/dst: p/dst
-					report-error p/job p/dst reason
-				]
-			] compose [job: (job) dst: (dst)]
-		]
+		foreach dst job/to [get-mx dst job]		;-- init sending process
 	]
 
 	get-info?: func [id [integer!] /local job][
@@ -158,7 +198,7 @@ Cause:   $ERROR$
 
 	on-received: func [data][
 		 either client/user-data = 'head [
-			if verbose > 0 [log/info join "new request: " as-string data]
+			if verbose > 0 [log/info ["new request: " as-string data]]
 			either data/1 = #"I" [
 				write-client get-info? to integer! as-string next data
 				close-client

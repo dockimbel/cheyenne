@@ -9,11 +9,14 @@ install-protocol [
 	name: 'dig
     port-id: 53
     scheme: 'udp
+    verbose: 0
     
+    strategy: 'round-robin		;-- alt: 'random
     dns-server:	none
 	domain-size: none
 	zem?: no
 	dot: #"."
+	value: none
 
 	defs: [
 		1	A
@@ -68,8 +71,14 @@ install-protocol [
 		none
 	]
 	
-	dns-server: either system/version/4 = 3 [win-get-dns][unix-get-dns]
-	if none? dns-server	[log/error "DNS server not found"]
+	either dns-server: any [
+		all [value: in uniserve/shared 'dns-server get value]
+		either system/version/4 = 3 [win-get-dns][unix-get-dns]
+	][
+		share append/only [dns-server:] dns-server
+	][
+		log/error "DNS server not found"
+	]
 
 	encode: func [name [string!] /local out][
 		out: make binary! length? name
@@ -156,24 +165,38 @@ install-protocol [
 	
 	on-connected: does [
 		new-insert-port server server/target
+		if verbose > 1 [log/info ["connected to DNS server: " server/remote-ip]]
 	]
 
 	on-init-port: func [port url /local domain][
 		port/target: port/host
 		port/host: either tuple? dns-server [dns-server][
-			pick dns-server random length? dns-server
+			pick dns-server switch startegy [
+				round-robin [first head reverse dns-server]
+				random		[pick dns-server random length? dns-server]
+			]
 		]
 	]
 
 	on-raw-received: func [data /local ip][
-		on-response data: decode as-string data
+		on-response data: decode as-string data	
 		either integer? data [
+			if verbose > 2 [log/info ["error code " mold data]]
 			on-error server "unknown domain"
 		][
-			sort/skip/compare data/1 5 4
-			ip: all [ip: find data/3 data/1/5 pick ip 4]
-			ip: either tuple? ip [ip][read join dns:// data/1/5]
-			on-mx server ip
+			either empty? data/1 [
+				on-error server "no MX record"
+			][
+				sort/skip/compare data/1 5 4
+				ip: all [ip: find data/3 data/1/5 pick ip 4]
+				ip: either tuple? ip [ip][read join dns:// data/1/5]
+				if verbose > 0 [log/info reform ["MX for" server/target ":" ip]]
+				either ip [
+					on-mx server ip
+				][
+					on-error server "cannnot find MX record"
+				]
+			]
 		]
 		close-server
 	]

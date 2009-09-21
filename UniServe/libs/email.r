@@ -176,7 +176,8 @@ email: context [
 			h/Content-Type: rejoin [ {text/plain; charset="} charset-str {"}]
 		]
 
-		msg: head insert tail h: export h msg
+		h: export h
+		msg: append append h crlf msg
 		replace/all msg "^/." "^/.."
 		name: make-filename			
 		write/binary root/:name msg

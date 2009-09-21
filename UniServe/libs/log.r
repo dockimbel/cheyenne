@@ -2,7 +2,7 @@ REBOL [
     Title: "Log Object Definition"
     Purpose: "Provides an easy way to log messages to screen/file"
     File:  %log.r
-    Version: 1.1.0
+    Version: 1.2.0
 ]
 
 logger: context [
@@ -14,7 +14,7 @@ logger: context [
 	zero: #"0"
 	dot: #"."
 	
-	notify: func [msg module [word!] type [word!] /local out time off][
+	notify: func [msg module [word!] type [word!] /local out time size][
 		if none? level [exit]
 		out: msg
 		if block? out [out: rejoin out]
@@ -27,9 +27,9 @@ logger: context [
 			info  [[mold reduce [module] out]]
 		]
 		time: mold now/time/precise
-		off: pick [-3 -6] system/version/4 = 3
-		if col = time/2 [insert time zero]
-		if dot = pick tail time off [insert tail time zero]
+		size: pick [12 15] system/version/4 = 3
+		if 8 = length? time [append time dot]
+		insert/dup tail time zero size - length? time
 		
 		out: rejoin [now/day "/" now/month "-" time  "-" out]
 		switch level [	

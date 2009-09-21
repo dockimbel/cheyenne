@@ -8,7 +8,7 @@ REBOL [
 install-protocol [
 	name: 'SMTP
 	port-id: 25
-	verbose: 2
+	verbose: 0
 	connect-retries: 4
 		
 	stop-at: crlf
@@ -24,10 +24,11 @@ install-protocol [
 		stop-at: crlf
 	]
 	
-	on-received: func [data /local su action job][
+	on-received: func [data /local su action job s][
+		if verbose > 2 [log/info [">> " as-string data]]
 		su: server/user-data
 		job: server/job
-		if verbose > 1 [log/info rejoin ["state = " su/state]]
+		if verbose > 1 [log/info ["state = " su/state]]
 		
 		either action: select [
 			helo ["220" [["HELO " system/network/host crlf]] mail]
@@ -44,8 +45,11 @@ install-protocol [
 			either any [action/1 = '- find/part data action/1 3][
 				foreach s action/2 [
 					s: any [all [block? s rejoin s] :s]
-					if verbose > 0 [log/info rejoin ["request >> " s]]
-					either word? s [do s][write-server s]
+					if all [0 < verbose verbose < 3][log/info rejoin ["request >> " s]]
+					either word? s [do s][
+						if verbose > 2 [log/info ["<< " as-string s]]
+						write-server s
+					]
 				]
 				su/state: action/3
 			][

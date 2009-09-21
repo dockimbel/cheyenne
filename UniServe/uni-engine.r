@@ -52,7 +52,7 @@ uniserve: make log-class [
 	services-path:  %services
 	protocols-path: %protocols 
 
-	max-ports: 1000
+	;max-ports: 1000		; could be used for setting a overloaded threshold?
 	ip-buffer: make binary! ip-buf-size: 64 * 1024
 	dns-cache: make hash! 100 ; ["domain" 1.2.3.4 hits ...]
 	
@@ -86,7 +86,7 @@ uniserve: make log-class [
 				uniserve/close-connection port
 			]
 		]
-		share: func [spec [block!]][uniserve/shared: make uniserve/shared spec]
+		share: func [spec [block!]][uniserve/share spec]
 	]
 
 	service-class: make plugin-class [
@@ -717,6 +717,8 @@ uniserve: make log-class [
 			if in ctx 'verbose [ctx/verbose: level]
 		]
 	]
+	
+	share: func [spec [block!]][shared: make shared spec]
 	
 	boot: func [
 		/no-wait	

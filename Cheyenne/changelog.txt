@@ -79,6 +79,11 @@ v0.9.20 - ??/??/2009
 	o Cheyenne: logs verbosity handling refactored. Now verbosity is more consistent
 	  across all modules.
 	
+	o New config keyword in global section: dns-server. Allow user-defined DNS server(s)
+	  for MX querying. Examples: 
+	  
+			dns-server 1.2.3.4
+			dns-server [1.2.3.4 1.2.3.5]
 	
 
 v0.9.19 - 01/03/2009
