@@ -119,7 +119,7 @@ Cause:   $ERROR$
 				if verbose > 1 [log/warn ["SMTP Error: " form reason]]				
 				either any [
 					zero? p/job/retry/smtp/1: p/job/retry/smtp/1 - 1
-					all [string? reason not find/part reason "45" 2]	;-- possible greylisting
+					all [string? reason #"4" <> reason/1]			;-- temp failure, possible greylisting
 				][
 					if verbose > 1 [log/info ["job " p/job/id " failed, sending report"]]
 					if word? reason [reason: "mail server unreachable"]

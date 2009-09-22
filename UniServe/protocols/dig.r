@@ -171,7 +171,7 @@ install-protocol [
 	on-init-port: func [port url /local domain][
 		port/target: port/host
 		port/host: either tuple? dns-server [dns-server][
-			pick dns-server switch startegy [
+			switch strategy [
 				round-robin [first head reverse dns-server]
 				random		[pick dns-server random length? dns-server]
 			]
