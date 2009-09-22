@@ -133,7 +133,7 @@ Cause:   $ERROR$
 					][
 						if verbose > 2 [log/info ["retrying with same MX in " mold/only retry/smtp/2]]
 						scheduler/plan compose/deep [
-							in (retry/smtp/2) do [send-email (p/job) (p/host) (p/target)] ;-- try again later
+							in (retry/smtp/2) do [send-email (p/job) (p/host) (to-email p/target)] ;-- try again later
 						]
 					]
 				]
