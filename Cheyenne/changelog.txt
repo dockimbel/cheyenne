@@ -84,6 +84,9 @@ v0.9.20 - ??/??/2009
 	  
 			dns-server 1.2.3.4
 			dns-server [1.2.3.4 1.2.3.5]
+
+	o Cheyenne: encap paths are now removed from %cheyenne.r and put in a separate
+	  file, avoiding users patching %cheyenne.r on each update.
 	
 
 v0.9.19 - 01/03/2009
