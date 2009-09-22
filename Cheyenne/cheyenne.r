@@ -128,7 +128,7 @@ cheyenne: make log-class [
 	name: 'boot
 	verbose: 0
 	
-	value: none
+	value: evt: none
 	data-dir: system/options/path
 	pid-file: %/tmp/cheyenne.pid
 	
@@ -152,7 +152,7 @@ cheyenne: make log-class [
 		if flag? 'custom-port [port-id: args/port-id]
 		if flag? 'verbose [verbosity: verbose: args/verbosity]
 		
-		do-cache uniserve-path/libs/scheduler.r
+		do-cache uniserve-path/libs/scheduler.r		
 		do-cache uniserve-path/uni-engine.r
 
 		either service?: all [OS-Windows? flag? 'service][
@@ -178,9 +178,9 @@ cheyenne: make log-class [
 			]
 			set-verbose any [verbosity 0]
 			
-			shared/pool-start: 				any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
-			shared/pool-max: 				any [all [flag? 'debug 0] all [flag? 'workers args/workers] 8]
-			shared/job-max: 				1000	;-- CGI/RSP requests queue size
+			shared/pool-start: 	any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
+			shared/pool-max: 	any [all [flag? 'debug 0] all [flag? 'workers args/workers] 8]
+			shared/job-max: 	1000	;-- CGI/RSP requests queue size
 
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
 			control/start/only 'RConsole none
@@ -216,8 +216,12 @@ cheyenne: make log-class [
 		if flag? 'embed [exit]
 		
 		until [
-			do-events
-			unless uniserve/flag-stop [log/warn "premature exit from event loop"]
+			evt: wait []							;-- main event loop
+			either none? evt [
+				scheduler/on-timer					;-- scheduler job event
+			][
+				unless uniserve/flag-stop [log/warn "premature exit from event loop"]
+			]
 			uniserve/flag-stop
 		]
 		if verbose > 0 [log/info "exit from event loop"]

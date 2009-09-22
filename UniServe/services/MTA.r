@@ -115,11 +115,12 @@ Cause:   $ERROR$
 				]			
 				try-clean-file job
 			]
-			on-error: func [p reason][
-				if verbose > 1 [log/warn ["SMTP Error: " form reason]]				
+			on-error: func [p reason /local retry][
+				if verbose > 1 [log/warn ["SMTP Error: " form reason]]
+				retry: p/job/retry
 				either any [
-					zero? p/job/retry/smtp/1: p/job/retry/smtp/1 - 1
-					all [string? reason #"4" <> reason/1]			;-- temp failure, possible greylisting
+					zero? retry/smtp/1: retry/smtp/1 - 1
+					all [string? reason #"4" <> reason/1]		;-- temp failure, possible greylisting
 				][
 					if verbose > 1 [log/info ["job " p/job/id " failed, sending report"]]
 					if word? reason [reason: "mail server unreachable"]
@@ -127,12 +128,12 @@ Cause:   $ERROR$
 				][
 					either word? reason [
 						if verbose > 2 [log/info "trying with another MX"]
-						p/job/retry/smtp/1: 4						;-- reset SMTP failure counter
-						get-mx to-email p/target p/job				;-- try with another MX at once
+						retry/smtp/1: 4							;-- reset SMTP failure counter
+						get-mx to-email p/target p/job			;-- try with another MX at once
 					][
-						if verbose > 2 [log/info ["retrying with same MX in " mold/only p/job/retry/smtp/2]]
-						scheduler/plan compose/only/deep [
-							in (p/job/retry/smtp/2) do [send-email (p/job) (p/host) (p/target)]
+						if verbose > 2 [log/info ["retrying with same MX in " mold/only retry/smtp/2]]
+						scheduler/plan compose/deep [
+							in (retry/smtp/2) do [send-email (p/job) (p/host) (p/target)] ;-- try again later
 						]
 					]
 				]
@@ -144,13 +145,14 @@ Cause:   $ERROR$
 	get-mx: func [dst [email!] job][
 		open-port/with join dig:// dst/host [
 			on-mx: func [p ip][
-				send-email p/job ip p/dst							;-- got MX, now send email
+				send-email p/job ip p/dst						;-- got MX, now send email
 			]
-			on-error: func [p reason][			
+			on-error: func [p reason /local retry][			
 				if verbose > 1 [log/warn ["MX error: " form reason]]
+				retry: p/job
 				either any [
 					string? reason
-					zero? job/retry/mx/1: job/retry/mx/1 - 1 		;-- count failures
+					zero? retry/mx/1: retry/mx/1 - 1 			;-- count failures
 				][
 					if verbose > 1 [
 						either positive? p/job/id [
@@ -159,11 +161,11 @@ Cause:   $ERROR$
 							log/warn reform ["sending report to" p/dst "failed...giving up"]
 						]
 					]
-					report-error p/job p/dst reason					;-- max retries reached or unknown domain
+					report-error p/job p/dst reason				;-- max retries reached or unknown domain
 				][													
 					if verbose > 2 [log/info "Retrying MX query on DNS server(s)"]
-					scheduler/plan compose/only/deep [
-						in (job/retry/mx/2) do [get-mx (p/dst) (p/job)]		;-- try again later
+					scheduler/plan compose/deep [
+						in (retry/mx/2) do [get-mx (to-email p/dst) (p/job)]	;-- try again later
 					]
 				]
 			]
