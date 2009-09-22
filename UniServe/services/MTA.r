@@ -131,7 +131,7 @@ Cause:   $ERROR$
 						get-mx to-email p/target p/job				;-- try with another MX at once
 					][
 						if verbose > 2 [log/info ["retrying with same MX in " mold/only p/job/retry/smtp/2]]
-						scheduler/plan compose/only/deep only [
+						scheduler/plan compose/only/deep [
 							in (p/job/retry/smtp/2) do [send-email (p/job) (p/host) (p/target)]
 						]
 					]
