@@ -64,7 +64,7 @@ Cause:   $ERROR$
 	]
 	
 	encode: func [s [block! email! none!]][
-		any [all [block? s rejoin [s/1 " <" s/2 ">, "]] s]
+		any [all [block? s rejoin [s/1 " <" s/2 ">"]] s]
 	]	
 	
 	report-error: func [job target msg /local new body name from dst jr][
