@@ -145,7 +145,7 @@ uniserve: make log-class [
 	]
 	
 	set 'open-port func [
-		[catch throw]
+		[catch]
 		url [url! string!] events [block!] /with vars [block!] 
 		/local port proto px-host px-port pos uo host
 	][
@@ -716,6 +716,7 @@ uniserve: make log-class [
 		foreach [n ctx] union services protocols [
 			if in ctx 'verbose [ctx/verbose: level]
 		]
+		verbose: level
 	]
 	
 	share: func [spec [block!]][shared: make shared spec]

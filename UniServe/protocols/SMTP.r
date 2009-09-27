@@ -20,15 +20,18 @@ install-protocol [
 	
 	on-connected: does [
 		server/timeout: 00:05		; 5 mn (RFC)
-		server/user-data: context [state: 'ehlo]
+		server/user-data: context [
+			state: 'ehlo
+			id: random 99999999
+		]
 		stop-at: crlf
 	]
 	
 	on-received: func [data /local su action job s][
-		if verbose > 2 [log/info [">> " as-string data]]
+		job: server/task/job
 		su: server/user-data
-		job: server/job
-		if verbose > 1 [log/info ["state = " su/state]]
+		if verbose > 2 [log/info trim/tail reform [su/id ">>" as-string data]]
+		if verbose > 1 [log/info [su/id " state = " su/state]]
 		
 		either action: select [
 			helo ["220" [["HELO " system/network/host crlf]] mail]
@@ -36,18 +39,18 @@ install-protocol [
 			ext1 ["250" [reset] ext2]
 			ext2 [  -   [["MAIL FROM:<" job/from "> BODY=8BITMIME" crlf]] rcpt]
 			mail ["250" [["MAIL FROM:<" job/from "> BODY=8BITMIME" crlf]] rcpt]
-			rcpt ["250" [["RCPT TO:<" server/target #">" crlf]] data]
+			rcpt ["250" [["RCPT TO:<" server/task/to #">" crlf]] data]
 			data ["250" ["DATA^M^/"] body]
-			body ["354" [[%outgoing/ server/job/body] "^M^/.^M^/"] sent]
+			body ["354" [[%outgoing/ job/body] "^M^/.^M^/"] sent]
 			sent ["250" ["QUIT^M^/"] quit]
 			quit ["221" [fire-event] closed]
 		] su/state [
 			either any [action/1 = '- find/part data action/1 3][
 				foreach s action/2 [
 					s: any [all [block? s rejoin s] :s]
-					if all [0 < verbose verbose < 3][log/info rejoin ["request >> " s]]
+					if all [0 < verbose verbose < 3][log/info rejoin [su/id " request >> " s]]
 					either word? s [do s][
-						if verbose > 2 [log/info ["<< " as-string s]]
+						if verbose > 2 [log/info trim/tail reform [su/id "<<" as-string s]]
 						write-server s
 					]
 				]

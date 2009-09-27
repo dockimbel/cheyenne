@@ -569,6 +569,7 @@ install-service [
 		mime-types: load-cache %misc/mime.types
 		clear handlers
 		conf: conf-parser/read self
+		share compose/only [config: (conf)]
 		if verbose > 3 [
 			out: copy ""
 			foreach [name phase] phases [
@@ -640,7 +641,7 @@ install-service [
 				if find [POST PUT] req/in/method [
 					req/state: 'data
 					either len: select req/in/headers 'Content-Length [
-						limit: select req/cfg 'post-max
+						limit: any [select req/cfg 'post-max 2147483647]		;-- 2GB max on upload
 						len: any [attempt [to integer! len] 0]
 						stop-at: either all [limit len > limit][req/out/code: 406 limit][len]
 						limit: any [

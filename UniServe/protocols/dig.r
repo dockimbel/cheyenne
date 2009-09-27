@@ -178,7 +178,7 @@ install-protocol [
 		]
 	]
 
-	on-raw-received: func [data /local ip][
+	on-raw-received: func [data /local list pos][
 		on-response data: decode as-string data	
 		either integer? data [
 			if verbose > 2 [log/info ["error code " mold data]]
@@ -188,11 +188,13 @@ install-protocol [
 				on-error server "no MX record"
 			][
 				sort/skip/compare data/1 5 4
-				ip: all [ip: find data/3 data/1/5 pick ip 4]
-				ip: either tuple? ip [ip][read join dns:// data/1/5]
-				if verbose > 0 [log/info reform ["MX for" server/target ":" ip]]
-				either ip [
-					on-mx server ip
+				list: extract/index data/1 5 5
+				forall list [if pos: find data/3 list/1 [list/1: pick pos 4]]
+				remove-each ip list: head list [none? ip] 	;-- clean up the list
+				
+				if verbose > 0 [log/info ["MX for " server/target ":^/" mold new-line/all list on]]
+				either not empty? list [
+					on-mx server list
 				][
 					on-error server "cannnot find MX record"
 				]
@@ -216,7 +218,7 @@ install-protocol [
 	
 	events: [
 		on-response 		; [records]
-		on-mx				; [ip]
+		on-mx				; [ip [block!]]
 		on-error			; [port code]
 	]
 	

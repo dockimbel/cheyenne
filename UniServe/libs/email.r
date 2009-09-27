@@ -34,7 +34,6 @@ email: context [
 		while [not tail? data] [
 			insert/part tail msg data num
 			insert tail msg crlf
-			;append msg join copy/part data num crlf
 			data: skip data num
 		]
 		msg
@@ -102,7 +101,7 @@ email: context [
 				append out eml
 				append out ", "
 			]
-			append list eml
+			append list any [all [email? eml eml] to email! eml]
 		]
 		head clear back back tail out
 	]
@@ -140,7 +139,7 @@ email: context [
 		h/to: encode-contacts t-list blockify h/to
 		if h/cc  [h/cc: encode-contacts t-list blockify h/cc]
 		if h/bcc [
-			foreach eml blockify h/bcc [append t-list either block? eml [eml/2][eml/1]]
+			foreach eml blockify h/bcc [append t-list to email! either block? eml [eml/2][eml/1]]
 			h/bcc: none
 		]
 		h/from: encode-contacts from: copy [] blockify h/from
@@ -168,7 +167,7 @@ email: context [
 			h/Content-Transfer-Encoding: none
 			msg: build-attach-body msg blockify h/attach bound rejoin [
 				{^M^/Content-Type: text/plain; charset="} charset-str {"^M^/}
-				{Content-Transfer-Encoding: 8bit^M^/}
+				{Content-Transfer-Encoding: 8bit^M^/^M^/}
 			]
 			insert msg crlf
 			h/attach: none

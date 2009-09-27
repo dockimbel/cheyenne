@@ -12,15 +12,32 @@ install-service [
 	
 	queue: make block! 8
 	root: join what-dir %outgoing/
-	max-time: 01:00						;-- maximum delay for keeping reports
-	max-reports: 100					;-- maximum number of reports
+	q-file: join system/options/path %.mta-queue
+	
+	max-time: 2:00						;-- maximum delay for keeping reports
+	;max-reports: 100					;-- maximum number of reports
 	random/seed now/time/precise
 
 	job-class: context [
-		id: start: none
-		state: [pending]
-		retry: [mx [4 [5 sec]] smtp [4 [15 mn]]]
-		from: to: body: report: none
+		id: 		; integer! 		 - unique job id
+		start: 		; date!			 - creation timestamp
+		state: 		; block!		 - job processing state
+		from: 		; email!		 - emitter's email address
+		to: 		; block!		 - list of target email addresses
+		body: 		; file!			 - name of file containing the message
+		report: 	; none! | block! - customized reporting
+		tasks:		; block!		 - one task per target
+			none
+	]
+	
+	task-class: context [
+		to:	none	; email!		- destination
+		mx:	none	; block!		- list of MX for destination domain
+		retry: [	;				- retry parameters
+			MX 	 [4 [5 sec]]
+			SMTP [4 [5 mn]]
+		]
+		job: none	; object!		- reference to parent job
 	]
 	
 	report-default: [
@@ -49,29 +66,38 @@ Cause:   $ERROR$
 		name
 	]
 	
-	try-clean-file: func [job][
-		if job/to = intersect job/to job/state [
-			attempt [delete join root job/body]
-		]
+	clean-file: func [job][
+		attempt [delete join root job/body]
 	]
 	
 	gc-jobs: has [n][
-		if max-reports < length? queue [
-			remove/part queue (length? queue) - maxreports
-		]
 		n: now
-		remove-each job queue [max-time < difference n job/start]
+		remove-each job queue [
+			all [
+				empty? job/tasks
+				max-time < difference n job/start
+			]
+		]
 	]
 	
 	encode: func [s [block! email! none!]][
 		any [all [block? s rejoin [s/1 " <" s/2 ">"]] s]
-	]	
+	]
 	
-	report-error: func [job target msg /local new body name from dst jr][
-		job/state/1: 'error
+	end-task: func [job task][
+		remove find job/tasks task
+		if empty? job/tasks [
+			job/state/1: 'done
+			clean-file job
+		]
+	]
+	
+	report-error: func [task msg /local job new body name from dst jr][
+		job: task/job
+		if job/state/3 = 'ok [change skip job/state 2 reduce ['error make block! 1]]
 		if not string? msg [msg: form msg]
-		repend job/state [to email! target msg]		
-		try-clean-file job
+		repend job/state/error [task/to msg]
+		end-task job task
 		if negative? job/id [exit]
 		
 		jr: job/report
@@ -81,10 +107,10 @@ Cause:   $ERROR$
 			"$FROM$"	[any [all [jr encode from: select jr 'from] "Mail Server <admin@noreply.com>"]]
 			"$DATE$" 	[to-idate now]
 			"$SUBJECT$"	[any [all [jr select jr 'subject] "###Email error reporting"]]
-			"$TARGET$" 	target
+			"$TARGET$" 	task/to
 			"$ERROR$" 	msg
 		][
-			replace body tag any [all [block? new do new] get new]
+			replace body tag any [all [word? new get new] do new]
 		]
 
 		replace/all body lf crlf
@@ -94,82 +120,120 @@ Cause:   $ERROR$
 		if verbose > 0 [log/info ["Sending error report to " dst]]
 		
 		process reduce [
-			any [all [from either block? from [from/2][from]] admin@noreply.com]
+			any [all [from either block? from [from/2][from]] noreply@cheyenne-server.org]
 			reduce [dst]
 			name
 			-1
 			none
 		]
 	]
-
-	send-email: func [job [object!] mx [tuple!] dst [email!]][
-		if verbose > 0 [log/info ["job: " job/id " MX: " mx]]
-		
-		open-port/with join smtp:// [mx slash dst][
-			on-sent: func [p /local job][
-				if verbose > 0 [log/info ["email sent to " p/target]]
-				job: p/job
-				remove find job/to to email! p/target
-				if all [empty? job/to job/state/1 = 'pending][
-					job/state/1: 'done
-				]			
-				try-clean-file job
+	
+	resolve-mx: func [task][
+		if verbose > 0 [log/info ["Resolving MX domain " task/mx/1]]
+		open-port/with join dns:// task/mx/1 [					;-- async DNS resolution
+			on-resolved: func [p ip][
+				if verbose > 1 [log/info ["MX resolved: " ip]]
+				p/task/mx/1: ip
+				send-email p/task
 			]
-			on-error: func [p reason /local retry][
+			on-error: func [p reason][
+				log/error ["cannot connect to DNS server: " mold reason]
+			]
+		] compose [task: (task)]
+	]
+
+	send-email: func [task [object!]][
+		if not tuple? task/mx/1 [
+			resolve-mx task
+			exit
+		]
+		if verbose > 0 [log/info ["job: " task/job/id " MX: " task/mx/1]]
+		
+		open-port/with join smtp:// [task/mx/1 slash task/to][
+			on-sent: func [p /local job][
+				if verbose > 0 [log/info ["email sent to " p/task/to]]
+				job: p/task/job
+				remove find job/to p/task/to		;TBD: see if useful when server restarted, else remove it
+				job/state/2/1: job/state/2/1 + 1
+				end-task job p/task
+			]
+			on-error: func [p reason /local task job retry][
 				if verbose > 1 [log/warn ["SMTP Error: " form reason]]
-				retry: p/job/retry
+				task: p/task
+				retry: task/retry
 				either any [
 					zero? retry/smtp/1: retry/smtp/1 - 1
 					all [string? reason #"4" <> reason/1]		;-- temp failure, possible greylisting
 				][
-					if verbose > 1 [log/info ["job " p/job/id " failed, sending report"]]
+					if verbose > 1 [log/info ["job " task/job/id " failed, sending report"]]
 					if word? reason [reason: "mail server unreachable"]
-					report-error p/job p/target reason
+					report-error task reason
 				][
 					either word? reason [
 						if verbose > 2 [log/info "trying with another MX"]
-						retry/smtp/1: 4							;-- reset SMTP failure counter
-						get-mx to-email p/target p/job			;-- try with another MX at once
+						retry/mx/1: retry/mx/1 - 1				;-- blame MX server
+						retry/smtp/1: task-class/retry/smtp/1	;-- reset SMTP failure counter to default
+						
+						either empty? task/mx: next task/mx [
+							scheduler/plan compose/deep [
+								in (retry/smtp/2) do [get-mx (task)]	 ;-- try again from beginning later
+							]
+						][
+							send-email task 					;-- try with next MX at once
+						]
 					][
 						if verbose > 2 [log/info ["retrying with same MX in " mold/only retry/smtp/2]]
 						scheduler/plan compose/deep [
-							in (retry/smtp/2) do [send-email (p/job) (p/host) (to-email p/target)] ;-- try again later
+							in (retry/smtp/2) do [send-email (task)] 	;-- try again later
 						]
 					]
 				]
 				
 			]
-		] compose [job: (job)]
+		] compose [task: (task)]
 	]
 	
-	get-mx: func [dst [email!] job][
-		open-port/with join dig:// dst/host [
-			on-mx: func [p ip][
-				send-email p/job ip p/dst						;-- got MX, now send email
+	get-mx: func [task][
+		open-port/with join dig:// task/to/host [
+			on-mx: func [p list][
+				p/task/mx: list
+				send-email p/task								;-- got MX, now send email
 			]
 			on-error: func [p reason /local retry][			
 				if verbose > 1 [log/warn ["MX error: " form reason]]
-				retry: p/job
+				retry: p/task
 				either any [
 					string? reason
 					zero? retry/mx/1: retry/mx/1 - 1 			;-- count failures
 				][
 					if verbose > 1 [
-						either positive? p/job/id [
-							log/info reform ["job" p/job/id "failed, sending report"]
+						either positive? p/task/job/id [
+							log/info reform ["job" p/task/job/id "failed, sending report"]
 						][
-							log/warn reform ["sending report to" p/dst "failed...giving up"]
+							log/warn reform ["sending report to" task/to "failed...giving up"]
 						]
 					]
-					report-error p/job p/dst reason				;-- max retries reached or unknown domain
+					report-error p/task reason					;-- max retries reached or unknown domain
 				][													
 					if verbose > 2 [log/info "Retrying MX query on DNS server(s)"]
 					scheduler/plan compose/deep [
-						in (retry/mx/2) do [get-mx (to-email p/dst) (p/job)]	;-- try again later
+						in (retry/mx/2) do [get-mx (p/task)]	;-- try again later
 					]
 				]
 			]
-		] compose [job: (job) dst: (dst)]
+		] compose [task: (task)]
+	]
+	
+	split: func [parent /local list][
+		list: copy parent/to		
+		forall list [
+			list/1: make task-class [
+				to: list/1
+				retry: copy/deep retry
+				job: parent
+			]
+		]
+		parent/tasks: head list
 	]
 
 	process: func [spec [block!] /local job][
@@ -180,16 +244,49 @@ Cause:   $ERROR$
 			body:	spec/3
 			id: 	spec/4
 			report:	spec/5
+			state:	reduce ['pending 0x1 * length? spec/2 'ok]
 			start:	now
 		]
 		if positive? job/id [append queue job]
-		foreach dst job/to [get-mx dst job]		;-- init sending process
+		foreach task split job [get-mx task]					;-- init sending process
 	]
 
 	get-info?: func [id [integer!] /local job][
-		mold/all all [
-			job: foreach j queue [if j/id = id [break/return j]]
+		mold/all either job: foreach j queue [if j/id = id [break/return j]][
+			if job/state/1 = 'done [remove find queue job]
 			job/state
+		][
+			none
+		]
+	]
+	
+	on-quit: has [flags][	
+		if all [
+			not empty? queue
+			attempt [flags: uniserve/shared/config/globals/persist]
+			find flags 'mail-queue
+		][
+			foreach job queue [									;-- workaround cycles issues
+				foreach task job/tasks [if not empty? job/tasks [task/job: none]]
+			]
+			attempt [write q-file mold/all queue]
+		]	
+	]
+
+	on-started: does [	
+		if all [
+			exists? q-file
+			queue: attempt [load q-file]
+		][
+			delete q-file
+			foreach job queue [
+				if not empty? job/tasks [
+					foreach task job/tasks [				
+						task/job: job						;-- link back to parent
+						get-mx task
+					] 
+				]
+			]
 		]
 	]
 

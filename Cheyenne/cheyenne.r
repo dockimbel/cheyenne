@@ -90,6 +90,7 @@ set-cache [
 		%protocols/ [
 			%FastCGI.r
 			%SMTP.r
+			%DNS.r
 			%dig.r
 		]
 	]
@@ -185,12 +186,12 @@ cheyenne: make log-class [
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
 			control/start/only 'RConsole none
 			control/start/only 'Logger none
-			control/start/only 'MTA none
 			if service? [control/start/only 'admin none]
 
 			share [dns-server: select services/httpd/conf/globals 'dns-server]
 
 			do-cache uniserve-path/protocols/SMTP.r
+			do-cache uniserve-path/protocols/DNS.r
 			do-cache uniserve-path/protocols/dig.r
 			
 			set-verbose any [verbosity 0]		;-- for SMTP and dig protocols
@@ -208,9 +209,8 @@ cheyenne: make log-class [
 				]
 			]
 			open-system-events
-			
+			control/start/only 'MTA none
 			foreach p any [port-id [80]][control/start/only 'HTTPd p]
-			
 			control/start/only 'task-master none
 		]
 		if flag? 'embed [exit]
@@ -372,6 +372,7 @@ cheyenne: make log-class [
 	]
 	
 	on-quit: does [
+		uniserve/services/mta/on-quit					; TBD: manage on-quit events from uni-engine
 		if not OS-Windows? [attempt [delete pid-file]]
 	]
 ]

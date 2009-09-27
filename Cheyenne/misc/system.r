@@ -36,6 +36,7 @@ make log-class [
 			]
 			either install-NT-service [
 				uniserve/services/httpd/on-quit
+				cheyenne/on-quit
 				uniserve/control/shutdown
 				control-service/start
 				launch/quit cheyenne/sub-args
