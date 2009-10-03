@@ -906,15 +906,13 @@ install-module [
 		protected-exec/event request/parsed/file get in session/events :event :event
 	]
 	
-	process-events: has [evt-data events ctx][	
+	process-events: has [evt-data events ctx init][	
 		either request/web-app [
 			either events: select apps request/web-app [
 				session/events: events
 			][
-				evt-data: any [
-					attempt [load join request/config/root-dir %/app-init.r] ; TBD: report errors !!!
-					[]
-				]
+				safe-exec %app-init.r does [init: load join request/config/root-dir %/app-init.r]
+				evt-data: any [init []]
 				repend apps [
 					request/web-app
 					events: make evt-class evt-data
