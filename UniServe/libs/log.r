@@ -69,3 +69,10 @@ log-class: context [
 		]
 	]
 ]
+
+;-- extends an existing object with log func (name words needs to be defined in obj)
+log-install: func [name [word!] /local obj f][
+	obj: get name
+	obj/log: func first f: get in log-class 'log bind/copy second :f obj
+	obj/name: name
+]

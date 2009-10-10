@@ -1,101 +1,29 @@
 REBOL [
 	Title: "Scheduler"
-	Purpose: "Task scheduling library with dialect"
+	Purpose: "Scheduler library for REBOL"
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "2009 SOFTINNOV"
 	Email: nr@softinnov.com
 	Date: 26/08/2009
 	Version: 0.9.0
 	Web: http://softinnov.org/rebol/scheduler.shtml
-	Purpose: "Scheduler library for REBOL"
 	License: "BSD - see %LICENCE.txt file"
-	Comments: {
-
-		Scheduler DSL quickstart
-		------------------------
-		
-		Legend:
-		- <value> means that the value is optional
-		- CAPITALIZED words design dialect's keywords
-
-		o Event with a precise point in time :
-			<name:> AT time! DO action
-
-		o Event with a delay :
-			<name:> IN n <unit> DO action
-
-		o Recurring event :
-			<name:> EVERY 
-				<n> <unit>		; recurring unit
-				<allowed>		; specific point(s) in time or duration(s) allowed
-				<NOT forbidden>	; specific point(s) in time or duration(s) forbidden
-				<FROM moment>	; starting point
-				<AT time>		; fix time for each event (only date changes)
-				<t TIMES>		; limit the number of event occurences
-				DO action		; job to execute
-		  with
-			<name:>: set-word! value for naming a task (for future access using the API).
-			<n>: integer! value for unit multiplying.
-			<unit>: any of 
-				s|sec|second|seconds
-				mn|minute|minutes
-				h|hour|hours
-				d|day|days
-				w|week|weeks
-				m|month|months
-			<allowed>: any time (00:00:00), calendar day (#dd), weekday (mon|monday), 
-					   month (jan|january), range of time|calendar-days or block of any
-					   of theses options.
-			<forbidden>: same options as <allowed>.
-			<moment>: date! or time! value.
-			<time>: time! value.
-			<t>: integer! value.
-			action: file!|url!|block!|function!|word! value to be evaluated when
-			        event is fired.
-			
-		Syntactic sugar
-		---------------
-		Default dialect is parsed in BLOCK! mode. That means that only REBOL values
-		are accepted, but some may want to write calendar dates like: 1st, 2nd,...
-		instead or #1, #2,...
-		
-		So, a preprocessor is included allowing tasks to be passed as string! values
-		extending the accepted syntax for the following cases :
-				1st, 2nd, 3rd,..nth 	: accepted
-				12s, 12mn, 12h, 12d,...	: accepted
-
-		Scheduler API
-		-------------
-		scheduler/plan [spec]		; add one or more tasks to the scheduler
-		scheduler/plan/new [spec]	; same as above but removes all previous tasks
-		scheduler/delete 'name		; removes the named task from the scheduler
-		scheduler/wait				; provides an adequate global event loop
-
-		Examples
-		--------
-		scheduler/plan [
-			at 18:30 do http://domain.com/update.r
-			every 3 days not [#2 - #9 #12 sat sun] at 00:30 do %batch.r
-			smk: every friday at 13:00 do %test.r
-			cc: every 12 hours do %backup.r
-			every [sat sun] at 12:00 do %beep.r
-			every month on #01 do %check.r
-		]
-		scheduler/wait
-		
-		(See %test-scheduler.r for more examples)
-	}
-
 ]
 		
 scheduler: context [
-	name: mult: unit: n: allow: forbid: on-day: ts: from: times: job: err:
+	label: mult: unit: n: allow: forbid: on-day: ts: from: times: job: err:
 	type: _s: _e: s: e: value: none
+	;-- every word put before value: will be erased by 'reset function
+	
+	name: 'scheduler
+	verbose: 1
 	
 	jobs:  make block! 8
 	queue: make block! 1
 	spwl:  system/ports/wait-list
 	flag-exit: off
+	
+	log: func [msg /warn /error /info /fatal][print msg]	;-- default log action
 	
 	get-now: has [n][n: now n/zone: 0:0 n]
 	
@@ -126,6 +54,7 @@ scheduler: context [
 		job: back find/only jobs task
 		remove queue
 		task/last: get-now
+		if verbose > 0 [log/info ["firing event " mold any [task/name task/source]]]
 		exec task	
 		if any [
 			task/at
@@ -139,7 +68,7 @@ scheduler: context [
 	
 	update-sys-timer: has [timer][
 		sort/skip jobs 2
-		remove find spwl time!
+		remove find spwl time!	
 		if not empty? jobs [
 			append/only queue jobs/2
 			append spwl difference jobs/1 get-now
@@ -251,7 +180,7 @@ scheduler: context [
 			make error! rejoin ["bad or sub-optimal specifications for" mold src]
 		]
 		record: reduce [
-			'name		all [name to word! name]
+			'name		all [label to word! label]
 			'multiple	mult
 			'unit		unit
 			'allow		allow
@@ -366,7 +295,7 @@ scheduler: context [
 	dialect: [
 		any [
 			(reset-locals) err: _s:
-			opt [set name set-word!]
+			opt [set label set-word!]
 			[
 				'at [set ts [date! | time!]]
 				| 'in set mult integer! delays (ts: 'in)
@@ -407,7 +336,7 @@ scheduler: context [
 		if string? spec [spec: pre-process spec]
 		
 		if not parse copy/deep spec dialect [
-			print ["Error parsing at rule:" mold copy/part err 10]
+			log/error ["Error parsing at rule:" mold copy/part err 10]
 		]	
 		update-sys-timer
 	]

@@ -23,7 +23,7 @@ install-HTTPd-extension [
 	log-file: %access.log
 	
 	max-size: 4 * 1024 * 1024 ; in MB (TBD: export it to the conf file)
-	cache: make hash! 50
+	cache: make hash! 100
 	cache-size: 0
 	
 	read-cache: func [req /local file path mdate][
@@ -342,7 +342,7 @@ install-HTTPd-extension [
 		charset: [word!] in [globals main]
 		
 		;--- Define a set of recurring jobs to do
-		jobs: [block!] in globals do [
+		jobs: [block!] in globals do [		
 			scheduler/plan/new args/1
 		]
 		

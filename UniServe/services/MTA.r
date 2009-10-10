@@ -175,16 +175,16 @@ Cause:   $ERROR$
 						retry/smtp/1: task-class/retry/smtp/1	;-- reset SMTP failure counter to default
 						
 						either empty? task/mx: next task/mx [
-							scheduler/plan compose/deep [
-								in (retry/smtp/2) do [get-mx (task)]	 ;-- try again from beginning later
+							scheduler/plan compose/deep [		;-- try again from beginning later
+								in (retry/smtp/2) do [uniserve/services/mta/get-mx (task)]	 
 							]
 						][
 							send-email task 					;-- try with next MX at once
 						]
 					][
 						if verbose > 2 [log/info ["retrying with same MX in " mold/only retry/smtp/2]]
-						scheduler/plan compose/deep [
-							in (retry/smtp/2) do [send-email (task)] 	;-- try again later
+						scheduler/plan compose/deep [			;-- try again later
+							in (retry/smtp/2) do [uniserve/services/mta/send-email (task)] 
 						]
 					]
 				]
@@ -216,8 +216,8 @@ Cause:   $ERROR$
 					report-error p/task reason					;-- max retries reached or unknown domain
 				][													
 					if verbose > 2 [log/info "Retrying MX query on DNS server(s)"]
-					scheduler/plan compose/deep [
-						in (retry/mx/2) do [get-mx (p/task)]	;-- try again later
+					scheduler/plan compose/deep [				;-- try again later
+						in (retry/mx/2) do [uniserve/services/mta/get-mx (p/task)]
 					]
 				]
 			]
