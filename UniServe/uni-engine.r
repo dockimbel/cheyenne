@@ -3,9 +3,9 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "@ 2002-2009 SOFTINNOV"
 	Email: nr@softinnov.com
-	Date: 31/08/2009
+	Date: 09/10/2009
 	File: %uni-engine.r
-	Version: 0.9.35
+	Version: 0.9.37
 	Purpose: "Multi-protocol asynchrone client/server framework"
 	License: {
 		BSD License, read the complete text in %docs/license.txt
@@ -402,7 +402,7 @@ uniserve: make log-class [
 				catch/name [ctx/:name v v2 v3 none] 'uniserve
 			] log-err
 			pl/stop: ctx/stop-at
-		]
+		]		
 		if :err = 'stop-events [
 			if value? 'scheduler [scheduler/flag-exit: on]
 			flag-stop: on
@@ -496,6 +496,7 @@ uniserve: make log-class [
 				]
 			][
 				if verbose > 1 [log/info "Host unreachable!"]
+				remove find spwl port
 				fire-event/init/arg port 'on-error 'unreachable
 			]
 			flag-stop

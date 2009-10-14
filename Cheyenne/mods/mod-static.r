@@ -177,7 +177,7 @@ install-HTTPd-extension [
 			req/in/file
 			ext: find/last/tail req/in/file dot
 			ext: to word! to string! ext
-		]
+		]	
 		req/out/mime: either all [ext mime: find service/mime-types ext][
 			first find/reverse mime path!
 		][
@@ -315,17 +315,19 @@ install-HTTPd-extension [
 		
 		;--- Add a new mime-type
 		set-mime: [path!] [word! | block!] in globals do [
-			use [pos][
+			use [pos sm][
 				if pos: find/only service/mime-types args/1 [
 					remove/part pos any [find next pos path! tail pos]
 				]
+				sm: service/mime-types
+				append/only sm args/1
+				new-line back tail sm on
+				foreach ext to block! args/2 [			
+					ext: mold ext
+					if dot = first ext [remove ext]
+					append sm to word! ext
+				]
 			]
-			append/only service/mime-types args/1
-			foreach ext args/2: to-block args/2 [	;--- word!! not series !!
-				ext: mold ext
-				if dot = first ext [remove ext]
-			]
-			append service/mime-types args/2
 		]
 		
 		;--- Define flags for data persistence handling

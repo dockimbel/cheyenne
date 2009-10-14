@@ -1,6 +1,12 @@
 UniServe ChangeLog:
 ------------------
 
+0.9.37  09/10/2009
+	
+	o Client ports issuing "host unreacheable" error were not removed from event list
+	  resulting in calling 'on-error handler multiple times instead of just once. Fixed.
+	
+
 0.9.36  20/09/2009
 	
 	o Set-verbose function added. Allows setting verbose level for all services
