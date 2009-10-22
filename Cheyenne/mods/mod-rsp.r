@@ -241,7 +241,11 @@ install-HTTPd-extension [
 					sessions/set-cookie sess req
 					h-store req/out/headers 'Location url
 					h-store req/out/headers 'Last-Modified none
-					repend sess/vars ['from req/in/url]
+					either pos: find sess/vars 'from [
+						pos/2: req/in/url
+					][
+						repend sess/vars ['from req/in/url]
+					]
 					throw true 	; redirects to login page
 				]
 			]
