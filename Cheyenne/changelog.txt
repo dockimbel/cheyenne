@@ -92,7 +92,11 @@ v0.9.20 - ??/??/2009
 	
 	o Config: set-mime wasn't adding the new mime type correctly, fixed.
 	
-	o RSP: 'from special session field can appear multiple times, fixed.
+	o RSP: 'from special session field can appear multiple times in sesssion block, fixed.
+	
+	o RSP: improved script error catching involving unset! values.
+	
+	o RSP: fix for a rare case of response buffer corruption.
 	
 
 v0.9.19 - 01/03/2009

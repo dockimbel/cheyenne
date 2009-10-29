@@ -152,15 +152,19 @@ cheyenne: make log-class [
 	do-cheyenne-app: has [port-id vlevel service? home verbosity][	
 		if flag? 'custom-port [port-id: args/port-id]
 		if flag? 'verbose [verbosity: verbose: args/verbosity]
+		verbosity: any [verbosity 0]
 		
-		do-cache uniserve-path/libs/scheduler.r		
+		do-cache uniserve-path/libs/scheduler.r
 		do-cache uniserve-path/uni-engine.r
+		
+		log-install 'scheduler			;--	install UniServe's logging in scheduler lib
+		scheduler/verbose: verbosity
 
 		either service?: all [OS-Windows? flag? 'service][
-			launch-service				; -- launch service thread
+			launch-service				;-- launch service thread
 			do-cache %misc/admin.r
 		][
-			do-cache %misc/system.r		; -- install tray icon for Windows
+			do-cache %misc/system.r		;-- install tray icon for Windows
 		]
 		
 
@@ -177,13 +181,14 @@ cheyenne: make log-class [
 				services/task-master/port-id: ((port-id/1 + 2000) // 64512) + 1024
 ; TDB: should do the same for Logger and RConsole service !!
 			]
-			set-verbose any [verbosity 0]
+			set-verbose verbosity
 			
 			shared/pool-start: 	any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
 			shared/pool-max: 	any [all [flag? 'debug 0] all [flag? 'workers args/workers] 8]
 			shared/job-max: 	1000	;-- CGI/RSP requests queue size
 
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
+
 			control/start/only 'RConsole none
 			control/start/only 'Logger none
 			if service? [control/start/only 'admin none]
@@ -194,7 +199,7 @@ cheyenne: make log-class [
 			do-cache uniserve-path/protocols/DNS.r
 			do-cache uniserve-path/protocols/dig.r
 			
-			set-verbose any [verbosity 0]		;-- for SMTP and dig protocols
+			set-verbose verbosity			;-- for SMTP and dig protocols
 			
 			all [
 				not port-id

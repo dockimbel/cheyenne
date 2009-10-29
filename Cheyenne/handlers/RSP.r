@@ -67,7 +67,7 @@ install-module [
 					not value? 'res
 					not :res == exit-value
 				]
-				make system/standard/error [type: 'throw id: 'no-function near: []]
+				make system/standard/error [type: 'throw id: 'no-function near: copy []]
 			]
 		]
 	]
@@ -75,7 +75,7 @@ install-module [
 	form-error: func [err [object!] /local type id desc][	
 		type: err/type
 		id: err/id
-		arg1: err/arg1
+		arg1: either unset? get/any in err 'arg1 [none][err/arg1]
 		arg2: err/arg2
 		arg3: err/arg3
 		desc: reduce system/error/:type/:id
@@ -105,7 +105,7 @@ install-module [
 	html-form-error: func [err [object!] file /event evt /local type id desc][	
 		type: err/type
 		id: err/id
-		arg1: err/arg1
+		arg1: either unset? get/any in err 'arg1 [none][err/arg1]
 		arg2: err/arg2
 		arg3: err/arg3
 		desc: reduce system/error/:type/:id
@@ -170,7 +170,7 @@ install-module [
 	
 	protected-exec: func [file code [block! function!] /event evt /local err thru?][
 		unless thru?: :print = :rsp-print [set print-funcs rsp-print-funcs]
-		if err: sandboxed-exec :code [
+		if err: sandboxed-exec :code [		
 			html-form-error err file			
 			either event [
 				log-script-error/with file err rejoin ["##Error in '" :evt " event"]
@@ -802,7 +802,9 @@ install-module [
 		response/compress?: yes
 		response/error?: no
 		if response/headers [clear response/headers]
-		if empty? jobs [response/reset]
+		;if empty? jobs [
+		response/reset
+		;]
 	]
 	
 	;-- quick implementation of multipart decoding :
@@ -898,7 +900,7 @@ install-module [
 		request/translated: join request/config/root-dir [
 			request/parsed/path
 			request/parsed/target
-		]				
+		]
 		if find request/config 'debug [debug-banner/active?: yes]
 	]
 	
@@ -993,6 +995,7 @@ install-module [
 		decode-params
 		locale/decode-lang
 		reset-response-object
+		clear jobs
 
 		file: request/translated
 		if verbose > 0 [log/info ["calling script: " mold file]]

@@ -170,15 +170,15 @@ ctx-task-class: make log-class [
 				any [zero? remains state <= 0]
 			]
 			if verbose > 0 [t0: now/time/precise]
-			req: load to string! request
+			req: load as-string request
 			either error? set/any 'err try [
 				if not find modules req/2 [
 					do-cache join modules-path [req/2 %.r]
 					change-dir system/options/path
 				]
 				module: select modules req/2
-				module/result: none			
-				module/on-task-received load to string! req/3
+				module/result: none
+				module/on-task-received load as-string req/3
 				false
 			][		
 				err: disarm err				
