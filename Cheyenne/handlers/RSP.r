@@ -67,7 +67,7 @@ install-module [
 					not value? 'res
 					not :res == exit-value
 				]
-				make system/standard/error [type: 'throw id: 'no-function near: copy []]
+				make system/standard/error [type: 'throw id: 'no-function near: []]
 			]
 		]
 	]
@@ -184,14 +184,14 @@ install-module [
 		false
 	]
 	
-	get-app-db: func [defs [block!] /local list][
-		if not list: select apps-db request/headers/host [
-			repend apps-db [request/headers/host list: make block! 1]
+	get-app-db: func [defs [block!] /local hosts conn-list][
+		if not hosts: select apps-db request/headers/host [
+			repend apps-db [request/headers/host hosts: make block! 1]
 		]
-		if not list: select list request/web-app [
-			repend apps-db [request/web-app list: copy/deep defs]
+		if not conn-list: select hosts request/web-app [
+			repend hosts [request/web-app conn-list: copy/deep defs]
 		]
-		list
+		conn-list
 	]
 	
 	engine: context [
