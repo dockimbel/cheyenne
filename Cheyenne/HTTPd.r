@@ -25,6 +25,7 @@ install-service [
 	dquote: #"^""
 	log-e-16: log-e 16
 	not-ws: complement charset " "
+	digit: charset "0123456789"
 
 	conf: mod-list: mime-types: none
 	handlers: make block! 10
@@ -32,6 +33,10 @@ install-service [
 	mod-dir: %mods/
 	incoming-dir: join cheyenne/data-dir %incoming/
 	version: none
+	block-list: none
+	block-ip-host?: no
+	banned: make hash! 3000						;-- [ip timestamp req...]
+	banning?: no								;-- can be FALSE or banning time! value
 	
 	keep-alive: "Keep-Alive"
 	
@@ -129,6 +134,35 @@ install-service [
 	]
 	
 	reset-stop: does [stop-at: newline]
+	
+	check-ip-host: func [headers][
+		parse/all headers [thru "Host:" any #" " 3 [1 3 digit dot] 1 3 digit (return true)]
+		false
+	]
+	
+	ban-ip: func [line][
+;		if client/remote-ip = 127.0.0.1 [exit]			;-- avoid locking server if behind a local proxy
+		
+		either pos: find banned client/remote-ip [
+			pos/2: now
+			pos/3: line
+		][
+			repend banned [client/remote-ip now line]
+		]
+	]
+	
+	blocked-pattern?: func [line [string!] /local c][
+		c: 2
+		foreach [s n] block-list [
+			if find/case line s [			
+				poke block-list c block-list/:c + 1
+				if banning? [ban-ip copy/part line 120]
+				return true
+			]
+			c: c + 2
+		]
+		false
+	]
 	
 	make-tmp-fileinfo: does [
 		make object! [
@@ -250,7 +284,7 @@ install-service [
 			if all [verbose > 1 logic? state][
 				log/info "=> request processed"
 			]
-			if state [exit]
+			if state [return state]
 		]	
 	]
 	
@@ -589,7 +623,19 @@ install-service [
 		]
 	]
 	
-	on-new-client: does [
+	on-new-client: has [pos][
+		if all [
+			banning?
+			pos: find banned client/remote-ip
+		][	
+			either pos/2 + banning? > now [ 
+				if verbose > 1 [log/info ["Banned IP:" client/remote-ip]]
+				close-client
+				exit
+			][
+				remove/part pos 3
+			]
+		]
 		set-modes client [
 			receive-buffer-size: 16384
 			send-buffer-size: 65536
@@ -598,22 +644,23 @@ install-service [
 		client/user-data: make block! 1
 	]
 	
+	drop-client: [
+		clear client/locals/in-buffer		;-- avoid any further received events
+		close-client
+		reset-stop
+		exit
+	]
 	
 	on-received: func [data /local req len limit q][
 		q: client/user-data
-		if empty? q [insert q copy [[state request]]] ; avoid wasting a call to make-http-session
+		if empty? q [insert q copy [[state request]]] 	;-- avoid wasting a call to make-http-session
 		req: last q
 		switch req/state [
-			request [			
+			request [
 				len: length? data
-				if any [
-					len < 6
-					len > 2048
-				][
-					if verbose > 1 [log/info ["Dropping invalid request=>" data]]
-					close-client
-					reset-stop
-					exit
+				if any [all [2048 < len len < 6] blocked-pattern? as-string data][
+					if verbose > 1 [log/info ["Dropping invalid request=>" copy/part as-string data 120]]
+					do drop-client
 				]
 				either block? req [
 					change back tail q req: make-http-session
@@ -630,10 +677,13 @@ install-service [
 				req/state: 'headers
 				exit
 			]
-			headers [
-				if verbose > 0 [log/info ["Request Headers=>" to-string data]]
+			headers [	
+				if all [block-ip-host? check-ip-host data][				
+					if verbose > 1 [log/info "Dropping request, IP Host header not allowed"]
+					do drop-client
+				]
+				if verbose > 0 [log/info ["Request Headers=>" as-string data]]
 				parse-headers data req/in
-; filter HOST: xxx.xxx.xxx.xxx (scanners) ?				
 				do-phase req 'parsed-headers
 				select-vhost req				
 				do-phase req 'url-to-filename
@@ -667,9 +717,9 @@ install-service [
 			data [
 				if verbose > 0 [
 					either verbose > 1 [
-						log/info ["Posted data=>" copy/part to-string data 80]
+						log/info ["Posted data=>" copy/part as-string data 80]
 					][
-						log/info ["Posted data=>" length? to-string data]
+						log/info ["Posted data=>" length? data]
 					]
 				]
 				if limit: find/part skip client/locals/in-buffer stop-at #{0D0A} 2 [

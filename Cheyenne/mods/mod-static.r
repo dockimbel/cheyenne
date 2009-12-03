@@ -350,5 +350,22 @@ install-HTTPd-extension [
 		
 		;--- Force user defined DNS server(s)
 		dns-server: [tuple! | block!] in globals
+		
+		;--- Block incoming connection if matching pattern found on request line
+		block: [word! | string! | block!] in globals do [
+			use [blk][
+				blk: to-block args/1
+				service/block-list: make block! length? blk
+				foreach s blk [
+					if string? s [repend service/block-list [s 0]]
+					if s = 'ip-host [service/block-ip-host?: yes]
+				]
+			]
+		]
+		
+		;--- Allow IP banning
+		allow-ip-banning: [opt [time!]] in globals do [
+			service/banning?: any [all [time? args/1 args/1] 0:01:00]
+		]
 	]
 ]

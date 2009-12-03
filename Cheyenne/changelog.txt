@@ -100,6 +100,35 @@ v0.9.20 - ??/??/2009
 	
 	o RSP: fix for locally defined databases growing connections issue.
 	
+	o New config keyword in global section: block. It will drop client connection if
+	  some given attack patterns are found in the request (usually on request line).
+	  Examples:
+	  
+	  		block "w00tw00t"
+	  		block [
+	  			"php"
+	  			"w00tw00t"
+	  			"/admin"
+	  		]
+	  
+	  When one of the pattern is detected, the connection is closed at once, no response
+	  is sent back to client. Additionnaly, you can add the 'ip-host keyword in block argument
+	  list to block all requests using an IP address in Host header instead of a valid domain.
+	  This is, almost every time, the signature of a web scanner. Examples:
+	  
+	  		block ip-host
+	  		block [
+	  			"php"
+	  			"w00tw00t"
+	  			ip-host
+	  		]
+	  
+	o New config keyword in global section: allow-ip-banning. It will drop client connection if
+	  the client IP has been already blocked once. Examples:
+	  
+	  		allow-ip-banning 				;-- default banning time is 1 minute
+	  		allow-ip-banning 08:00:00		;-- ban for 8 hours
+	
 
 v0.9.19 - 01/03/2009
 
