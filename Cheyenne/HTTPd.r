@@ -141,7 +141,7 @@ install-service [
 	]
 	
 	ban-ip: func [line][
-;		if client/remote-ip = 127.0.0.1 [exit]			;-- avoid locking server if behind a local proxy
+		if client/remote-ip = 127.0.0.1 [exit]			;-- avoid locking server if behind a local proxy
 		
 		either pos: find banned client/remote-ip [
 			pos/2: now
