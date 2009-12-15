@@ -658,7 +658,10 @@ install-service [
 		switch req/state [
 			request [
 				len: length? data
-				if any [all [2048 < len len < 6] blocked-pattern? as-string data][
+				if any [
+					all [2048 < len len < 6]
+					all [block-list blocked-pattern? as-string data]
+				][
 					if verbose > 1 [log/info ["Dropping invalid request=>" copy/part as-string data 120]]
 					do drop-client
 				]
