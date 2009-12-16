@@ -160,13 +160,11 @@ cheyenne: make log-class [
 		log-install 'scheduler			;--	install UniServe's logging in scheduler lib
 		scheduler/verbose: verbosity
 
-		either service?: all [OS-Windows? flag? 'service][
+		if service?: all [OS-Windows? flag? 'service][
 			launch-service				;-- launch service thread
 			do-cache %misc/admin.r
-		][
-			do-cache %misc/system.r		;-- install tray icon for Windows
 		]
-		
+		do-cache %misc/system.r		;-- install system port and tray icon support for Windows
 
 		do-cache uniserve-path/services/task-master.r		
 		do-cache uniserve-path/services/RConsole.r	
@@ -240,6 +238,7 @@ cheyenne: make log-class [
 	
 	do-tray-app: does [
 		do-cache %misc/system.r
+		open-system-events
 		set-tray-remote-events
 		do-events
 	]
