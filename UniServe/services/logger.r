@@ -13,6 +13,14 @@ install-service [
 	
 	trace-file: join system/options/path %trace.log
 	error-file: join system/options/path %error.log
+	
+	on-started: has [pid][
+		if cheyenne/port-id [
+			pid: join "-" cheyenne/port-id/1
+			insert find/reverse tail trace-file #"." pid
+			insert find/reverse tail error-file #"." pid
+		]
+	]
 		
 	on-new-client: does [
 		if client/remote-ip <> 127.0.0.1 [close-client]

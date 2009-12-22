@@ -666,7 +666,7 @@ uniserve: make log-class [
 	][
 		if start [
 			exec: [
-				log/info ["starting " mold name "..."]
+				log/info ["starting " mold name " on port " any [id svc/port-id] "..."]
 				unless find-service name id [
 					out: open-service name any [id svc/port-id]
 				]			

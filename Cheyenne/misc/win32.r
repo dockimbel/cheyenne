@@ -5,6 +5,7 @@ app-name: "Cheyenne"
 kernel32: load/library %kernel32.dll
 advapi32: load/library %advapi32.dll
 shell32:  load/library %shell32.dll
+iphlpapi: load/library %iphlpapi.dll
 
 int: :to-integer
 
@@ -244,6 +245,40 @@ GetCurrentProcessId: make routine! [
 	return:   [integer!]
 ] kernel32 "GetCurrentProcessId"
 
+tcp-states: [
+	CLOSED
+	LISTEN
+	SYN_SENT
+	SYN_RCVD
+	ESTABLISHED
+	FIN_WAIT1
+	FIN_WAIT2
+	CLOSE_WAIT
+	CLOSING
+	LAST_ACK
+	TIME_WAIT
+	DELETE_TCB
+]
+
+DWORD: [len [integer!]]
+
+MIB_TCPROW: [
+	dwState			[integer!]
+	dwLocalAddr		[integer!]
+	LocalPort		[short]
+	_pad			[short]
+	dwRemoteAddr	[integer!]
+	RemotePort		[short]
+	_pad2			[short]
+]
+
+GetTcpTable: make routine! compose/deep [
+	pTcpTable	[string!]
+	pdwSize		[struct! [(DWORD)]]
+	bOrder 		[integer!]
+	return: 	[integer!]
+] iphlpapi "GetTcpTable"
+
 ; === helper functions ===
 
 null: to-char 0
@@ -404,3 +439,32 @@ set 'NT-service-running? has [ss][
 ]
 
 set [setuid setgid] none
+
+
+set 'list-listen-ports has [size buf-size buffer out len state value][
+	size: 100'000
+	buf-size: make struct! DWORD reduce [size]
+	buffer: make-null-string! buf-size/len
+
+	GetTcpTable buffer buf-size 1
+	if buf-size/len > size [
+		buffer: make-null-string! buf-size/len
+		GetTcpTable buffer buf-size 1
+	]
+	parse/all buffer [
+		copy len 4 skip (
+			len: to integer! as-binary reverse len
+			out: make block! len
+		)
+		len [
+			copy state 4 skip (v1: pick tcp-states to integer! as-binary reverse state)
+			4 skip
+			copy value 2 skip (
+				value: to integer! as-binary value
+				if all [v1 = 'LISTEN not find out value][append out value])
+			10 skip
+		]
+	]
+	buffer: none
+	sort out
+]

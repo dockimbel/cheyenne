@@ -273,7 +273,8 @@ Cause:   $ERROR$
 		]	
 	]
 
-	on-started: does [	
+	on-started: has [pid][
+		if cheyenne/port-id [append q-file join "-" cheyenne/port-id/1]
 		if all [
 			exists? q-file
 			queue: attempt [load q-file]
@@ -282,7 +283,7 @@ Cause:   $ERROR$
 			foreach job queue [
 				if not empty? job/tasks [
 					foreach task job/tasks [				
-						task/job: job						;-- link back to parent
+						task/job: job							;-- link back to parent
 						get-mx task
 					] 
 				]

@@ -8,6 +8,19 @@ email: context [
 	charset-str: none
 	root: join what-dir %outgoing/
 	random/seed now/time/precise
+	
+	server: make system/standard/port [
+		scheme: 'tcp
+		host: 127.0.0.1
+		port-id: any [
+			all [
+				value? 'servers-port
+				block? servers-port
+				servers-port/MTA
+			]
+			9803
+		]
+	]
 
 	system/standard/email: make system/standard/email [
 		Content-Transfer-Encoding: "8bit"
@@ -183,13 +196,13 @@ email: context [
 
 		id: checksum append h random 999999
 		msg: mold/all reduce [from/1 t-list name id report]
-		write/direct/no-wait/binary tcp://127.0.0.1:9803 add-header msg
+		write/direct/no-wait/binary server add-header msg
 		id
 	]
 
 	set 'email-info? func [id [integer!] /local p res][
 		 attempt [
-			p: open/direct tcp://127.0.0.1:9803
+			p: open/direct server
 			insert p add-header join "I" id
 			res: load copy p
 			close p

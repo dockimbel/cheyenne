@@ -111,7 +111,7 @@ v0.9.20 - ??/??/2009
 	  			"/admin"
 	  		]
 	  
-	  When one of the pattern is detected, the connection is closed at once, no response
+	  When one of the patterns is detected, the connection is closed at once, no response
 	  is sent back to client. Additionnaly, you can add the 'ip-host keyword in block argument
 	  list to block all requests using an IP address in Host header instead of a valid domain.
 	  This is, almost every time, the signature of a web scanner. Examples:
@@ -129,6 +129,11 @@ v0.9.20 - ??/??/2009
 	  		allow-ip-banning 				;-- default banning time is 1 minute
 	  		allow-ip-banning 08:00:00		;-- ban for 8 hours
 	
+	o Added support for running multiple Cheyenne instances on same server (relocating internal
+	  listening ports if necessary). Trace files, PID file and other files used for c
+	  (RSP sessions, MTA jobs,...) will now include HTTPd's port number in the file name if
+	  server is running on port(s) other than the default one (80).
+	  
 
 v0.9.19 - 01/03/2009
 

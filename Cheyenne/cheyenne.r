@@ -129,7 +129,7 @@ cheyenne: make log-class [
 	name: 'boot
 	verbose: 0
 	
-	value: evt: none
+	value: evt: port-id: none
 	data-dir: system/options/path
 	pid-file: %/tmp/cheyenne.pid
 	
@@ -149,7 +149,7 @@ cheyenne: make log-class [
 		do bind body in obj 'self
 	]
 	
-	do-cheyenne-app: has [port-id vlevel service? home verbosity][	
+	do-cheyenne-app: has [vlevel service? home verbosity offset n list][	
 		if flag? 'custom-port [port-id: args/port-id]
 		if flag? 'verbose [verbosity: verbose: args/verbosity]
 		verbosity: any [verbosity 0]
@@ -173,12 +173,7 @@ cheyenne: make log-class [
 		do-cache uniserve-path/protocols/FastCGI.r
 		do-cache %HTTPd.r
 
-		within uniserve [
-			if port-id [	
-				;-- translate Task-master's listen port to allow several instances to run
-				services/task-master/port-id: ((port-id/1 + 2000) // 64512) + 1024
-; TDB: should do the same for Logger and RConsole service !!
-			]
+		within uniserve [			
 			set-verbose verbosity
 			
 			shared/pool-start: 	any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
@@ -186,6 +181,31 @@ cheyenne: make log-class [
 			shared/job-max: 	1000	;-- CGI/RSP requests queue size
 
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
+			
+			all [
+				not port-id
+				port-id: select services/httpd/conf/globals 'listen
+				port-id: to-block port-id
+			]			
+			if port-id [
+				;-- ensure that pid filename won't collide with other instances
+				insert find/reverse tail pid-file #"." join "-" port-id/1
+
+				;-- relocate non-HTTPd listen ports to allow several instances to run				
+				offset: port-id/1 // 63516 + 2020
+				in-use: list-listen-ports			
+				list: make block! 8
+				foreach svc [task-master RConsole logger MTA][
+					n: services/:svc/port-id + offset
+					until [not find in-use n: n + 1]
+					services/:svc/port-id: n
+					repend list [svc n]
+				]
+				log/info ["servers port relocated: ^/" mold new-line/all/skip copy list on 2]
+			]
+			share [server-ports: list]
+			
+			if not OS-Windows? [attempt [write pid-file process-id?]]
 
 			control/start/only 'RConsole none
 			control/start/only 'Logger none
@@ -199,15 +219,12 @@ cheyenne: make log-class [
 			
 			set-verbose verbosity			;-- for SMTP and dig protocols
 			
-			all [
-				not port-id
-				port-id: select services/httpd/conf/globals 'listen
-				port-id: to-block port-id
-			]
 			if OS-Windows? [
 				if not service? [
 					set-tray-help-msg rejoin [
-						"Cheyenne is listening on port: " mold any [port-id 80]
+						"Cheyenne is listening on port"
+						either all [port-id 1 < length? port-id]["s"][""] ": " 
+						replace/all mold/only any [port-id 80] " " ","
 					]
 				]
 			]
@@ -322,12 +339,7 @@ cheyenne: make log-class [
 		
 		parse-cmd-line
 		
-		unless flag? 'bg-process [
-			do-cache %misc/os.r			 				; -- can't use any OS calls before that
-			if not OS-Windows? [
-				attempt [write pid-file process-id?]
-			]
-		]
+		unless flag? 'bg-process [do-cache %misc/os.r]	; -- can't use any OS calls before that
 			
 		logger/level: either flag? 'verbose [
 			logger/level: either flag? 'no-screen [

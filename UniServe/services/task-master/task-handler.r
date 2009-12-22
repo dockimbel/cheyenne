@@ -6,6 +6,11 @@ REBOL [
 ]
 
 logger: context [
+	server: make system/standard/port [
+		scheme: 'tcp
+		port-id: 9802
+		host: 127.0.0.1
+	]
 	col: #":"
 	zero: #"0"
 	dot: #"."
@@ -24,9 +29,7 @@ logger: context [
 		h: debase/base to-hex length? data 16
 		insert tail h #"T" ;pick [#"E" #"T"] to logic! err? 
 		insert data h
-		attempt [
-			write/direct/no-wait/binary tcp://127.0.0.1:9802 data
-		]
+		attempt [write/direct/no-wait/binary server data]
 	]
 
 	notify: func [msg module [word!] type [word!] /local out][
@@ -81,10 +84,17 @@ debug: context [
 protect [logger log-class debug]
 
 if ssa: system/script/args [
-	ssa: parse ssa none
-	uniserve-path: all [v: select ssa "uniserve-path" load v]
-	modules-path:  all [v: select ssa "modules-path" load v]
-	uniserve-port: all [v: select ssa "server-port" load v]
+	ssa: load/all ssa
+	uniserve-path: select ssa 'u-path
+	modules-path:  select ssa 'm-path
+	servers-port:  select ssa 's-port
+	
+	either block? servers-port [
+		uniserve-port: servers-port/task-master
+		logger/server/port-id: servers-port/logger
+	][
+		uniserve-port: servers-port
+	]
 ]
 if not value? 'uniserve-path [uniserve-path: what-dir]
 if not value? 'modules-path  [modules-path: dirize uniserve-path/modules]
@@ -98,8 +108,8 @@ unless value? 'encap-fs [
 ]
 
 s-read-io: get in system/words 'read-io
-s-quit: get in system/words 'quit
-s-halt: get in system/words 'halt
+s-quit:    get in system/words 'quit
+s-halt:    get in system/words 'halt
 
 ctx-task-class: make log-class [
 	name: 'task-handler

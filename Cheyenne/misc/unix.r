@@ -31,3 +31,39 @@ set 'kill-app func [pid][
 	call join "kill " pid
 ]
 set 'process-id? does [getpid]
+
+tcp-states: [
+	ESTABLISHED
+	SYN_SENT
+	SYN_RECEIVED
+	FIN_WAIT_1
+	FIN_WAIT_2
+	TIME_WAIT
+	CLOSED
+	CLOSE_WAIT
+	LAST_ACK
+	LISTEN
+	CLOSING
+]
+
+set 'list-listen-ports has [p out value state][
+	p: open/read/lines %/proc/net/tcp
+	out: make block! length? p
+	p: next p					;-- skip column names line
+	until [
+		parse/all first p [
+			thru ": " thru #":" copy value to #" "
+			thru #":" thru #" " copy state to #" "
+		]
+		state: pick tcp-states to integer! debase/base state 16
+		if all [
+			state = 'LISTEN
+			not find out value: to integer! debase/base value 16
+		][
+			append out value
+		]
+		tail? p: next p
+	]
+	close p
+	sort out
+]

@@ -118,10 +118,10 @@ install-service [
 	
 	on-started: does [
 		additional-args: rejoin [
-			" uniserve-path " mold uniserve-path
-			" server-port "	 mold port-id
+			" u-path " mold uniserve-path
+			" s-port " mold any [uniserve/shared/server-ports port-id]	;TBD: fix shared object issues
 			either value? 'modules-path [
-				rejoin [" modules-path " mold modules-path]
+				rejoin [" m-path " mold modules-path]
 			][""]
 		]
 		if integer? shared/pool-start [loop shared/pool-start [fork]]

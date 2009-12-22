@@ -430,6 +430,7 @@ install-HTTPd-extension [
 		ws: #" "
 		
 		ctx-file: join system/options/path %.rsp-sessions
+		if cheyenne/port-id [append ctx-file join "-" cheyenne/port-id/1]
 		
 		proto: context [
 			id: vars: start: expires: timeout: queue: init: app: auth: 
