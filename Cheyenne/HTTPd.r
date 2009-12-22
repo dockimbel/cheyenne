@@ -690,6 +690,7 @@ install-service [
 				do-phase req 'parsed-headers
 				select-vhost req				
 				do-phase req 'url-to-filename
+				if verbose > 1 [log/info ["translated file: " mold req/in/file]]
 				reset-stop
 				if find [POST PUT] req/in/method [
 					req/state: 'data
