@@ -273,7 +273,7 @@ Cause:   $ERROR$
 		]	
 	]
 
-	on-started: has [pid][
+	on-started: does [
 		if cheyenne/port-id [append q-file join "-" cheyenne/port-id/1]
 		if all [
 			exists? q-file

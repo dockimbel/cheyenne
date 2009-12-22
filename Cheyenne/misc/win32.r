@@ -262,16 +262,6 @@ tcp-states: [
 
 DWORD: [len [integer!]]
 
-MIB_TCPROW: [
-	dwState			[integer!]
-	dwLocalAddr		[integer!]
-	LocalPort		[short]
-	_pad			[short]
-	dwRemoteAddr	[integer!]
-	RemotePort		[short]
-	_pad2			[short]
-]
-
 GetTcpTable: make routine! compose/deep [
 	pTcpTable	[string!]
 	pdwSize		[struct! [(DWORD)]]
