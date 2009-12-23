@@ -17,7 +17,7 @@ install-module [
 	verbose: 0
 	
 	libs: none
-	apps: make block! 1 	; [app events ctx ...]
+	apps: make block! 1 	; [app-dir events ctx ...]
 	apps-db: make block! 1 	; [domain1 [app [db1 def1 ...] app2 [...] ...] domain2 [...] ...]
 	databases: none
 	jobs: make block! 1
@@ -240,7 +240,8 @@ install-module [
 			if all [
 				value? 'request
 				object? :request
-				ctx: find apps request/web-app
+				request/web-app
+				ctx: find apps request/config/root-dir
 			][
 				out: bind out third ctx
 			]		
@@ -765,7 +766,7 @@ install-module [
 
 		depth: [0]		
 		either request/web-app [
-			if arg: find apps request/web-app [
+			if arg: find apps request/config/root-dir [
 				;bind value: load value arg/3
 				value: load value
 				depth/1: depth/1 + 1
@@ -908,22 +909,23 @@ install-module [
 		protected-exec/event request/parsed/file get in session/events :event :event
 	]
 	
-	process-events: has [evt-data events ctx init][	
+	process-events: has [evt-data events ctx init root][	
 		either request/web-app [
-			either events: select apps request/web-app [
+			root: request/config/root-dir
+			either events: select apps root [
 				session/events: events
 			][
-				safe-exec %app-init.r does [init: load join request/config/root-dir %/app-init.r]
+				safe-exec %app-init.r does [init: load join root %/app-init.r]
 				evt-data: any [init []]
 				repend apps [
-					request/web-app
+					root
 					events: make evt-class evt-data
 					ctx: context []
 				]
 				session/events: events
-				change-dir request/config/root-dir
+				change-dir root
 				fire-event 'on-application-start
-				ctx: third find apps request/web-app	 ; ctx needs to reference the new object				
+				ctx: third find apps root				 ; ctx needs to reference the new object				
 				foreach fun next first events [
 					bind second get in events :fun ctx
 				]
@@ -931,7 +933,7 @@ install-module [
 				system/script/path: dirize save-path
 			]			
 			if session/init? [
-				change-dir request/config/root-dir
+				change-dir root
 				fire-event 'on-session-start
 				change-dir save-path
 			]
@@ -1029,7 +1031,7 @@ install-module [
 	]
 	
 	on-quit: has [blk][
-		foreach [app events ctx] apps [
+		foreach [app-dir events ctx] apps [
 			safe-exec %on-application-end events/on-application-end
 		]
 		
