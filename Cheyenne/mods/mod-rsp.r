@@ -78,22 +78,8 @@ install-HTTPd-extension [
 		]
 	]
 	
-	log-error: func [req /local evt][
-		evt: clear ""
-		insert tail evt "----------------------"
-		insert tail evt "^/Timestamp: "
-		insert tail evt now/precise
-		insert tail evt "^/Error:^/"
-		form-error evt req/out/error
-		insert tail evt "^/Request:^/"
-		insert tail evt mold req/in
-		insert tail evt newline
-		write/append %rsp-errors.log evt
-	]
-	
 	filter-error: func [req /local page][
 		unless find req/cfg 'debug [
-;			log-error req
 			page: either page: select req/cfg 'error-page [
 				req/out/forward: page
 			][
@@ -171,8 +157,6 @@ install-HTTPd-extension [
 					)
 					opt ['close (close?: yes sessions/destroy sess req)]
 					(sess/busy?: no)
-					;	probe "@@@@@@@@@@@@@@@@@@@@@@@@@@"
-					;	?? close?
 					;	if not close? [sessions/set-cookie sess req]
 					;)
 				]
@@ -338,12 +322,16 @@ install-HTTPd-extension [
 		true
 	]
 
-	task-done: func [req /local page][
+	task-done: func [req /local page][	
 		if declined? req [return none]	;-- Check if this doesn't block some valid calls
 		decode-msg req
-		if req/out/error [filter-error req]
-		process-next-job
-		service/process-queue
+		either req/in/ws? [
+			service/ws-send-response req
+		][
+			if req/out/error [filter-error req]
+			process-next-job
+			service/process-queue
+		]
 		true 		
 	]
 
@@ -354,8 +342,12 @@ install-HTTPd-extension [
 		if verbose > 0 [log/info mold ro/content]
 		unless any-string? ro/content [ro/content: mold ro/content]
 		ro/code: 500
-		process-next-job		
-		service/process-queue	
+		either req/in/ws? [
+			service/close-client
+		][
+			process-next-job		
+			service/process-queue
+		]
 		true
 	]
 	

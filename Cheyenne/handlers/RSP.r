@@ -567,7 +567,7 @@ install-module [
 	
 	set 'request context [
 		content: headers: method: posted: client-ip: server-port: 
-		translated: parsed: config: web-app: none
+		translated: parsed: config: web-app: web-socket?: none
 		
 		query-string: has [out][
 			out: make string! 32
@@ -852,6 +852,10 @@ install-module [
 		list: make block! 1
 		any [
 			all [
+				request/web-socket?
+				list: reduce ['data as-string request/parsed/content]
+			]
+			all [
 				value: select request/headers 'Content-type
 				find/part value "multipart/form-data" 19
 				list: decode-multipart request/posted
@@ -898,11 +902,17 @@ install-module [
 		request/method: request/parsed/method
 		request/posted: request/parsed/content
 		request/headers: request/parsed/headers
+		request/web-socket?: request/parsed/ws?
 		request/translated: join request/config/root-dir [
 			request/parsed/path
 			request/parsed/target
 		]
-		if find request/config 'debug [debug-banner/active?: yes]
+		if all [
+			find request/config 'debug
+			not request/web-socket?
+		][
+			debug-banner/active?: yes
+		]
 	]
 	
 	fire-event: func [event [word!]][
@@ -971,6 +981,7 @@ install-module [
 	compress-output: has [value buf][
 		if all [
 			not response/error?
+			not request/web-socket?
 			response/compress?
 			not empty? buf: response/buffer
 			512 < length? buf
@@ -1011,7 +1022,7 @@ install-module [
 		][
 			engine/exec file last splitted
 		]
-		if session/events [fire-event 'on-page-end]
+		if all [session/events not request/web-socket?][fire-event 'on-page-end]
 		if debug-banner/active? [debug-banner/on-page-end]
 		
 		if verbose > 2 [log/info mold response/buffer]

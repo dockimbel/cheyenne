@@ -40,6 +40,12 @@ install-service [
 	
 	keep-alive: "Keep-Alive"
 	
+	ws-response: 
+{HTTP/1.1 101 Web Socket Protocol Handshake^M
+Upgrade: WebSocket^M
+Connection: Upgrade^M
+}
+	
 	http-responses: [
 		100 "Continue"
 		101 "Switching Protocols"
@@ -187,7 +193,7 @@ install-service [
 			in: make object! [
 				headers: make block! 10
 				status-line: method: url: content: path: target: 
-				arg: ext: version: file: script-name: none
+				arg: ext: version: file: script-name: ws?: none
 			]
 			out: make object! [
 				headers: copy proto-header
@@ -469,6 +475,32 @@ install-service [
 		]
 	]
 	
+	ws-handshake: func [req][
+		client/locals/expire: now + 00:30		;-- web sockets timeout of 30mn
+		req/in/ws?: yes
+		req/out/code: 101
+		h-store req/out/headers 'Connection none
+		h-store req/out/headers 'WebSocket-Origin join "http://" req/in/headers/host
+        h-store req/out/headers 'WebSocket-Location rejoin [
+        	"ws://" req/in/headers/host req/in/url
+        ]
+		req/state: 'ws-handshake
+		send-response req
+		if verbose > 0 [
+			log/info ["[WebSocket] Opened=> " req/out/headers/WebSocket-Location]
+		]
+	]
+	
+	ws-send-response: func [req][
+		if verbose > 0 [
+			log/info ["[WebSocket] <= " copy/part as-string req/out/content 80]
+		]
+		write-client 
+			head insert tail
+				insert req/out/content #"^(00)"
+				#"^(FF)"
+	]
+	
 	process-queue: has [q req][
 		q: client/user-data
 		if empty? q [log/warn "empty queue"]	;-- should never happen!		
@@ -478,7 +510,7 @@ install-service [
 				q/1/out/code
 			]
 		][		
-			if finish-response first q [remove q]
+			if send-response first q [remove q]
 		]
 	]
 	
@@ -519,10 +551,10 @@ install-service [
 		respond new
 	]	
 	
-	finish-response: func [req /local q out data value keep?][
+	send-response: func [req /local q out data value keep?][		
 		q: client/user-data
 		out: req/out
-		
+
 		unless out/header-sent? [
 			do-phase req 'filter-output
 			if req/out/forward [
@@ -551,6 +583,7 @@ install-service [
 				out/status-line: select http-responses out/code
 			]
 			if any [
+				req/in/ws?
 				1 < length? q
 				all [
 					any [
@@ -562,10 +595,12 @@ install-service [
 					find value keep-alive
 				]
 			][		
-				h-store out/headers 'Connection keep-alive
+				unless req/in/ws? [h-store out/headers 'Connection keep-alive]
 				keep?: yes
 			]
-			write-client data: join out/status-line form-header out/headers
+			write-client data: join
+				either req/in/ws? [ws-response][out/status-line]
+				form-header out/headers
 		]
 
 		if all [out/content req/in/method <> 'HEAD][write-client out/content]
@@ -574,7 +609,9 @@ install-service [
 		if any [
 			all [not keep? 1 = length? q]
 			out/code = 405
-		][close-client]
+		][
+			close-client
+		]
 		
 		do-phase req 'logging
 		do-phase req 'clean-up
@@ -659,7 +696,8 @@ install-service [
 			request [
 				len: length? data
 				if any [
-					all [2048 < len len < 6]
+					len < 6
+					len > 2048
 					all [block-list blocked-pattern? as-string data]
 				][
 					if verbose > 1 [log/info ["Dropping invalid request=>" copy/part as-string data 120]]
@@ -691,6 +729,12 @@ install-service [
 				select-vhost req				
 				do-phase req 'url-to-filename
 				if verbose > 1 [log/info ["translated file: " mold req/in/file]]
+				if "WebSocket" = select req/in/headers 'Upgrade [			
+					ws-handshake req
+					req/state: 'ws-header
+					stop-at: none			;-- switch to packet mode
+					exit
+				]
 				reset-stop
 				if find [POST PUT] req/in/method [
 					req/state: 'data
@@ -748,12 +792,50 @@ install-service [
 		reset-stop
 	]
 	
+	on-raw-received: func [data /local req start][		;-- web sockets handled in packet mode
+		req: last client/user-data
+		start: data
+		until [	
+			switch req/state [
+				ws-header [
+					either 127 < to integer! data/1 [
+						;encoded-length not supported yet
+						close-client
+						exit
+					][
+						if data/1 <> #"^(00)" [close-client]	;-- only 00 mode supported
+						req/state: 'ws-frame
+						req/in/content: clear any [req/in/content make binary! 10'000]
+					]
+					start: data: next data
+				]
+				ws-frame [
+					if verbose > 0 [
+						log/info ["[WebSocket] => " copy/part as-string start 80]
+					]
+					either data: find data #"^(FF)" [
+						insert/part req/in/content start data
+						do-phase req 'make-response
+						data: next data
+						req/state: 'ws-header
+					][
+						append req/in/content start
+						;TBD: check limit properly + add disk streaming mode
+						if 100'000 > length? req/in/content [close-client]
+						exit
+					]
+				]
+			]
+			tail? data
+		]
+	]
+	
 	on-task-part: func [data req][
 		req/out/content: data
 		do-phase req 'task-part
 	]
 	
-	on-task-done: func [data req][
+	on-task-done: func [data req][	
 		req/out/content: data
 		do-phase req 'task-done
 	]
@@ -764,7 +846,7 @@ install-service [
 	]
 	
 	on-close-client: does [
-		if verbose > 1 [log/info ["Connection closed"]]
+		if verbose > 1 [log/info "Connection closed"]
 		;--- TBD: close properly tmp disk files (when upload has been interrupted)
 	]
 ]

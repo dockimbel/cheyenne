@@ -1,0 +1,22 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Welcome!</title>
+</head>
+<body>
+<center>
+<h2>Web Socket test page</h2>
+
+<script>
+var conn = new WebSocket("ws://localhost/ws.rsp")
+
+conn.onopen = function(evt) { alert("Conn opened");}
+conn.onmessage = function(evt) { alert("Read: " + evt.data); }
+conn.onclose = function(evt) { alert("Conn closed"); }
+
+
+</script>
+<button onClick="conn.send('Hello World');"> Send Message </button>
+</center>
+</body>
+</html>

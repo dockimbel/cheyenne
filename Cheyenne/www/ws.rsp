@@ -1,0 +1,11 @@
+<%
+
+;-- RSP API web sockets specific changes --
+;
+;   request/web-socket? => true if this is an incoming socket message, false if it's HTTP.
+;   request/content/data => contains the socket message (string!)
+
+;-- just echo back the message
+prin request/content/data
+
+%>

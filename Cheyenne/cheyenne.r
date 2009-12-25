@@ -173,7 +173,7 @@ cheyenne: make log-class [
 		do-cache uniserve-path/protocols/FastCGI.r
 		do-cache %HTTPd.r
 
-		within uniserve [			
+		within uniserve [
 			set-verbose verbosity
 			
 			shared/pool-start: 	any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
@@ -218,6 +218,8 @@ cheyenne: make log-class [
 			do-cache uniserve-path/protocols/dig.r
 			
 			set-verbose verbosity			;-- for SMTP and dig protocols
+			verbose: max verbosity - 2 0	;-- lower down UniServe's and Task-Master's verbosity 
+			uniserve/services/task-master/verbose: max verbosity - 1 0
 			
 			if OS-Windows? [
 				if not service? [
@@ -314,6 +316,7 @@ cheyenne: make log-class [
 						repend args ['workers abs value]
 					)			
 					| #"-" copy value 1 5 #"v" (
+						value: trim value
 						set-flag 'verbose repend args ['verbosity length? value]
 						propagate join " -" value
 					)
