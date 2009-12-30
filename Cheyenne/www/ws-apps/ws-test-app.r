@@ -46,12 +46,16 @@ install-socket-app [								;-- load application at Cheyenne startup
 	]
 	
 	;-- on-message event happens when the server receives a message from the client (can happen only
-	;-- while the connection is opened). The 'data argument contains the text message as a string! value
-	;-- from the client in UTF-8 encoding. Additionnaly the client port is passed in 'client argument.
-	on-message: func [data client][						
+	;-- while the connection is opened). The client port is passed in 'client argument. The 'data argument
+	;--	contains the text message as a string! value from the client in UTF-8 encoding.
+	on-message: func [client data][						
 		;send data									;-- 'send function emit string! data to client (must be UTF-8 encoded!).
 													;-- 'send will emit the data to the client from which the message originates.
-		do-task data								;-- 'do-task processes the argument data (can be anything) in background 
+		do-task/on-done data func [client data][	;-- 'do-task processes the argument data (can be anything) in background 
+			data: uppercase data					;--	simulates a post-processing action
+			print ["post-processing:" data]
+			send/with data client
+		]
 	]												;-- passing the data to the initial RSP script. Currently, the response
 													;-- data from the RSP is sent directly to the client.
 
@@ -76,6 +80,7 @@ install-socket-app [								;-- load application at Cheyenne startup
 
 ;-- Implementation pending for :
 ;--   v  - 'on-message should have a 'client argument in addition to the 'data value.
-;--     - 'on-done event for 'do-task return action to be able to post-process it before sending data to client
+;--   v  - 'on-done event for 'do-task return action to be able to post-process it before sending data to client
 ;--   v  - 'session object to access session data shared by RSP processes.
 ;--     - protected /ws-apps folder from direct remote access.
+;-- 	- reloading socket apps if modified

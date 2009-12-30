@@ -216,7 +216,7 @@ Connection: Upgrade^M
 			state: 'request
 			loops: 0
 			handler: locals: cfg: file-info: vhost: app: tmp: 
-			socket-app: socket-port: session: none
+			socket-app: socket-port: session: tasks: none
 		 ]
 	]
 

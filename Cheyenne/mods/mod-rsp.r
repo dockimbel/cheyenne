@@ -326,7 +326,11 @@ install-HTTPd-extension [
 		if declined? req [return none]	;-- Check if this doesn't block some valid calls
 		decode-msg req
 		either req/in/ws? [
-			service/ws-send-response req
+			either all [req/socket-app not empty? req/tasks][
+				service/mod-list/mod-socket/on-task-done req
+			][
+				service/ws-send-response req
+			]
 		][
 			if req/out/error [filter-error req]
 			process-next-job
@@ -343,7 +347,12 @@ install-HTTPd-extension [
 		unless any-string? ro/content [ro/content: mold ro/content]
 		ro/code: 500
 		either req/in/ws? [
-			service/close-client
+			either all [req/socket-app not empty? req/tasks][		;-- TBD: see what should be the
+				service/mod-list/mod-socket/on-task-done req		;-- policy in such case...
+			][
+				;service/close-client
+				service/do-phase req 'socket-disconnect
+			]
 		][
 			process-next-job		
 			service/process-queue

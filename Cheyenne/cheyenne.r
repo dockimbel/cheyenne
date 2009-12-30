@@ -49,6 +49,7 @@ set-cache [
 		%mod-userdir.r
 		%mod-internal.r
 		%mod-extapp.r
+		%mod-socket.r
 	]
 	%handlers/ [
 		%CGI.r

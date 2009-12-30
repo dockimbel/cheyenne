@@ -2,7 +2,8 @@ REBOL []
 
 install-HTTPd-extension [
 	name: 'mod-socket
-	
+	verbose: 0
+		
 	order: [
 		socket-connect		normal
 		socket-message		normal
@@ -43,9 +44,10 @@ install-HTTPd-extension [
 			]
 		]
 		
-		do-task: func [data [string!] /on-done handler [function! block!]][
+		do-task: func [data [string!] /on-done handler [function! block!]][ ;-- handler: func [client data][...]
 			__ctx/in/content: data
-			service/mod-list/mod-rsp/make-response __ctx
+			if on-done [append __ctx/tasks :handler]			;-- store handler for deferred action
+			service/mod-list/mod-rsp/make-response __ctx		;-- trigger a bg job through RSP pipe
 			__ctx: none
 		]
 	]
@@ -65,30 +67,43 @@ install-HTTPd-extension [
 		repend apps [new/name new]
 	]
 	
-	fire-event: func [req event [word!] /arg data /arg2 port /local err app current][
+	check-update: has [][
+	
+	]
+	
+	fire-event: func [
+		req
+		action [word! function! block!]
+		/arg data
+		/local err app current
+	][
 		app: req/socket-app
 		app/__ctx: req
 		app/session: req/session
 		current: service/client
 		service/client: req/socket-port
-		unless data [data: service/client]
-		if error? set/any 'err try [app/:event data port][
-			log/error rejoin [event " call failed with error: " mold disarm err]
+		if error? set/any 'err try pick [
+			[app/:action req/socket-port data]				;-- event action
+			[do :action req/socket-port data]				;-- function! or block! action
+		] word? :action [
+			log/error rejoin [mold :action " call failed with error: " mold disarm err]
 		]
 		service/client: current
 		app/__ctx: app/session: none
 	]
 	
 	socket-connect: func [req][
+		check-update
 		req/socket-app: select mappings req/in/url
 		append req/socket-app/clients service/client
 		req/session: service/mod-list/mod-rsp/sessions/exists? req
+		req/tasks: make block! 10
 		fire-event req 'on-connect
 		true
 	]
 	
 	socket-message: func [req][
-		fire-event/arg/arg2 req 'on-message as-string req/in/content service/client
+		fire-event/arg req 'on-message as-string req/in/content
 		true
 	]
 	
@@ -96,6 +111,14 @@ install-HTTPd-extension [
 		remove find req/socket-app/clients req/socket-port
 		fire-event req 'on-disconnect
 		true
+	]
+	
+	on-task-done: func [req /local action][					;-- event generated from mod-rsp
+		if verbose > 0 [log/info "calling on-task-done"]
+		if action: pick req/tasks 1 [
+			remove req/tasks
+			fire-event/arg req :action req/out/content
+		]
 	]
 	
 	words: [
