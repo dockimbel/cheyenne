@@ -1,7 +1,7 @@
 REBOL [
 	Title: "Web Socket test application"
-	Date: 29/12/2009
 	Author: "Nenad Rakocevic/Softinnov"
+	Date: 29/12/2009
 ]
 
 ;-- Web socket applications are loaded in Cheyenne/UniServe main process.
@@ -47,8 +47,8 @@ install-socket-app [								;-- load application at Cheyenne startup
 	
 	;-- on-message event happens when the server receives a message from the client (can happen only
 	;-- while the connection is opened). The 'data argument contains the text message as a string! value
-	;-- from the client in UTF-8 encoding.
-	on-message: func [data][						
+	;-- from the client in UTF-8 encoding. Additionnaly the client port is passed in 'client argument.
+	on-message: func [data client][						
 		;send data									;-- 'send function emit string! data to client (must be UTF-8 encoded!).
 													;-- 'send will emit the data to the client from which the message originates.
 		do-task data								;-- 'do-task processes the argument data (can be anything) in background 
@@ -62,10 +62,20 @@ install-socket-app [								;-- load application at Cheyenne startup
 			send/with "tick" port					;-- 'send is used here with /with refinement, in order to point
 		]											;-- to the right client port. In 'on-timer, there's no implicit
 	]												;-- client port.
+	
+	;-- SESSION support (should work ok, but untested yet)
+	;-- If the socket has been opened from a RSP webapp, the session object is available from within the
+	;-- socket application. Usage:
+	;--
+	;--		session/vars		;-- block of name/value pairs (word! anytype!). Reading is always safe.
+	;--							;-- Writing *only* if no background tasks is running.
+	;--
+	;--		session/busy?		;-- returns TRUE is a background task is running else FALSE. Use it
+	;--							;--	to synchronize session variables writings.
 ]
 
 ;-- Implementation pending for :
-;--     - 'on-message should have a 'client argument in addition to the 'data value.
+;--   v  - 'on-message should have a 'client argument in addition to the 'data value.
 ;--     - 'on-done event for 'do-task return action to be able to post-process it before sending data to client
-;--     - 'session object to access session data shared by RSP processes.
-;--     - protected /ws-apps folder from direct remote accesses.
+;--   v  - 'session object to access session data shared by RSP processes.
+;--     - protected /ws-apps folder from direct remote access.

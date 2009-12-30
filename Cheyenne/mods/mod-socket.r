@@ -53,12 +53,8 @@ install-HTTPd-extension [
 	make-unique-id: has [id][
 		until [
 			id: random 9999
-			any [
-				all [
-					not empty? apps
-					foreach [name app] apps [if app/__id = id [break/return false] true]
-				]
-				true
+			either empty? apps [true][
+				foreach [name app] apps [if app/__id = id [break/return false] true]
 			]
 		]
 		to word! join "SA" id
@@ -69,32 +65,37 @@ install-HTTPd-extension [
 		repend apps [new/name new]
 	]
 	
-	fire-event: func [req event [word!] /arg data /local err app current][
+	fire-event: func [req event [word!] /arg data /arg2 port /local err app current][
 		app: req/socket-app
 		app/__ctx: req
+		app/session: req/session
 		current: service/client
 		service/client: req/socket-port
 		unless data [data: service/client]
-		if error? set/any 'err try [app/:event data][
+		if error? set/any 'err try [app/:event data port][
 			log/error rejoin [event " call failed with error: " mold disarm err]
 		]
 		service/client: current
-		app/__ctx: none
+		app/__ctx: app/session: none
 	]
 	
 	socket-connect: func [req][
 		req/socket-app: select mappings req/in/url
 		append req/socket-app/clients service/client
+		req/session: service/mod-list/mod-rsp/sessions/exists? req
 		fire-event req 'on-connect
+		true
 	]
 	
 	socket-message: func [req][
-		fire-event/arg req 'on-message as-string req/in/content
+		fire-event/arg/arg2 req 'on-message as-string req/in/content service/client
+		true
 	]
 	
 	socket-disconnect: func [req /local app][
-		fire-event req 'on-disconnect
 		remove find req/socket-app/clients req/socket-port
+		fire-event req 'on-disconnect
+		true
 	]
 	
 	words: [

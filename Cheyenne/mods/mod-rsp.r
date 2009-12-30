@@ -147,7 +147,7 @@ install-HTTPd-extension [
 						sessions/set-cookie sess req
 						login?: select sess/vars 'login?
 					) 
-					'vars set list block! (sess/vars: list)	
+					'vars set list block! (insert clear sess/vars list)	
 					'queries set list [block! | none!] (sess/cache-queries: list)
 					'timeout set value time! (
 						if sess/timeout <> value [

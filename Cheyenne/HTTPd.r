@@ -102,24 +102,24 @@ Connection: Upgrade^M
 	http-responses: make hash! http-responses
 
 	phases: make hash! [
-		method-support	 []
-		url-translate 	 []
-		url-to-filename  []
-		parsed-headers	 []
-		filter-input	 []
-		access-check	 []
-		set-mime-type	 []
-		make-response	 []
-		filter-output	 []
-		reform-headers	 []
-		logging			 []
-		clean-up		 []
-		task-done 		 []
-		task-failed		 []
-		task-part		 []
-		socket-connect	 []
-		socket-message	 []
-		socket-deconnect []
+		method-support	  []
+		url-translate 	  []
+		url-to-filename   []
+		parsed-headers	  []
+		filter-input	  []
+		access-check	  []
+		set-mime-type	  []
+		make-response	  []
+		filter-output	  []
+		reform-headers	  []
+		logging			  []
+		clean-up		  []
+		task-done 		  []
+		task-failed		  []
+		task-part		  []
+		socket-connect	  []
+		socket-message	  []
+		socket-disconnect []
 	]
 	
 	do extension-class: has [list][
@@ -216,7 +216,7 @@ Connection: Upgrade^M
 			state: 'request
 			loops: 0
 			handler: locals: cfg: file-info: vhost: app: tmp: 
-			socket-app: socket-port: none
+			socket-app: socket-port: session: none
 		 ]
 	]
 
@@ -863,8 +863,8 @@ Connection: Upgrade^M
 		if all [
 			req: pick tail client/user-data -1
 			req/socket-app
-		][
-			do-phase req 'socket-deconnect
+		][		
+			do-phase req 'socket-disconnect
 			req/socket-port: none
 		]
 		;--- TBD: close properly tmp disk files (when upload has been interrupted)

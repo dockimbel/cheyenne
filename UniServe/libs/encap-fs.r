@@ -1,4 +1,7 @@
-REBOL []
+REBOL [
+	Title: "Encap virtual filesystem"
+	Date: 21/09/2009
+]
 
 encap-fs: context [
 	verbose: 0
