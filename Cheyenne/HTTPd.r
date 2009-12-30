@@ -102,21 +102,24 @@ Connection: Upgrade^M
 	http-responses: make hash! http-responses
 
 	phases: make hash! [
-		method-support	[]
-		url-translate 	[]
-		url-to-filename []
-		parsed-headers	[]
-		filter-input	[]
-		access-check	[]
-		set-mime-type	[]
-		make-response	[]
-		filter-output	[]
-		reform-headers	[]
-		logging			[]
-		clean-up		[]
-		task-done 		[]
-		task-failed		[]
-		task-part		[]
+		method-support	 []
+		url-translate 	 []
+		url-to-filename  []
+		parsed-headers	 []
+		filter-input	 []
+		access-check	 []
+		set-mime-type	 []
+		make-response	 []
+		filter-output	 []
+		reform-headers	 []
+		logging			 []
+		clean-up		 []
+		task-done 		 []
+		task-failed		 []
+		task-part		 []
+		socket-connect	 []
+		socket-message	 []
+		socket-deconnect []
 	]
 	
 	do extension-class: has [list][
@@ -212,7 +215,8 @@ Connection: Upgrade^M
 			]
 			state: 'request
 			loops: 0
-			handler: locals: cfg: file-info: vhost: app: tmp: none
+			handler: locals: cfg: file-info: vhost: app: tmp: 
+			socket-app: socket-port: none
 		 ]
 	]
 
@@ -482,23 +486,28 @@ Connection: Upgrade^M
 		h-store req/out/headers 'Connection none
 		h-store req/out/headers 'WebSocket-Origin join "http://" req/in/headers/host
         h-store req/out/headers 'WebSocket-Location rejoin [
-        	"ws://" req/in/headers/host req/in/url
+        	"ws://" req/in/headers/host req/in/url: join req/in/path req/in/target
         ]
 		req/state: 'ws-handshake
 		send-response req
 		if verbose > 0 [
 			log/info ["[WebSocket] Opened=> " req/out/headers/WebSocket-Location]
 		]
+		req/socket-port: client
+		do-phase req 'socket-connect
 	]
 	
-	ws-send-response: func [req][
+	ws-send-response: func [req /direct /with port /local data][
+		data: any [all [direct req] req/out/content]
 		if verbose > 0 [
-			log/info ["[WebSocket] <= " copy/part as-string req/out/content 80]
+			log/info ["[WebSocket] <= " copy/part as-string data 80]
 		]
-		write-client 
-			head insert tail
-				insert req/out/content #"^(00)"
-				#"^(FF)"
+		data: head insert tail insert copy data #"^(00)" #"^(FF)"
+		either with [
+			write-client/with data port
+		][
+			write-client data
+		]
 	]
 	
 	process-queue: has [q req][
@@ -799,7 +808,7 @@ Connection: Upgrade^M
 			switch req/state [
 				ws-header [
 					either 127 < to integer! data/1 [
-						;encoded-length not supported yet
+						;encoded-length frames not supported yet
 						close-client
 						exit
 					][
@@ -811,11 +820,15 @@ Connection: Upgrade^M
 				]
 				ws-frame [
 					if verbose > 0 [
-						log/info ["[WebSocket] => " copy/part as-string start 80]
+						log/info ["[WebSocket] => " head remove back tail copy/part as-string start 80]
 					]
 					either data: find data #"^(FF)" [
 						insert/part req/in/content start data
-						do-phase req 'make-response
+						either req/socket-app [
+							do-phase req 'socket-message
+						][
+							do-phase req 'make-response		;TBD: see if this mode is relevant
+						]
 						data: next data
 						req/state: 'ws-header
 					][
@@ -845,8 +858,15 @@ Connection: Upgrade^M
 		do-phase req 'task-failed
 	]
 	
-	on-close-client: does [
+	on-close-client: has [req][
 		if verbose > 1 [log/info "Connection closed"]
+		if all [
+			req: pick tail client/user-data -1
+			req/socket-app
+		][
+			do-phase req 'socket-deconnect
+			req/socket-port: none
+		]
 		;--- TBD: close properly tmp disk files (when upload has been interrupted)
 	]
 ]

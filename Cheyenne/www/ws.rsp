@@ -5,6 +5,9 @@
 ;   request/web-socket? => true if this is an incoming socket message, false if it's HTTP.
 ;   request/content/data => contains the socket message (string!)
 
+;-- only allow web socket clients (protects from direct access with HTTP)
+if not request/web-socket? [response/redirect "ws.html"]
+
 ;-- just echo back the message
 prin request/content/data
 

@@ -4,10 +4,14 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "2009 SOFTINNOV"
 	Email: nr@softinnov.com
-	Date: 26/08/2009
-	Version: 0.9.0
+	Date: 28/12/2009
+	Version: 0.9.1
 	Web: http://softinnov.org/rebol/scheduler.shtml
 	License: "BSD - see %LICENCE.txt file"
+	History: {
+		0.9.1 - 28/12/2009
+			o new function 'add-job for lower level adding of a new job
+	}
 ]
 		
 scheduler: context [
@@ -16,7 +20,7 @@ scheduler: context [
 	;-- every word put before value: will be erased by 'reset function
 	
 	name: 'scheduler
-	verbose: 1
+	verbose: 0
 	
 	jobs:  make block! 8
 	queue: make block! 1
@@ -51,17 +55,19 @@ scheduler: context [
 	
 	on-timer: has [task job][
 		task: queue/1
-		job: back find/only jobs task
 		remove queue
-		task/last: get-now
-		if verbose > 0 [log/info ["firing event " mold any [task/name task/source]]]
-		exec task	
-		if any [
-			task/at
-			all [task/repeat zero? task/repeat: task/repeat - 1]
-			none? job/1: next-event? task
-		][
-			remove/part job 2
+		if job: find/only jobs task [
+			job: back job
+			task/last: get-now
+			if verbose > 0 [log/info ["firing event for job " mold any [task/name task/source]]]
+			exec task	
+			if any [
+				task/at
+				all [task/repeat zero? task/repeat: task/repeat - 1]
+				none? job/1: next-event? task
+			][
+				remove/part job 2
+			]
 		]
 		update-sys-timer
 	]
@@ -115,7 +121,7 @@ scheduler: context [
 		next-new: either find [day month] u [
 			[new/:u: new/:u + offset]
 		][
-			offset: offset * select [hour 1:0 minute 0:1 second 0:0:1] u
+			offset: offset * any [select [hour 1:0 minute 0:1 second 0:0:1] u 1]
 			[new/time: new/time + offset]
 		]
 		if short [do next-new return new]
@@ -165,7 +171,11 @@ scheduler: context [
 					1
 				]
 			]
-			new: search-event spec new
+			new: either unit = 'time [
+				search-event/short spec new
+			][
+				search-event spec new
+			]
 		]		
 		new
 	]
@@ -338,6 +348,21 @@ scheduler: context [
 		if not parse copy/deep spec dialect [
 			log/error ["Error parsing at rule:" mold copy/part err 10]
 		]	
+		update-sys-timer
+	]
+	
+	add-job: func [code [block!] /at time /every freq [time!] /name id [word!]][
+		reset-locals
+		all [name label: id]
+		if every [
+			mult: freq
+			unit: 'time
+		]
+		if at [ts: time]
+		job: code
+		_s: reduce ['add-job code time freq id]
+		_e: tail _s
+		store-job
 		update-sys-timer
 	]
 	

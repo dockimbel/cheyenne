@@ -17,6 +17,7 @@ conn.onclose = function(evt) { alert("Conn closed"); }
 
 </script>
 <button onClick="conn.send('Hello World');"> Send Message </button>
+<button onClick=" alert('button closed');conn.close();"> Deconnect </button>
 </center>
 </body>
 </html>
