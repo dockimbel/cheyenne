@@ -6,7 +6,7 @@ conf-parser: make log-class [
 	
 	location: folder: main-rules: string-rules: file-rules:
 	global-rules: symbols: args: value: err: service: module: mode: 
-	vhost: none
+	vhost: scope: none
 	
 	cfg-file:  %httpd.cfg
 	
@@ -38,6 +38,7 @@ conf-parser: make log-class [
 	]
 	
 	host-rules: [
+		scope: 
 		any [err: (mode: 'main) main-rules]
 		any [
 			err: set location string! (mode: 'location) into [any string-rules]
