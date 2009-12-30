@@ -6,7 +6,7 @@ install-HTTPd-extension [
 	order: [
 		socket-connect		normal
 		socket-message		normal
-		socket-deconnect	normal
+		socket-disconnect	normal
 	]
 	
 	apps: make block! 8
@@ -19,7 +19,7 @@ install-HTTPd-extension [
 		
 		;-- public API
 		timer?: no
-		session: on-connect: on-message: on-deconnect: on-timer: clients: none
+		session: on-connect: on-message: on-disconnect: on-timer: clients: none
 		
 		set-timer: func [delay [time! none!]][
 			timer?: either delay [
@@ -35,7 +35,7 @@ install-HTTPd-extension [
 			service/ws-send-response/direct/with data port
 		]
 		
-		deconnect: func [/with port [port!]][
+		disconnect: func [/with port [port!]][
 			either with [
 				service/close-client/with port
 			][
@@ -92,8 +92,8 @@ install-HTTPd-extension [
 		fire-event/arg req 'on-message as-string req/in/content
 	]
 	
-	socket-deconnect: func [req /local app][
-		fire-event req 'on-deconnect
+	socket-disconnect: func [req /local app][
+		fire-event req 'on-disconnect
 		remove find req/socket-app/clients req/socket-port
 	]
 	

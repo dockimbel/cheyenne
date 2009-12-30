@@ -29,17 +29,17 @@ install-socket-app [								;-- load application at Cheyenne startup
 	;-- it also uniquely identifies the connection. Client port will be automatically
 	;-- added to connection list called 'clients that can be read at any time (read only!).
 	on-connect: func [client][						
-		debug/print "client socket connected!"
+		print "client socket connected!"
 		if not timer? [								;-- 'timer? returns TRUE is a timer is running else FALSE (read only!)
 			set-timer 0:0:05						;-- switch on timer event for this app with a delay of
 		]											;-- 5 secs between each one.
 	]
 	
-	;-- on-deconnect event happens when a client deconnects or when you use the 'deconnect
-	;-- function to force deconnection. The 'client argument is the client port value. Once
+	;-- on-disconnect event happens when a client disconnects or when you use the 'disconnect
+	;-- function to force disconnection. The 'client argument is the client port value. Once
 	;-- this event processed, the client port is removed from the 'clients list of connections.
-	on-deconnect: func [client][
-		debug/print "client socket deconnected!"
+	on-disconnect: func [client][
+		print "client socket disconnected!"
 		if empty? clients [							;-- 'clients connection list is a hash!, so all series functions apply.
 			set-timer none							;-- passing none to 'set-timer will stop the timer.
 		]
@@ -50,8 +50,8 @@ install-socket-app [								;-- load application at Cheyenne startup
 	;-- from the client in UTF-8 encoding.
 	on-message: func [data][						
 		;send data									;-- 'send function emit string! data to client (must be UTF-8 encoded!).
-													;-- 'send will emit the data to the client from where the message originates.
-		do-task data								;-- 'do-task processes the argument data (can be any thing) in background 
+													;-- 'send will emit the data to the client from which the message originates.
+		do-task data								;-- 'do-task processes the argument data (can be anything) in background 
 	]												;-- passing the data to the initial RSP script. Currently, the response
 													;-- data from the RSP is sent directly to the client.
 
