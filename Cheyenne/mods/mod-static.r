@@ -115,7 +115,11 @@ install-HTTPd-extension [
 	]
 	
 	url-to-filename: func [req /local cfg domain ext][
-		cfg: req/cfg		
+		cfg: req/cfg
+		if find/match req/in/url "/ws-apps" [
+			req/out/code: 404		
+			return true
+		]
 		if not req/in/file [	;-- allow other modules to set req/in/file
 			; --- Find and assign a default file if necessary		
 			if empty? trim req/in/target [		;-- trim should be done when target is parsed
@@ -132,7 +136,7 @@ install-HTTPd-extension [
 				]
 			]
 			req/in/file: rejoin [cfg/root-dir req/in/path req/in/target]
-		]	 
+		]
 		if any [
 			not req/file-info: info? req/in/file
 			req/file-info/type <> 'file

@@ -250,6 +250,7 @@ install-HTTPd-extension [
 				if any [empty? path pos: find/match res path][
 					if any [
 						req/in/target = "app-init.r"
+						all [pos find pos "ws-apps"]
 						all [pos find pos "private"]	; forbid /app/private, but allow /private/app
 						all [not pos find res "private"]
 					][

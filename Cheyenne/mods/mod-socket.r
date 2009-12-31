@@ -16,15 +16,15 @@ install-HTTPd-extension [
 	
 	app-class: context [
 		;-- private words
-		__name: __ctx: __id: none
+		__name: __ctx: __id: __file: __last-ts: none
 		
 		;-- public API
 		timer?: no
-		session: on-connect: on-message: on-disconnect: on-timer: clients: none
+		rsp-session: on-connect: on-message: on-disconnect: on-timer: clients: none
 		
 		set-timer: func [delay [time! none!]][
 			timer?: either delay [
-				scheduler/add-job/every/name [on-timer] delay __id
+				scheduler/add-job/every/name compose [fire-event (__ctx) 'on-timer] delay __id				
 				yes
 			][
 				scheduler/delete __id
@@ -46,7 +46,7 @@ install-HTTPd-extension [
 		
 		do-task: func [data [string!] /on-done handler [function! block!]][ ;-- handler: func [client data][...]
 			__ctx/in/content: data
-			if on-done [append __ctx/tasks :handler]			;-- store handler for deferred action
+			if on-done [append/only __ctx/tasks :handler]		;-- store handler for deferred action
 			service/mod-list/mod-rsp/make-response __ctx		;-- trigger a bg job through RSP pipe
 			__ctx: none
 		]
@@ -65,10 +65,20 @@ install-HTTPd-extension [
 	set 'install-socket-app func [spec [block!] /local new][
 		new: make make app-class [__id: make-unique-id clients: make hash! 100] spec
 		repend apps [new/name new]
+		new
 	]
 	
-	check-update: has [][
-	
+	get-app: func [req /local app ts file][
+		app: select mappings req/in/url
+		if app/__last-ts <> ts: modified? file: app/__file [
+			app: do file
+			app/__last-ts: ts
+			app/__file: file
+			change next find mappings req/in/url app
+			remove/part find apps app/__name 2					;-- remove the old app version
+			if verbose > 0 [log/info ["socket-app " mold app/__name " updated"]]
+		]
+		app
 	]
 	
 	fire-event: func [
@@ -79,9 +89,9 @@ install-HTTPd-extension [
 	][
 		app: req/socket-app
 		app/__ctx: req
-		app/session: req/session
+		app/rsp-session: req/session
 		current: service/client
-		service/client: req/socket-port
+		service/client: req/socket-port		
 		if error? set/any 'err try pick [
 			[app/:action req/socket-port data]				;-- event action
 			[do :action req/socket-port data]				;-- function! or block! action
@@ -89,12 +99,11 @@ install-HTTPd-extension [
 			log/error rejoin [mold :action " call failed with error: " mold disarm err]
 		]
 		service/client: current
-		app/__ctx: app/session: none
+		app/__ctx: app/rsp-session: none
 	]
 	
 	socket-connect: func [req][
-		check-update
-		req/socket-app: select mappings req/in/url
+		req/socket-app: get-app req
 		append req/socket-app/clients service/client
 		req/session: service/mod-list/mod-rsp/sessions/exists? req
 		req/tasks: make block! 10
@@ -114,7 +123,7 @@ install-HTTPd-extension [
 	]
 	
 	on-task-done: func [req /local action][					;-- event generated from mod-rsp
-		if verbose > 0 [log/info "calling on-task-done"]
+		if verbose > 0 [log/info "calling on-task-done"]	
 		if action: pick req/tasks 1 [
 			remove req/tasks
 			fire-event/arg req :action req/out/content
@@ -124,11 +133,13 @@ install-HTTPd-extension [
 	words: [
 		;--- Define the URL to web socket application name mapping
 		socket-app: [string!] [word!] in main do [		
-			use [root file][
+			use [root file app][
 				either root: select scope 'root-dir [
 					either exists? file: rejoin [root %/ws-apps/ args/2 ".r"][
-						do file
-						repend mappings [args/1 last apps]
+						app: do file
+						app/__file: file
+						app/__last-ts: modified? file
+						repend mappings [args/1 app]
 					][
 						log/error ["can't access file " file]
 					]

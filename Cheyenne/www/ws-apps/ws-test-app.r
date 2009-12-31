@@ -61,20 +61,20 @@ install-socket-app [								;-- load application at Cheyenne startup
 
 	;-- on-timer event happens only if 'set-timer has been used previously with a time! value.
 	;-- This event will keep been generated until 'set-timer is called with 'none value.
-	on-timer: does [								
+	on-timer: does [
 		foreach port clients [						;-- 'clients series can be traversed
 			send/with "tick" port					;-- 'send is used here with /with refinement, in order to point
 		]											;-- to the right client port. In 'on-timer, there's no implicit
 	]												;-- client port.
 	
-	;-- SESSION support (should work ok, but untested yet)
+	;-- RSP session support (should work ok, but untested yet)
 	;-- If the socket has been opened from a RSP webapp, the session object is available from within the
 	;-- socket application. Usage:
 	;--
-	;--		session/vars		;-- block of name/value pairs (word! anytype!). Reading is always safe.
+	;--		rsp-session/vars	;-- block of name/value pairs (word! anytype!). Reading is always safe.
 	;--							;-- Writing *only* if no background tasks is running.
 	;--
-	;--		session/busy?		;-- returns TRUE is a background task is running else FALSE. Use it
+	;--		rsp-session/busy?		;-- returns TRUE is a background task is running else FALSE. Use it
 	;--							;--	to synchronize session variables writings.
 ]
 
@@ -82,5 +82,6 @@ install-socket-app [								;-- load application at Cheyenne startup
 ;--   v  - 'on-message should have a 'client argument in addition to the 'data value.
 ;--   v  - 'on-done event for 'do-task return action to be able to post-process it before sending data to client
 ;--   v  - 'session object to access session data shared by RSP processes.
-;--     - protected /ws-apps folder from direct remote access.
-;-- 	- reloading socket apps if modified
+;--   v  - protected /ws-apps folder from direct access.
+;--   v	 - reloading socket apps if modified
+;--   v  - 'do-task support in 'on-timer 

@@ -4,13 +4,14 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "2009 SOFTINNOV"
 	Email: nr@softinnov.com
-	Date: 28/12/2009
+	Date: 31/12/2009
 	Version: 0.9.1
 	Web: http://softinnov.org/rebol/scheduler.shtml
 	License: "BSD - see %LICENCE.txt file"
 	History: {
-		0.9.1 - 28/12/2009
+		0.9.1 - 31/12/2009
 			o new function 'add-job for lower level adding of a new job
+			o fixed an issue with deleting queued job
 	}
 ]
 		
@@ -73,10 +74,10 @@ scheduler: context [
 	]
 	
 	update-sys-timer: has [timer][
-		sort/skip jobs 2
 		remove find spwl time!	
 		if not empty? jobs [
-			append/only queue jobs/2
+			sort/skip jobs 2
+			if not find/only queue jobs/2 [append/only queue jobs/2]
 			append spwl difference jobs/1 get-now
 		]
 	]
@@ -359,7 +360,7 @@ scheduler: context [
 			unit: 'time
 		]
 		if at [ts: time]
-		job: code
+		job: copy code
 		_s: reduce ['add-job code time freq id]
 		_e: tail _s
 		store-job
@@ -376,6 +377,14 @@ scheduler: context [
 		job: jobs
 		forskip job 2 [
 			if job/2/name = name [
+				if not empty? queue [
+					either queue/1 = job/2 [
+						remove queue
+						update-sys-timer
+					][
+						remove find/only queue job/2
+					]
+				]
 				remove/part job 2
 				return true
 			]
