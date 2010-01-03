@@ -32,7 +32,7 @@ install-HTTPd-extension [
 			]
 		]
 		
-		send: func [data [string!] /with port [port!]][
+		send: func [port [port!] data [string!]][
 			service/ws-send-response/direct/with data port
 		]
 		
@@ -69,8 +69,10 @@ install-HTTPd-extension [
 	]
 	
 	get-app: func [req /local app ts file][
-		app: select mappings req/in/url
-		if app/__last-ts <> ts: modified? file: app/__file [
+		if all [
+			app: select mappings req/in/url
+			app/__last-ts <> ts: modified? file: app/__file 
+		][
 			app: do file
 			app/__last-ts: ts
 			app/__file: file
@@ -103,11 +105,12 @@ install-HTTPd-extension [
 	]
 	
 	socket-connect: func [req][
-		req/socket-app: get-app req
-		append req/socket-app/clients service/client
-		req/session: service/mod-list/mod-rsp/sessions/exists? req
-		req/tasks: make block! 10
-		fire-event req 'on-connect
+		if req/socket-app: get-app req [
+			append req/socket-app/clients service/client
+			req/session: service/mod-list/mod-rsp/sessions/exists? req
+			req/tasks: make block! 10
+			fire-event req 'on-connect
+		]
 		true
 	]
 	

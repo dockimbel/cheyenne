@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+  	<style>
+  		body {
+  			font-family: sans-serif;
+  			text-align: center;
+  			background-color: lightgrey;
+  		}
+
+  		.logbox, .ubox, .msgbox {
+  			border: 2px solid silver;
+  		}
+  		.logbox {
+			margin-left: auto;
+			margin-right: auto;
+			background-color: lightblue;
+			width: 350px;
+			height: 50px;
+			margin-top: 100px;
+			padding: 20px;
+  		}
+  		.ubox {
+  			background-color: lightcyan;
+  			width: 120px;
+  			height: 507px;
+  			padding: 0;
+  			font-size: .8em;
+  		}
+  		.msgbox {
+  			background-color: beige;
+			width: 500px;
+			height: 500px;
+			text-align: left;
+			font-size: 0.8em;
+			padding: 4px;
+			overflow-y: scroll;
+  		}
+  		#users {
+		   list-style-type: square;
+		   margin-left: 1em;
+		   padding-left: 5px;
+		   width: 100px;
+		   text-align: left;
+		   font-weight: bold;
+		}
+  	</style>
+    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js'></script>
+    <script>
+/*
+-----------------------------------------------------
+Chat protocol is very simple: 1 byte header + payload.
+Header meanings :
+   - u : new user enters the chat room
+   - m : a user posted a message to the room
+   - r : a user quits the room
+-----------------------------------------------------
+*/
+    	var ws;
+    	var user;
+    	var msgbox;
+
+    	items = new Array("#list","#msg","[name=post]","[name=send]");
+
+    	function debug(str){ $("#debug").text(str); };
+
+    	function info(str) { $("#msg").append(str + '<br>'); }
+
+		function ws_connect() {
+			/* Initiate the connection to the server using a web socket */
+			ws = new WebSocket("ws://" + location.host + "/chat.rsp");
+
+			ws.onopen = function() {
+				debug("online");
+				for (i in items) $(items[i]).show();
+				$("[name=post]").focus();
+				user = $("[name=login]").val();
+				ws.send('u' + user);	/* Send the user name to the server */
+			};
+
+			ws.onmessage = function(evt) {
+				var msg = evt.data.slice(1); /* Extract the payload bypassing the header */
+
+				switch(evt.data[0]) {		 /* 1 byte header action value */
+					case 'u':
+						$("#users").append('<li id="_' + msg + '">' + msg + '</li>');
+						info('<font color="darkgreen">' + msg + ' enters...</font>');
+						break;
+					case 'm':
+						info(msg);
+						msgbox.scrollTop = msgbox.scrollHeight;
+						break;
+					case 'r':
+						$("#_" + msg).remove();
+						info('<font color="darkred">' + msg + ' exits...</font>');
+						break;
+				};
+			};
+
+			ws.onclose = function() {
+				debug("offline");
+			};
+		}
+		$(document).ready(
+			function(){
+				for (i in items) $(items[i]).hide();
+				$("#enter").click(
+					function(event){
+						if (jQuery.trim($("[name=login]").val()) != '') {
+							ws_connect();
+							$("#login").hide();
+						}
+					}
+				);
+				$("[name=send]").click(
+					function(event){
+					   ws.send('m' + user + ': ' + $("[name=post]").val());
+					   $("[name=post]").val('');
+					   $("[name=post]").focus();
+					}
+				);
+				msgbox = document.getElementById("msg");
+				$("[name=login]").focus();
+			}
+		);
+    </script>
+  </head>
+  <body>
+		<h2>Realtime chat demo using web sockets</h2>
+		Connection state : <span id="debug">not connected</span>
+
+		<div id="login" class="logbox" align="center">
+			<b>User name</b>
+			<input type="text" name="login">
+			<button id="enter">Connect</button>
+		</div>
+
+		<table align="center" style="margin-top:20px">
+			<tr>
+				<td>
+					<div id="list" class="ubox">
+						<ul id="users"></ul>
+					</div>
+				</td><td>
+					<div id="msg" class="msgbox"></div>
+				</td>
+			</tr><tr>
+				<td colspan="2" align="right" style="padding-right:20px">
+					<input type="text" name="post" size="68">
+					<button name="send">Send</button>
+				<td>
+			</tr>
+		</table>
+  </body>
+</html>

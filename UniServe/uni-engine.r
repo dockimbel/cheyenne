@@ -130,7 +130,7 @@ uniserve: make log-class [
 				now > pl/expire
 			][
 				if verbose > 1 [
-					log/info ["Timeout port: " port/remote-ip]
+					log/info ["Timeout port: " port/local-port " ip: " port/remote-ip]
 				]
 				close-connection/keep port
 			]

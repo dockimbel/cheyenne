@@ -49,12 +49,12 @@ install-socket-app [								;-- load application at Cheyenne startup
 	;-- while the connection is opened). The client port is passed in 'client argument. The 'data argument
 	;--	contains the text message as a string! value from the client in UTF-8 encoding.
 	on-message: func [client data][						
-		;send data									;-- 'send function emit string! data to client (must be UTF-8 encoded!).
+		;send client data							;-- 'send function emit string! data to client (must be UTF-8 encoded!).
 													;-- 'send will emit the data to the client from which the message originates.
 		do-task/on-done data func [client data][	;-- 'do-task processes the argument data (can be anything) in background 
 			data: uppercase data					;--	simulates a post-processing action
 			print ["post-processing:" data]
-			send/with data client
+			send client data
 		]
 	]												;-- passing the data to the initial RSP script. Currently, the response
 													;-- data from the RSP is sent directly to the client.
@@ -63,9 +63,9 @@ install-socket-app [								;-- load application at Cheyenne startup
 	;-- This event will keep been generated until 'set-timer is called with 'none value.
 	on-timer: does [
 		foreach port clients [						;-- 'clients series can be traversed
-			send/with "tick" port					;-- 'send is used here with /with refinement, in order to point
-		]											;-- to the right client port. In 'on-timer, there's no implicit
-	]												;-- client port.
+			send port "tick"						;-- 'send the data to the given client port
+		]
+	]
 	
 	;-- RSP session support (should work ok, but untested yet)
 	;-- If the socket has been opened from a RSP webapp, the session object is available from within the
@@ -77,11 +77,3 @@ install-socket-app [								;-- load application at Cheyenne startup
 	;--		rsp-session/busy?		;-- returns TRUE is a background task is running else FALSE. Use it
 	;--							;--	to synchronize session variables writings.
 ]
-
-;-- Implementation pending for :
-;--   v  - 'on-message should have a 'client argument in addition to the 'data value.
-;--   v  - 'on-done event for 'do-task return action to be able to post-process it before sending data to client
-;--   v  - 'session object to access session data shared by RSP processes.
-;--   v  - protected /ws-apps folder from direct access.
-;--   v	 - reloading socket apps if modified
-;--   v  - 'do-task support in 'on-timer 

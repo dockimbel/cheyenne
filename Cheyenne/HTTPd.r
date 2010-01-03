@@ -480,7 +480,7 @@ Connection: Upgrade^M
 	]
 	
 	ws-handshake: func [req][
-		client/locals/expire: now + 00:30		;-- web sockets timeout of 30mn
+		client/locals/expire: none			;-- timeout disabled for web socket ports
 		req/in/ws?: yes
 		req/out/code: 101
 		h-store req/out/headers 'Connection none
