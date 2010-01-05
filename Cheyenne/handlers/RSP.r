@@ -994,7 +994,7 @@ install-module [
 		]
 	]	
 
-	on-task-received: func [data /local file events][
+	on-task-received: func [data /local file events page-events?][
 		if verbose > 0 [
 			log/info "New job received :" 
 			log/info mold data
@@ -1014,15 +1014,19 @@ install-module [
 		if verbose > 0 [log/info ["calling script: " mold file]]
 		change-dir first splitted: split-path file
 		
+		page-events?: all [session/events not request/web-socket?]
+		
 		if debug-banner/active? [debug-banner/on-page-start]
-		if session/events [fire-event 'on-page-start]
+		if page-events? [fire-event 'on-page-start]
+		
 		unless all [
 			integer? response/status
 			response/status >= 300
 		][
 			engine/exec file last splitted
 		]
-		if all [session/events not request/web-socket?][fire-event 'on-page-end]
+		
+		if page-events? [fire-event 'on-page-end]
 		if debug-banner/active? [debug-banner/on-page-end]
 		
 		if verbose > 2 [log/info mold response/buffer]
