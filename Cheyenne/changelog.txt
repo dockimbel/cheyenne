@@ -134,8 +134,6 @@ v0.9.20 - ??/??/2009
 	  (RSP sessions, MTA jobs,...) will now include HTTPd's port number in the file name if
 	  server is running on port(s) other than the default one (80).
 	  
-	o Experimental Web Sockets support added. (See %www/ws.html and %www/ws.rsp)
-
 	o New web socket application framework added. See %www/ws-apps/ws-test-app.r for a commented example.
 
 	o New 'socket-app config keyword to define socket application URL mappings to be used
@@ -145,6 +143,8 @@ v0.9.20 - ??/??/2009
 
 	  Currently, the URL must point to a valid RSP script. The application name following must exists in
  	  host's or webapp's root folder under %/ws-apps sub-folder.
+ 	  
+ 	o RSP: user errors from included scripts were sent to browser even in production mode. Fixed.
 	
 	  
 
