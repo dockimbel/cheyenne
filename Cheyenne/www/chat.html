@@ -36,6 +36,10 @@
 			padding: 4px;
 			overflow-y: scroll;
   		}
+  		.infobox {
+  			font-size: 0.8em;
+  			margin-top: 60px;
+  		}
   		#users {
 		   list-style-type: square;
 		   margin-left: 1em;
@@ -60,11 +64,12 @@ Header meanings :
     	var user;
     	var msgbox;
 
-    	items = new Array("#list","#msg","[name=post]","[name=send]");
-
     	function debug(str){ $("#debug").text(str); };
 
-    	function info(str) { $("#msg").append(str + '<br>'); }
+    	function info(str) {
+    		$("#msg").append(str + '<br>');
+    		msgbox.scrollTop = msgbox.scrollHeight;
+    	}
 
 		function ws_connect() {
 			/* Initiate the connection to the server using a web socket */
@@ -72,10 +77,9 @@ Header meanings :
 
 			ws.onopen = function() {
 				debug("online");
-				for (i in items) $(items[i]).show();
-				$("[name=post]").focus();
 				user = $("[name=login]").val();
 				ws.send('u' + user);	/* Send the user name to the server */
+				$("#post").focus();
 			};
 
 			ws.onmessage = function(evt) {
@@ -88,7 +92,6 @@ Header meanings :
 						break;
 					case 'm':
 						info(msg);
-						msgbox.scrollTop = msgbox.scrollHeight;
 						break;
 					case 'r':
 						$("#_" + msg).remove();
@@ -97,28 +100,35 @@ Header meanings :
 				};
 			};
 
-			ws.onclose = function() {
-				debug("offline");
-			};
+			ws.onclose = function() {debug("offline");};
 		}
+
+		function enter_chat() {
+			if (jQuery.trim($("[name=login]").val()) != '') {
+				ws_connect();
+				$("#login").hide();
+				$(".hideable").show();
+			}
+		}
+
+		function post_msg() {
+			ws.send('m' + user + ': ' + $("#post").val());
+			$("#post").val('');
+			$("#post").focus();
+		}
+
 		$(document).ready(
 			function(){
-				for (i in items) $(items[i]).hide();
-				$("#enter").click(
-					function(event){
-						if (jQuery.trim($("[name=login]").val()) != '') {
-							ws_connect();
-							$("#login").hide();
-						}
-					}
-				);
-				$("[name=send]").click(
-					function(event){
-					   ws.send('m' + user + ': ' + $("[name=post]").val());
-					   $("[name=post]").val('');
-					   $("[name=post]").focus();
-					}
-				);
+				$(".hideable").hide();
+
+				if (typeof(WebSocket) != "function") alert("Your browser doesn't support Web Sockets!");
+
+				$("#enter").click(          function(event) {enter_chat();});
+				$("[name=send]").click(     function(event) {post_msg();});
+
+				$("[name=login]").keypress( function(event) {if (event.which == 13 ) enter_chat();});
+				$("#post").keypress(        function(event) {if (event.which == 13 ) post_msg();});
+
 				msgbox = document.getElementById("msg");
 				$("[name=login]").focus();
 			}
@@ -127,6 +137,7 @@ Header meanings :
   </head>
   <body>
 		<h2>Realtime chat demo using web sockets</h2>
+		<small>- <i>requires a web socket enabled web browser like Chrome 4</i> -</small><br><br>
 		Connection state : <span id="debug">not connected</span>
 
 		<div id="login" class="logbox" align="center">
@@ -138,18 +149,27 @@ Header meanings :
 		<table align="center" style="margin-top:20px">
 			<tr>
 				<td>
-					<div id="list" class="ubox">
+					<div id="list" class="ubox hideable">
 						<ul id="users"></ul>
 					</div>
 				</td><td>
-					<div id="msg" class="msgbox"></div>
+					<div id="msg" class="msgbox hideable"></div>
 				</td>
 			</tr><tr>
 				<td colspan="2" align="right" style="padding-right:20px">
-					<input type="text" name="post" size="68">
-					<button name="send">Send</button>
+					<input type="text" name="post" id="post" size="68" class="hideable">
+					<button name="send" class="hideable">Send</button>
 				<td>
 			</tr>
 		</table>
+
+		<div class="infobox">
+			This demo is powered by the <a href="http://cheyenne-server.org">Cheyenne Web Server</a> using the latest revision from our
+			<a href="http://code.google.com/p/cheyenne-server/source/checkout">SVN repository</a>.
+			<br>
+			You can find the server-side source code of this demo <a href="http://code.google.com/p/cheyenne-server/source/browse/trunk/Cheyenne/www/ws-apps/chat.r">here</a>.
+			<br><br>
+			More informations and contact info in <a href="http://cheyenne-server.org/blog.rsp">Cheyenne's blog</a>.
+		</div>
   </body>
 </html>
