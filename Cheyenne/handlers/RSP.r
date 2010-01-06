@@ -287,7 +287,7 @@ install-module [
 			current: last jobs
 			clear skip tail jobs -2
 			if verbose > 2 [dump]
-			response/error?: any [response/error? res] 		;-- Make TRUE persistant across nested executions
+			response/error?: to logic! any [response/error? res] 		;-- Make TRUE persistant across nested executions
 		]
 	]
 		
