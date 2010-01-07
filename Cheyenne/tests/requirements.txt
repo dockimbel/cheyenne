@@ -47,8 +47,8 @@ define-tests [					;-- 'define-tests will load this test group in engine
 		check res/code 200				;-- 'check: func [value1 value2] : compare values 
 										;-- and if == then test's OK, else test KO.
 		
-		check 							;-- check can be call several times in the same test
-			res/content/length			;-- 'req est un objet avec le contenu pré-parsé
+		check 							;-- check can be called several times in the same test
+			res/content/length			;-- 'req is an object! storing pre-parsed response.
 			res/headers/Content-length	
 			
 		check
