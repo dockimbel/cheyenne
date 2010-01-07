@@ -1,0 +1,104 @@
+Cheyenne's Units Tests requirements
+
+    Nenad Rakocevic
+    start date: 21/11/2009
+
+
+===Goals and needs
+
+The goal is to build a test suite for regression testing. So, the tests should cover only features supported by Cheyenne (not all RFC features).
+
+
+* short & simple testing engine
+* simple tests description structure
+* named groups of tests (with ability to make group of groups)
+* ability to run tests for one given group only
+* one file = one group of tests (if it makes things simplier only)
+* all test files should be in the same folder
+
+---Testing engine
+
+I see 2 options :
+
+* use an existing unit test engine written in REBOL.
+* write one that will be adequate for the job.
+
+The second one has my preference but only if it doesn't take more than 2-3 days to build. Ideally, it should be built incrementally as testing support needs grow.
+
+The engine should define some local functions dedicated to HTTP requests sending and analyzing.
+
+Exemple :
+
+define-tests [					;-- 'define-tests will load this test group in engine
+								;-- tests definition is a custom simple dialect
+
+	group "HTTP low-level tests"	;-- group naming
+
+	"GET method" [				;-- string! for test name, block! for test specs
+								;-- spec block should accept REBOL code
+		res: send server [
+			method: "GET"		
+			URL: "basic.html"
+			version: 1.0		;-- HTTP protocol version
+			keep-alive: no		;-- close the connection once response retrieved
+		]						;-- keep-alive: yes will be required to test persistent
+								;-- connections.
+								
+		check res/code 200				;-- 'check: func [value1 value2] : compare values 
+										;-- and if == then test's OK, else test KO.
+		
+		check 							;-- check can be call several times in the same test
+			res/content/length			;-- 'req est un objet avec le contenu pré-parsé
+			res/headers/Content-length	
+			
+		check
+			123456789
+			checksum res/content/data
+	]
+	...
+	
+Possible output in console :
+
+Group: HTTP low-level tests
+	#1 : GET method => passed OK
+or 
+	#1 : GET method => *** Error on check #2
+
+
+
+
+===HTTP protocol (priority 1)
+
+Tests should be written using latest HTTP RFC (should be 2616) and other related RFCs as reference documentation.
+
+* request line parsing
+* client headers parsing and semantics
+* server headers correctness
+* adequate response codes
+* correct HTTP1.0 answers (when client asks for 1.0)
+* correct HTTP1.1 specific features support (like pipelining)
+
+===Cheyenne (priority 2)
+
+The following tests also include testing configuration keywords declared in each mod.
+
+* mod-static specific features testing
+* mod-ssi specific features testing
+* mod-fastcgi & mod-extapp specific features testing (using PHP as backend)
+* OS specific tests (low priority ~3)
+
+Others mods will be implicitly tested in other groups of tests.
+
+===RSP (priority 2)
+
+* POST data handling (with cheyenne's specific features tests)
+* GET & POST data decoding (including multipart encoding)
+* RSP API complete cover (http://cheyenne-server.org/docs/rsp-api.html)
+* Webapp's events
+* Webapps isolation
+* Sessions life cycle
+
+===CGI (priority 3)
+
+* REBOL CGI's compliant interface (simulation of REBOL -cgi startup mode)
+* General CGI compliance (using simple Perl CGI scripts from Perl's units tests)
