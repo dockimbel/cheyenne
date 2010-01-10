@@ -48,6 +48,7 @@ application/x-ustar				ustar
 application/x-wais-source		src
 application/x-rip 				rip
 application/zip					zip
+application/json				json
 audio/basic						au snd
 audio/midi						mid midi kar
 audio/mpeg						mpga mp2 mp3

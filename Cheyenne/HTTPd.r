@@ -27,16 +27,19 @@ install-service [
 	not-ws: complement charset " "
 	digit: charset "0123456789"
 
-	conf: mod-list: mime-types: none
-	handlers: make block! 10
+	conf: 									;-- loaded %httpd.cfg file
+	mod-list: 								;-- list of all loaded mod-* listed in config file
+	mime-types: none						;-- list of mime types (%misc/mime.types)
+	handlers: make block! 10				;-- list of extension/handlers mappings (from config)
 	conf-parser: do-cache %misc/conf-parser.r
 	mod-dir: %mods/
-	incoming-dir: join cheyenne/data-dir %incoming/
-	version: none
-	block-list: none
-	block-ip-host?: no
-	banned: make hash! 3000						;-- [ip timestamp req...]
-	banning?: no								;-- can be FALSE or banning time! value
+	incoming-dir: join cheyenne/data-dir %incoming/	;-- used for temporary holding uploaded files
+	version: none							;-- Cheyenne's version (tuple!)
+	
+	block-list: none						;-- list of request line patterns to block
+	block-ip-host?: no						;-- yes: block Host headers using an IP address
+	banned: make hash! 3000					;-- [ip timestamp req...]
+	banning?: no							;-- can be: FALSE or banning time! value
 	
 	keep-alive: "Keep-Alive"
 	
@@ -106,6 +109,7 @@ Connection: Upgrade^M
 		url-translate 	  []
 		url-to-filename   []
 		parsed-headers	  []
+		upload-file		  []
 		filter-input	  []
 		access-check	  []
 		set-mime-type	  []
@@ -175,7 +179,7 @@ Connection: Upgrade^M
 	
 	make-tmp-fileinfo: does [
 		make object! [
-			bound: remains: buffer: port: none
+			bound: remains: expected: buffer: port: none
 			files: make block! 1
 		]
 	]
@@ -565,19 +569,21 @@ Connection: Upgrade^M
 		out: req/out
 
 		unless out/header-sent? [
+			if all [out/content empty? out/content][out/content: none]
+			
 			do-phase req 'filter-output
 			if req/out/forward [
 				do-request req
 				return false ;-- keep request in queue
 			]
+			
 			do-phase req 'reform-headers
 
-			if all [out/content empty? out/content][out/content: none]
 			if all [not out/content out/code >= 400][
 				out/content: select http-error-pages out/code
 				out/mime: pick [text/html application/octet-stream] out/code >= 400 
 			]		
-			either out/content [
+			either out/content [				
 				unless out/headers/Content-Type [
 					h-store out/headers 'Content-Type form out/mime
 				]			
@@ -697,7 +703,7 @@ Connection: Upgrade^M
 		exit
 	]
 	
-	on-received: func [data /local req len limit q][
+	on-received: func [data /local req len limit q v][
 		q: client/user-data
 		if empty? q [insert q copy [[state request]]] 	;-- avoid wasting a call to make-http-session
 		req: last q
@@ -735,48 +741,54 @@ Connection: Upgrade^M
 				if verbose > 0 [log/info ["Request Headers=>" as-string data]]
 				parse-headers data req/in
 				do-phase req 'parsed-headers
-				select-vhost req				
-				do-phase req 'url-to-filename
-				if verbose > 1 [log/info ["translated file: " mold req/in/file]]
-				if "WebSocket" = select req/in/headers 'Upgrade [			
-					ws-handshake req
-					req/state: 'ws-header
-					stop-at: none			;-- switch to packet mode
-					exit
-				]
-				reset-stop
-				if find [POST PUT] req/in/method [
-					req/state: 'data
-					either len: select req/in/headers 'Content-Length [
-						limit: any [select req/cfg 'post-max 2147483647]		;-- 2GB max on upload
-						len: any [attempt [to integer! len] 0]
-						stop-at: either all [limit len > limit][req/out/code: 406 limit][len]
-						limit: any [
-							select conf/globals 'post-mem-limit
-							select req/cfg 'post-mem-limit
-							100'000
-						]
-						if stop-at > limit [
-							unless exists? incoming-dir [make-dir incoming-dir]
-							req/tmp: make-tmp-fileinfo
-							decode-boundary req							
-							req/in/content: make string! 1024
-							req/tmp/remains: stop-at						
-							req/state: 'stream-in
-							stop-at: limit
-						]
+				select-vhost req
+				if not req/out/code [
+					do-phase req 'url-to-filename
+					if verbose > 1 [log/info ["translated file: " mold req/in/file]]
+					if "WebSocket" = select req/in/headers 'Upgrade [	
+						ws-handshake req
+						req/state: 'ws-header
+						stop-at: none			;-- switch to packet mode
 						exit
-					][
-						req/out/code: 400
+					]
+					reset-stop
+					if find [POST PUT] req/in/method [
+						req/state: 'data
+						either len: select req/in/headers 'Content-Length [
+							all [
+								v: select req/in/headers 'Content-Type
+								find/match v "multipart/form-data"
+								do-phase req 'upload-file
+							]
+							limit: any [select req/cfg 'post-max 2147483647]		;-- 2GB max on upload
+							len: any [attempt [to integer! len] 0]
+							stop-at: either all [limit len > limit][req/out/code: 406 limit][len]
+							limit: any [
+								select conf/globals 'post-mem-limit
+								select req/cfg 'post-mem-limit
+								100'000
+							]
+							if stop-at > limit [
+								unless exists? incoming-dir [make-dir incoming-dir]
+								req/tmp: make-tmp-fileinfo
+								decode-boundary req							
+								req/in/content: make string! 1024
+								req/tmp/remains: req/tmp/expected: stop-at						
+								req/state: 'stream-in
+								stop-at: limit
+							]
+							exit
+						][
+							req/out/code: 400
+						]
 					]
 				]
 			]
 			data [
 				if verbose > 0 [
-					either verbose > 1 [
-						log/info ["Posted data=>" copy/part as-string data 80]
-					][
-						log/info ["Posted data=>" length? data]
+					log/info [
+						"Posted data=>"
+						either verbose > 1 [copy/part as-string data 80][length? data]
 					]
 				]
 				if limit: find/part skip client/locals/in-buffer stop-at #{0D0A} 2 [
@@ -820,7 +832,10 @@ Connection: Upgrade^M
 				]
 				ws-frame [
 					if verbose > 0 [
-						log/info ["[WebSocket] => " head remove back tail copy/part as-string start 80]
+						log/info [
+							"[WebSocket] => "
+							head remove back tail copy/part as-string start 80
+						]
 					]
 					either data: find data #"^(FF)" [
 						insert/part req/in/content start data
@@ -869,4 +884,6 @@ Connection: Upgrade^M
 		]
 		;--- TBD: close properly tmp disk files (when upload has been interrupted)
 	]
+	
+	random/seed now/time/precise
 ]
