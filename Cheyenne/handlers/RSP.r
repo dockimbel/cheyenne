@@ -583,6 +583,20 @@ install-module [
 			remove back tail out
 			out
 		]
+		
+		store: func [spec [block!] target [file!]][
+			if slash = last target [join target spec/1]
+			
+			either file? spec/2 [
+				call/wait reform [
+					pick ["move /Y" "mv"] system/version/4 = 3
+					to-local-file spec/2
+					to-local-file target
+				]
+			][
+				write/binary target spec/2
+			]
+		]
 	]
 	
 	set 'response context [
