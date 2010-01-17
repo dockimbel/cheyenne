@@ -36,7 +36,7 @@ install-service [
 	pool-list: make block! 16
 	obj: len: none
 	queue: make block! 100
-	additional-args: ""
+	worker-args: none
 
 	share [
 		pool-start: 2	; number of helper process when Uniserve starts
@@ -55,14 +55,15 @@ install-service [
 		ctx: none
 	]
 
-	fork: does [
+	fork: has [cmd][
 		if verbose > 0 [log/info "launching new slave"]
 		shared/pool-count: shared/pool-count + 1
-		launch* join mold either value? 'uniserve-path [
+		cmd: mold either value? 'uniserve-path [
 			rejoin [uniserve-path slash bg-process]
 		][
 			bg-process
-		] additional-args
+		]
+		launch* either encap? [worker-args][reform [cmd worker-args]]
 	]	
 	
 	send-job: func [port data][
@@ -117,12 +118,14 @@ install-service [
 	]
 	
 	on-started: does [
-		additional-args: rejoin [
-			" u-path " mold uniserve-path
-			" s-port " mold any [uniserve/shared/server-ports port-id]	;TBD: fix shared object issues
-			either value? 'modules-path [
-				rejoin [" m-path " mold modules-path]
-			][""]
+		worker-args: reform [
+			"-worker" mold any [uniserve/shared/server-ports port-id]		;TBD: fix shared object issues
+		]
+		if not encap? [
+			append worker-args reform [" -up" mold uniserve-path]
+			if value? 'modules-path [
+				append worker-args reform [" -mp" mold modules-path]
+			]
 		]
 		if integer? shared/pool-start [loop shared/pool-start [fork]]
 	]

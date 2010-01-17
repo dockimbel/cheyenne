@@ -3,9 +3,9 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "@ 2002-2009 SOFTINNOV"
 	Email: nr@softinnov.com
-	Date: 09/10/2009
+	Date: 17/01/2010
 	File: %uni-engine.r
-	Version: 0.9.37
+	Version: 0.9.38
 	Purpose: "Multi-protocol asynchrone client/server framework"
 	License: {
 		BSD License, read the complete text in %docs/license.txt
@@ -186,7 +186,7 @@ uniserve: make log-class [
 		port/state/func: 3				; black magic !			
 		port/user-data: head events
 		host: port/host
-		if pos: find dns-cache port/host [
+		if all [string? host pos: find dns-cache port/host][
 			change at pos 3 pos/3 + 1
 			;port/host: second pos
 			host: port/remote-ip: second pos

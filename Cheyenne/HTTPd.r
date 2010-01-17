@@ -583,13 +583,28 @@ Connection: Upgrade^M
 				out/content: select http-error-pages out/code
 				out/mime: pick [text/html application/octet-stream] out/code >= 400 
 			]		
-			either out/content [				
-				unless out/headers/Content-Type [
+			either out/content [
+				either file? out/content [
+;TBD: exists? file? NO=>404				
+				req/in/file: any [
+						all [
+							value: select out/headers 'Content-Disposition
+							value: find/tail value {filename="}
+							to file! copy/part value find value #"^""
+						]
+						out/content
+					]
+					mod-list/mod-static/set-mime-type req
 					h-store out/headers 'Content-Type form out/mime
-				]			
-				h-store out/headers 'Content-Length form any [
-					all [file? out/content req/file-info/size]
-					length? out/content
+					h-store out/headers 'Content-Length form size? out/content
+				][
+					unless out/headers/Content-Type [
+						h-store out/headers 'Content-Type form out/mime
+					]			
+					h-store out/headers 'Content-Length form any [
+						all [file? out/content req/file-info/size]
+						length? out/content
+					]
 				]
 			][
 				if out/code = 200 [out/code: 204]
@@ -689,7 +704,7 @@ Connection: Upgrade^M
 			]
 		]
 		set-modes client [
-			receive-buffer-size: 16384
+			receive-buffer-size: 65536
 			send-buffer-size: 65536
 		]
 		reset-stop		

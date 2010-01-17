@@ -294,7 +294,7 @@ cheyenne: make log-class [
 		if ssa: system/script/args [
 			parse ssa [
 				any [
-					"task-handler" (set-flag 'bg-process) break 
+					"-worker" (set-flag 'bg-process) break 
 					| "-p" copy value any [1 5 digit opt #","] (
 						repend args [
 							'port-id

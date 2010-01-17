@@ -1,6 +1,12 @@
 UniServe ChangeLog:
 ------------------
 
+0.9.38  17/01/2010
+	
+	o Fixed an issue with 'open-port wrongly querying dns-cache for IP addresses instead
+	  of domain names.
+
+
 0.9.37  09/10/2009
 	
 	o Client ports issuing "host unreacheable" error were not removed from event list

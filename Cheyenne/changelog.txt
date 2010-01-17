@@ -161,6 +161,24 @@ v0.9.20 - ??/??/2009
 	  will save the uploaded file with a forced name (original name needs to be saved
 	  separatedly if needed).
 	  
+	o HTTPd: added support for returning a file! name from a worker process as 
+	  response. Enables sending a file from filesystem without reading it in memory
+	  in a worker process. Example(RSP, could work in CGI too):
+	  
+	  		response/buffer: %/c/www/movie123.avi		;-- use absolute paths preferably
+	  		
+	  The mime type will be set depending on file extension or you can force it using
+	  a Content-Disposition header. Example: 
+	  
+	  		response/buffer: get-modes %file123.tmp 'full-path		;-- dynamically lookup full path
+			response/set-header 'Content-Disposition  {attachment; filename="movie123.avi"}
+	  
+	  Double quotes are mandatory around filename's value.
+	  
+	 o UniServe: fixed a bug with internal DNS resolution cache querying.
+	 
+	 o Worker tasks: cleaned-up command line arguments.
+	  
 
 v0.9.19 - 01/03/2009
 

@@ -85,9 +85,9 @@ protect [logger log-class debug]
 
 if ssa: system/script/args [
 	ssa: load/all ssa
-	uniserve-path: select ssa 'u-path
-	modules-path:  select ssa 'm-path
-	servers-port:  select ssa 's-port
+	if value: select ssa '-up [uniserve-path: value]
+	if value: select ssa '-mp [modules-path: value]
+	servers-port: select ssa '-worker
 	
 	either block? servers-port [
 		uniserve-port: servers-port/task-master
@@ -96,9 +96,8 @@ if ssa: system/script/args [
 		uniserve-port: servers-port
 	]
 ]
-if not value? 'uniserve-path [uniserve-path: what-dir]
+if all [not value? 'uniserve-path not encap?][uniserve-path: what-dir]
 if not value? 'modules-path  [modules-path: dirize uniserve-path/modules]
-if not value? 'uniserve-port [uniserve-port: 9799]
 
 change-dir system/options/path
 

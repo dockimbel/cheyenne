@@ -135,7 +135,7 @@ install-HTTPd-extension [
 				)
 				| none!
 			]
-			'content set value [string! | binary!] 		(ro/content: value)
+			'content set value [string! | binary! | file!] (ro/content: value)
 			'forward set value [string! | url! | none!] (ro/forward: value)
 			'error   set value [logic! | object!] 		(ro/error: value)
 			'log?    set value [logic!] 				(ro/log?: value)
