@@ -199,7 +199,7 @@ cheyenne: make log-class [
 				list: make block! 8
 				foreach svc [task-master RConsole logger MTA][
 					n: services/:svc/port-id + offset
-					until [not find in-use n: n + 1]
+					if in-use [until [not find in-use n: n + 1]]
 					services/:svc/port-id: n
 					repend list [svc n]
 				]
