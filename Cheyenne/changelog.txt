@@ -175,10 +175,33 @@ v0.9.20 - ??/??/2009
 	  
 	  Double quotes are mandatory around filename's value.
 	  
-	 o UniServe: fixed a bug with internal DNS resolution cache querying.
+	o UniServe: fixed a bug with internal DNS resolution cache querying.
 	 
-	 o Worker tasks: cleaned-up command line arguments.
+	o Worker tasks: cleaned-up command line arguments.
 	  
+	o New config keyword: 'locals added. It allows to declare domain or application specific
+	  local parameters that will be passed to worker processes. The content is free-form,
+	  just keep it as short as possible for performances and avoid using plain REBOL code to
+	  keep the config file clean. Example:
+	   
+	  		locals [
+	   			config-path		%private/config/
+	   			logo-image		%img/logo3.png
+	   			...
+	   		]
+	   		
+	o RSP: new 'on-instance-start event (to be used in %app-init.r). It's called when a webapp
+	  new instance is used to make the first database access. Typical usage is to place there
+	  instances specific database cache setting (db-cache/define API function).
+	  
+	o RSP: fixed a bug in db cache synchronization making some internal timeout value leak 
+	  between sessions.
+	  
+	o RSP: relaxed event declaration in %app-init.r, now you can define only the events you
+	  use, no need to add them all anymore.
+	 
+	o CGI: environment variables now sanitized after each request (not sure it is necessary).
+	 
 
 v0.9.19 - 01/03/2009
 

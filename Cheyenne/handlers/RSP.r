@@ -18,7 +18,7 @@ install-module [
 	
 	libs: none
 	apps: make block! 1 	; [app-dir events ctx ...]
-	apps-db: make block! 1 	; [domain1 [app [db1 def1 ...] app2 [...] ...] domain2 [...] ...]
+	apps-db: make block! 1 	; [domain1 [app [db1 def1 cache1...] app2 [...] ...] domain2 [...] ...]
 	databases: none
 	jobs: make block! 1
 	start-flag: close-flag: no
@@ -31,6 +31,7 @@ install-module [
 	evt-class: context [
 		on-application-start: 
 		on-application-end: 
+		on-instance-start:
 		on-session-start: 
 		on-session-end: 
 		on-page-start:
@@ -184,14 +185,19 @@ install-module [
 		false
 	]
 	
-	get-app-db: func [defs [block!] /local hosts conn-list][
-		if not hosts: select apps-db request/headers/host [
+	get-app-db: func [defs [block!] /cache /local hosts ports list][
+		unless hosts: select apps-db request/headers/host [
 			repend apps-db [request/headers/host hosts: make block! 1]
 		]
-		if not conn-list: select hosts request/web-app [
-			repend hosts [request/web-app conn-list: copy/deep defs]
+		unless pos: find hosts request/web-app [
+			repend hosts [request/web-app ports: copy/deep defs list: make block! 1]
+			fire-event 'on-instance-start		
 		]
-		conn-list
+		any [
+			all [cache any [list pos/3]]
+			ports
+			pos/2
+		]
 	]
 	
 	engine: context [
@@ -236,7 +242,7 @@ install-module [
 			if error? try [out: load out][
 				out: reduce ['load out]
 			]
-			if not block? out [out: reduce [out]]
+			unless block? out [out: reduce [out]]
 			if all [
 				value? 'request
 				object? :request
@@ -447,7 +453,7 @@ install-module [
 		[catch] db [word! path!] data [string! block! word!]
 		/flat /local port out res defs
 	][
-		if not pos: any [
+		unless pos: any [
 			all [
 				word? :db
 				 any [
@@ -509,11 +515,18 @@ install-module [
 	]
 	
 	set 'db-cache context [
-		data: make block! 1  ; ['db ['class [...] ...] ...]
 		sync-list: none
 
-		sync: func [list [block! none!] /local times][	
-			if none? sync-list [sync-list: list]
+		sync: func [list [block! none!]][	
+			sync-list: any [list []]
+		]
+		
+		get-db: func [name [word!] /local data][
+			data: get-app-db/cache []
+			unless block? data: data/:name [
+				make error! reform ["Database" :name " not found!"]
+			]
+			data
 		]
 		
 		define: func [[catch] db [word!] spec [block!] /local pos times][
@@ -525,10 +538,9 @@ install-module [
 					| skip
 				]
 			]
-			repend data [db spec]
-			unless sync-list [sync-list: make block! length? spec]
-			times: make block! 1
-			loop (length? spec) / 2 [append times now]
+			repend get-app-db/cache [] [db spec]
+			if empty? sync-list [sync-list: make block! length? spec]
+			times: array/initial (length? spec) / 2 now
 			either pos: find sync-list db [
 				change/only next pos times
 			][
@@ -541,7 +553,7 @@ install-module [
 			db [word!] class [word!] flat [logic! none!]
 			/local cache pos modified
 		][
-			cache: second pos: find data/:db class			
+			cache: second pos: find get-db :db class			
 			modified: pick sync-list/:db (index? next pos) / 2
 			if cache/1 <> modified [
 				cache/1: modified
@@ -557,10 +569,11 @@ install-module [
 		
 		invalid: func [[catch] db [word!] class [word! block!] /local cache list][
 			if word? class [class: reduce [class]]
-			cache: data/:db
-			list: sync-list/:db
-			foreach w class [
-				poke list (index? next find cache w) / 2 now
+			cache: get-db :db
+			if list: sync-list/:db [
+				foreach w class [
+					poke list (index? next find cache w) / 2 now
+				]
 			]
 		]
 	]
@@ -929,21 +942,22 @@ install-module [
 		]
 	]
 	
-	fire-event: func [event [word!]][
-		protected-exec/event request/parsed/file get in session/events :event :event
+	fire-event: func [event [word!] /local fun][
+		if fun: get in session/events :event [
+			protected-exec/event request/parsed/file :fun :event
+		]
 	]
 	
-	process-events: has [evt-data events ctx init root][	
+	process-events: has [events ctx init root][	
 		either request/web-app [
 			root: request/config/root-dir
 			either events: select apps root [
 				session/events: events
 			][
 				safe-exec %app-init.r does [init: load join root %/app-init.r]
-				evt-data: any [init []]
 				repend apps [
 					root
-					events: make evt-class evt-data
+					events: make evt-class any [init []]
 					ctx: context []
 				]
 				session/events: events
@@ -951,9 +965,8 @@ install-module [
 				fire-event 'on-application-start
 				ctx: third find apps root				 ; ctx needs to reference the new object				
 				foreach fun next first events [
-					bind second get in events :fun ctx
+					if fun: get in events :fun [bind second :fun ctx]
 				]
-				;fire-event 'on-application-start
 				system/script/path: dirize save-path
 			]			
 			if session/init? [

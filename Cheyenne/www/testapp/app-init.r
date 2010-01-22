@@ -1,13 +1,20 @@
 REBOL [
 	Purpose: "RSP environement init code"
 ]
-
+comment {
 on-application-start: does [
 	;--- add here your library / modules loading
 ]
 
 on-application-end: does [
 	;--- add here your library / modules proper closing
+]
+
+on-instance-start: does [
+	;--- add here instance specific init code
+	;--- it's called when first database access is made using DO-SQL
+	;--- so typical usage is db-cache init when multiple instances
+	;--- of the same webapp are running on the same server.
 ]
 
 on-session-start: does [
@@ -23,7 +30,7 @@ on-session-end: does [
 	;--- add here your per session closing/cleanup code
 
 ]
-
+}
 on-page-start: has [][
 	set 't0 now/time/precise
 ]

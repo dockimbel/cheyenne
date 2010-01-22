@@ -183,6 +183,14 @@ install-module [
 		join "HTTP_" uppercase replace/all form data #"-" #"_"
 	]
 	
+	reset-env-vars: does [
+		foreach var vars/cgi 	[set-env var empty]
+		foreach var vars/apache [set-env var empty]
+		foreach [name value] system/options/cgi/other-headers [
+			set-env name empty
+		]
+	]
+	
 	set-env-vars: func [data /local var soc root][
 		soc: system/options/cgi
 		root: either slash = first data/cfg/root-dir [
@@ -297,6 +305,7 @@ install-module [
 				print ["CGI error:" err-log]			; TBD: log stderr output
 			]
 			result: output
+			reset-env-vars
 		]
 		header: port: data: none
 	]

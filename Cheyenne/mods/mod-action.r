@@ -136,5 +136,8 @@ install-HTTPd-extension [
 		
 		;--- list libraries to be loaded by workers processes
 		worker-libs: [block!] in globals
+		
+		;--- allow domain or application specific local parameters (free-form content)
+		locals: [block!] in main
 	]
 ]
