@@ -190,9 +190,9 @@ v0.9.20 - ??/??/2009
 	   			...
 	   		]
 	   		
-	o RSP: new 'on-instance-start event (to be used in %app-init.r). It's called when a webapp
-	  new instance is used to make the first database access. Typical usage is to place there
-	  instances specific database cache setting (db-cache/define API function).
+	o RSP: new 'on-database-init event (to be used in %app-init.r). It's called when a new
+	  webapp instance is called and makes the first database access. Typical usage is to place
+	  there database cache settings (db-cache/define API function).
 	  
 	o RSP: fixed a bug in db cache synchronization making some internal timeout value leak 
 	  between sessions.

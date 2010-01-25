@@ -18,20 +18,14 @@ install-module [
 	
 	libs: none
 	apps: make block! 1 	; [app-dir events ctx ...]
-	apps-db: make block! 1 	; [domain1 [app [db1 def1 cache1...] app2 [...] ...] domain2 [...] ...]
-	databases: none
+	databases: [global []] 	; [global [db1 def1 cache1...] domain1 [app [db1 def1 cache1...] app2 [...] ...] domain2 [...] ...]
 	jobs: make block! 1
-	start-flag: close-flag: no
 	splitted: none
-	
-	app-class: context [
-		name: events: ctx: databases: none
-	]
 	
 	evt-class: context [
 		on-application-start: 
 		on-application-end: 
-		on-instance-start:
+		on-database-init:
 		on-session-start: 
 		on-session-end: 
 		on-page-start:
@@ -185,19 +179,15 @@ install-module [
 		false
 	]
 	
-	get-app-db: func [defs [block!] /cache /local hosts ports list][
-		unless hosts: select apps-db request/headers/host [
-			repend apps-db [request/headers/host hosts: make block! 1]
+	get-app-db: func [defs [block!] /local hosts ports list][
+		unless hosts: select databases request/headers/host [
+			repend databases [request/headers/host hosts: make block! 1]
 		]
 		unless pos: find hosts request/web-app [
 			repend hosts [request/web-app ports: copy/deep defs list: make block! 1]
-			fire-event 'on-instance-start		
+			fire-event 'on-database-init		
 		]
-		any [
-			all [cache any [list pos/3]]
-			ports
-			pos/2
-		]
+		any [ports pos/2]
 	]
 	
 	engine: context [
@@ -451,18 +441,22 @@ install-module [
 
 	set 'do-sql func [
 		[catch] db [word! path!] data [string! block! word!]
-		/flat /local port out res defs
+		/flat /local port out res defs pos
 	][
 		unless pos: any [
 			all [
 				word? :db
-				 any [
+				any [
 					all [
 						request/web-app
 						defs: select request/config 'databases
 						find get-app-db defs :db
 					]
-					find databases :db
+					all [
+						pos: find databases/global :db
+						any [all [empty? pos/3 fire-event 'on-database-init] true]
+						pos
+					]
 				]
 			]
 			all [path? :db attempt [do :db]]
@@ -516,20 +510,27 @@ install-module [
 	
 	set 'db-cache context [
 		sync-list: none
-
-		sync: func [list [block! none!]][	
-			sync-list: any [list []]
-		]
 		
-		get-db: func [name [word!] /local data][
-			data: get-app-db/cache []
-			unless block? data: data/:name [
-				make error! reform ["Database" :name " not found!"]
+		get-cache: func [name [word!] /init /local data][
+			if not any [
+				all [
+					data: select databases request/headers/host
+					data: find data request/web-app
+					data: third data
+					any [init block? data: select data :name]
+				]
+				all [
+					data: find databases/global :name
+					data: third data
+					any [init block? data: select data :name]
+				]
+			][
+				make error! rejoin ["Database '" :name " cache not found!"]
 			]
 			data
 		]
 		
-		define: func [[catch] db [word!] spec [block!] /local pos times][
+		define: func [[catch] db [word!] spec [block!]][
 			parse spec [
 				some [
 					pos: string! (
@@ -538,22 +539,24 @@ install-module [
 					| skip
 				]
 			]
-			repend get-app-db/cache [] [db spec]
-			if empty? sync-list [sync-list: make block! length? spec]
-			times: array/initial (length? spec) / 2 now
-			either pos: find sync-list db [
-				change/only next pos times
-			][
-				repend sync-list [db times]
-			]
+			repend get-cache/init :db [db spec]
 		]
 		
 		query: func [
 			[catch] 
 			db [word!] class [word!] flat [logic! none!]
-			/local cache pos modified
+			/local cache pos classes modified times list
 		][
-			cache: second pos: find get-db :db class			
+			cache: second pos: find list: get-cache :db class
+			unless sync-list [sync-list: make block! length? list]
+			unless find sync-list db [
+				times: array/initial (length? list) / 2 now
+				either classes: find sync-list db [
+					change/only next classes times
+				][
+					repend sync-list [db times]
+				]
+			]			
 			modified: pick sync-list/:db (index? next pos) / 2
 			if cache/1 <> modified [
 				cache/1: modified
@@ -567,9 +570,10 @@ install-module [
 			copy cache/3
 		]
 		
-		invalid: func [[catch] db [word!] class [word! block!] /local cache list][
+		invalid: func [[catch] db [word!] class [word! block!] /local cache list][		
 			if word? class [class: reduce [class]]
-			cache: get-db :db
+			cache: get-cache :db
+			unless sync-list [sync-list: make block! length? cache]
 			if list: sync-list/:db [
 				foreach w class [
 					poke list (index? next find cache w) / 2 now
@@ -618,14 +622,25 @@ install-module [
 		buffered?: yes
 		compress?: yes
 		log?: yes
-		error?: no
+		error?: no						;-- must be a logic! value
 		cache-list: make block! 1
 		stats: [0 0]	; [real-sql-requests sql-cache-hits]
-		
+
+		reset-object: does [
+			clear cache-list
+			status: forward-url: none
+			buffered?: log?: compress?: yes
+			error?: no
+			if headers [clear headers]
+			reset
+		]
+
 		set-status: func [code [integer!] /msg str [string!]][
 			status: any [all [msg reform [code str]] code]
 		]
+
 		set-cookie: func [][]
+
 		set-header: func [word [word!] value [string! none!] /add /local pos][
 			unless headers [headers: make block! 1]
 			either all [not add pos: find headers word][
@@ -635,11 +650,14 @@ install-module [
 				insert tail headers value
 			]
 		]
+
 		end: does [throw exit-value]
+
 		reset: does [
 			buffer: buffer*
 			clear buffer
 		]
+
 		redirect: func [url [string! url!] /strict /thru /last][
 			either debug-banner/active? [
 				debug-banner/make-redirect-page url
@@ -649,9 +667,11 @@ install-module [
 			]
 			end
 		]
+
 		auto-flush: func [mode [logic!]][
 			;--TDB
 		]
+
 		flush: func [/end][
 			if buffered? [buffered?: no]
 			if all [not end empty? buffer][exit]		; don't send a false 0-length body
@@ -660,8 +680,10 @@ install-module [
 			]
 			reset
 		]
+
 		cache: func [time [time!]][insert tail cache-list time]
 		cache-delete: func [url [url!]][insert tail cache-list time]
+
 		forward: func [[catch] url [string! url!]][
 			if any [
 				all [string? url slash <> first url]
@@ -676,6 +698,7 @@ install-module [
 			forward-url: url
 			end
 		]
+
 		no-log: does [log?: no]
 		no-compress: does [compress?: no]
 	]
@@ -683,6 +706,12 @@ install-module [
 	set 'session context [
 		content: timeout: events: id: none
 		active?: init?: no
+		_start?: _close?: no
+		
+		reset-object: does [
+			_start?: _close?: false
+			events: none
+		]
 		
 		add: func [name [word!] value /local pos][
 			either pos: find content name [
@@ -702,8 +731,8 @@ install-module [
 		
 		start: does [
 			unless active? [
-				start-flag: yes
-				close-flag: no
+				_start?: yes
+				_close?: no
 				content: make block! 1
 				id: none
 			]
@@ -720,8 +749,8 @@ install-module [
 		]
 		
 		end: does [
-			start-flag: no
-			close-flag: yes	
+			_start?: no
+			_close?: yes	
 		]
 	]
 	
@@ -822,19 +851,6 @@ install-module [
 	crlfx2: join crlf crlf
 	dquote: #"^""
 	
-	reset-response-object: does [
-		clear response/cache-list
-		response/status: response/forward-url: none
-		response/buffered?: yes
-		response/log?: yes
-		response/compress?: yes
-		response/error?: no
-		if response/headers [clear response/headers]
-		;if empty? jobs [
-		response/reset
-		;]
-	]
-	
 	;-- quick implementation of multipart decoding :
 	;	- doesn't support multipart/mixed encoding yet
 	;	- doesn't parse all optional headers
@@ -903,7 +919,7 @@ install-module [
 		request/content: list
 	]
 	
-	decode-msg: func [data /local value list init?][
+	decode-msg: func [data /local value list][
 		parse load/all data [
 			'cfg  set value block! 	 (request/config: value)
 			'in	  set value object!	 (request/parsed: value)
@@ -914,8 +930,8 @@ install-module [
 					(session/active?: yes)
 					'ID 	 set value string!	(session/id: value)
 					'vars 	 set list  block! 	(session/content: list)
-					'queries set list  [block! | none!] (db-cache/sync list)
-					'app  	 set value [string! | none!]  (request/web-app: value)
+					'queries set list  [block! | none!]  (db-cache/sync-list: list)
+					'app  	 set value [string! | none!] (request/web-app: value)
 					'timeout set value time!	(session/timeout: value)
 					'init 	 set value logic!	(session/init?: value)
 				]
@@ -989,15 +1005,15 @@ install-module [
 			log?    (response/log?)
 			session
 		]
-		either any [session/active? start-flag][
+		either any [session/active? session/_start?][
 			sess: compose/only [
 				id	 	(session/id)
 				vars 	(session/content)
 				queries (db-cache/sync-list)
 				timeout (session/timeout)
 			]
-			if start-flag [insert sess 'init]
-			if close-flag [append sess 'close]
+			if session/_start? [insert sess 'init]
+			if session/_close? [append sess 'close]
 			append/only res sess
 		][
 			append res none
@@ -1026,15 +1042,13 @@ install-module [
 			log/info "New job received :" 
 			log/info mold data
 		]
-		session/events: none
-		close-flag: start-flag: no
 		debug-banner/active?: no
-
+		session/reset-object
 		decode-msg data
 		process-events
 		decode-params
 		locale/decode-lang
-		reset-response-object
+		response/reset-object
 		clear jobs
 
 		file: request/translated
@@ -1072,16 +1086,15 @@ install-module [
 		result: build-msg
 	]
 	
-	on-quit: has [blk][
+	on-quit: has [blk rule p][
 		foreach [app-dir events ctx] apps [
 			safe-exec %on-application-end events/on-application-end
 		]
 		
 		if all [libs blk: select libs 'on-quit][safe-exec-files blk]
 		
-		if block? databases [
-			parse databases [any [set p port! (attempt [close p]) | skip]]
-		]
+		rule: [any [into rule | set p port! (attempt [close p]) | skip]]
+		parse databases [some [into rule | skip]]
 	]
 	
 	;--- Initialization ---
@@ -1101,7 +1114,9 @@ install-module [
 		parse conf [
 			thru 'globals into [
 				any [
-					'databases set databases block!
+					'databases set value block! (
+						foreach [name url] value [repend databases/global [name url make block! 1]]
+					)
 					| 'worker-libs set libs block!
 					| skip
 				]
