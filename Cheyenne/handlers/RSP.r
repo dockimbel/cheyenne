@@ -190,6 +190,19 @@ install-module [
 		any [ports pos/2]
 	]
 	
+	relative-path: func [src dst /local i][
+		src: remove parse src "/"
+		dst: remove parse get-modes dst 'full-path "/"
+		if src/1 <> dst/1 [return none]					;-- requires same root
+
+		i: 1 + length? src 
+		repeat c i - 1 [if src/:c <> dst/:c [i: c break]]	
+		dst: to-file at dst i
+		src: at src i
+		if not tail? src [loop length? src [insert dst %../]]
+		dst
+	]
+	
 	engine: context [
 		list: make hash! 100
 		current: none
@@ -601,14 +614,22 @@ install-module [
 			out
 		]
 		
-		store: func [spec [block!] target [file!]][
+		store: func [[catch] spec [block!] target [file!] /local src path dir save-dir][
 			if slash = last target [join target spec/1]
 			
 			either file? spec/2 [
-				call/wait reform [
-					pick ["move /Y" "mv"] system/version/4 = 3
-					to-local-file spec/2
-					to-local-file target
+				src: split-path spec/2
+				either path: relative-path src/1 target [
+					save-dir: system/script/path				;-- use rename trick to move file
+					change-dir src/1
+					rename src/2 path
+					change-dir save-dir
+				][
+					call/wait reform [							;-- fallback method
+						pick ["move /Y" "mv"] system/version/4 = 3
+						to-local-file spec/2
+						to-local-file target
+					]
 				]
 			][
 				write/binary target spec/2
