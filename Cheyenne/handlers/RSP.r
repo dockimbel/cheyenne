@@ -368,6 +368,17 @@ install-module [
 	
 	;--- public API ---
 	
+	alpha: charset [#"a" - #"z" #"A" - #"Z"]
+	numeric: charset "0123456789"
+	alpha-num: union alpha numeric
+	domain-chars: union alpha-num charset "-"
+	specials: charset "!.#$%&*+-=_|~"
+	email-chars: union alpha-num specials
+	
+	email-rule: [
+		some [".." break | email-chars] #"@" [some [some domain-chars #"."] 1 6 alpha]
+	]
+	
 	set 'set-protected func [w [word!] value][
 		unprotect :w
 		set :w :value
@@ -398,7 +409,7 @@ install-module [
 		]
 		set 'say func [[catch] data [string! none!] /local cat][	
 			unless all [current default data][return data]				
-			any [
+			copy any [
 				all [
 					cat: find/case default data
 					cat: pick current index? cat
@@ -812,9 +823,15 @@ install-module [
 					either empty? value: pick pos 2 [
 						poke pos 2 value: none
 					][
-						if all [
-							type <> '-
-							not attempt [poke pos 2 to get type value]
+						if any [
+							all [
+								type = 'email!
+								not parse/all value email-rule
+							]
+							all [
+								not find [- email!] type
+								not attempt [poke pos 2 to get type value]
+							]
 						][
 							unless invalid [invalid: make block! 1]
 							insert tail invalid name
@@ -830,7 +847,6 @@ install-module [
 				]
 			]
 		][throw make error! "invalid spec block!"]
-		invalid
 	]
 	
 	set '*do :do
