@@ -814,10 +814,9 @@ install-module [
 	]
 	
 	set 'validate func [[catch] spec [block!] /full /local vars value invalid pos m?][
-		full: to logic! full
 		if error? try [
 			vars: request/content
-			value: pick [[name type m?][name type]] full
+			value: pick [[name type m?][name type]] to logic! full
 			foreach :value spec [
 				either pos: find vars name [
 					either empty? value: pick pos 2 [
@@ -829,7 +828,7 @@ install-module [
 								not parse/all value email-rule
 							]
 							all [
-								not find [- email!] type
+								type <> '-
 								not attempt [poke pos 2 to get type value]
 							]
 						][
