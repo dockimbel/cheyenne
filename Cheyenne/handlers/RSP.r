@@ -376,7 +376,7 @@ install-module [
 	email-chars: union alpha-num specials
 	
 	email-rule: [
-		some [".." break | email-chars] #"@" [some [some domain-chars #"."] 1 6 alpha]
+		some [".." break | email-chars] #"@" [some [some domain-chars #"."] 2 6 alpha]
 	]
 	
 	set 'set-protected func [w [word!] value][
@@ -847,6 +847,7 @@ install-module [
 				]
 			]
 		][throw make error! "invalid spec block!"]
+		invalid
 	]
 	
 	set '*do :do
