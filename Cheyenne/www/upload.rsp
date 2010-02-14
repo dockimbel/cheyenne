@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Cheyenne Upload result page</title>
+	<style>
+			body      {font-family: sans-serif;font-size:0.8em;}
+	</style>
+</head>
+<body>
+	<h4>Upload Result:</h4>
+	<%
+		validate [
+			ufile	-
+			keep	-
+			token	integer!
+		]
+		req: request/content
+	%>
+	<ul>
+		<li><b>file name :</b> <%=req/ufile/1%></li>
+		<li><b>file size :</b> <%=size? req/ufile/2%> bytes</li>
+		<li><b>temporary file name :</b> <%=req/ufile/2%></li>
+		<%if req/keep [%>
+		<li><b>file stored to:</b>
+			<%either 'name-taken = catch [file: request/store req/ufile][%>
+			*** Error: a file with same name already exists!
+			<%][
+				prin file
+			  ]
+		]%>
+	</ul>
+</body>
+</html>

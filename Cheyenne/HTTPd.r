@@ -33,7 +33,8 @@ install-service [
 	handlers: make block! 10				;-- list of extension/handlers mappings (from config)
 	conf-parser: do-cache %misc/conf-parser.r
 	mod-dir: %mods/
-	incoming-dir: join cheyenne/data-dir %incoming/	;-- used for temporary holding uploaded files
+	default-incoming-dir: join cheyenne/data-dir %incoming/	;-- used for temporary holding uploaded files
+	incoming-dir: none						;-- incoming folder resolved at runtime
 	version: none							;-- Cheyenne's version (tuple!)
 	
 	block-list: none						;-- list of request line patterns to block
@@ -411,22 +412,29 @@ Connection: Upgrade^M
 		]
 	]
 	
-	stream-to-memory: func [req data /local tmp pos][
+	stream-to-memory: func [req data /local tmp bound pos b?][
 		tmp: req/tmp
+		bound: tmp/bound
+	
 		parse/all data [							;-- search file 
 			any [
-				thru tmp/bound 
+				thru bound b?:
 				opt ["--" (append req/in/content data exit)]
 				thru {name="} thru {"}
-				opt [ {; filename="} thru crlfcrlf pos: break]
+				opt [ {; filename="} thru crlfcrlf pos: to end]
 			]
 		]
 		either pos [								;-- found, switch to disk
 			insert/part tail req/in/content data pos 
 			open-tmp-file tmp req/in/content
 			stream-to-disk req pos
-		][
-			insert/part tail req/in/content data bufferize tmp data
+		][	
+			either all [b? pos: find b? bound][
+				insert/part tail req/in/content data pos
+				stream-to-memory req pos
+			][
+				insert/part tail req/in/content data bufferize tmp data
+			]
 		]
 	]
 	
@@ -436,7 +444,7 @@ Connection: Upgrade^M
 			if tmp/buffer [
 				insert data tmp/buffer
 				tmp/buffer: none
-			]			
+			]
 			either tmp/port [
 				stream-to-disk req as-string data
 			][
@@ -718,7 +726,7 @@ Connection: Upgrade^M
 		exit
 	]
 	
-	on-received: func [data /local req len limit q v][
+	on-received: func [data /local req len limit q v up?][
 		q: client/user-data
 		if empty? q [insert q copy [[state request]]] 	;-- avoid wasting a call to make-http-session
 		req: last q
@@ -772,7 +780,7 @@ Connection: Upgrade^M
 						either len: select req/in/headers 'Content-Length [
 							all [
 								v: select req/in/headers 'Content-Type
-								find/match v "multipart/form-data"
+								up?: to logic! find/match v "multipart/form-data"
 								do-phase req 'upload-file
 							]
 							limit: any [select req/cfg 'post-max 2147483647]		;-- 2GB max on upload
@@ -783,14 +791,18 @@ Connection: Upgrade^M
 								select req/cfg 'post-mem-limit
 								100'000
 							]
-							if stop-at > limit [
+							if any [stop-at > limit up?][
+								incoming-dir: any [
+									select req/cfg 'incoming-dir
+									default-incoming-dir
+								]
 								unless exists? incoming-dir [make-dir incoming-dir]
 								req/tmp: make-tmp-fileinfo
 								decode-boundary req							
 								req/in/content: make string! 1024
 								req/tmp/remains: req/tmp/expected: stop-at						
 								req/state: 'stream-in
-								stop-at: limit
+								if not up? [stop-at: limit]
 							]
 							exit
 						][

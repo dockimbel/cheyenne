@@ -149,14 +149,19 @@ v0.9.20 - ??/??/2009
 	o HTTPd: added new upload realtime information query API. See %www/upload.html.
 
 	o RSP: new method 'store added to Request object. It simplifies uploaded files
-	  management by abstracting file's location (memory or disk). Example:
+	  management. Example:
 
-			request/store request/content/file %attached/
+			request/store request/content/file
+			
+	  will save the uploaded file passed as "file" query parameter in default incoming folder
+	  using the original name (!!watch out for security issues!!).
+	
+			request/store/as request/content/file %attached/
 			
 	  will save the uploaded file passed as "file" query parameter in %attached/ folder
 	  using the original name (!!watch out for security issues!!).
 	  
-	  		request/store request/content/file %attached/my-file.bin
+	  		request/store/as request/content/file %attached/my-file.bin
 	  		
 	  will save the uploaded file with a forced name (original name needs to be saved
 	  separatedly if needed).

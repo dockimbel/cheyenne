@@ -625,26 +625,28 @@ install-module [
 			out
 		]
 		
-		store: func [[catch] spec [block!] target [file!] /local src path dir save-dir][
-			if slash = last target [join target spec/1]
-			
-			either file? spec/2 [
+		store: func [[catch] spec [block!] /as target [file!] /local src path save-dir][
+			either as [
+				if slash = last target [join target spec/1]
 				src: split-path spec/2
-				either path: relative-path src/1 target [
-					save-dir: system/script/path				;-- use rename trick to move file
-					change-dir src/1
-					rename src/2 path
-					change-dir save-dir
-				][
-					call/wait reform [							;-- fallback method
+				unless path: relative-path src/1 target [		
+					call/wait reform [					;-- fallback method
 						pick ["move /Y" "mv"] system/version/4 = 3
 						to-local-file spec/2
-						to-local-file target
+						target: to-local-file target
 					]
+					return target
 				]
 			][
-				write/binary target spec/2
+				src: split-path spec/2
+				path: spec/1
 			]
+			if exists? target: join src/1 path [throw 'name-taken]
+			save-dir: system/script/path
+			change-dir src/1
+			rename src/2 path							;-- use rename trick to move file
+			change-dir save-dir
+			clean-path target
 		]
 	]
 	

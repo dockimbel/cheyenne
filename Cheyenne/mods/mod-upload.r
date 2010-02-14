@@ -15,7 +15,7 @@ install-HTTPd-extension [
 	
 	store: func [token req /local n][
 		n: now
-		remove-each [id req ts] uploads [ts + 00:01 < n]	;-- GC tokens older than 1 minute
+		remove-each [id req ts] uploads [ts + 00:01 < n]	;-- Remove tokens older than 1 minute
 		repend uploads [token req n]
 	]
 			
