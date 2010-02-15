@@ -206,6 +206,8 @@ v0.9.20 - ??/??/2009
 	  use, no need to add them all anymore.
 	 
 	o CGI: environment variables now sanitized after each request (not sure it is necessary).
+	
+	o HTTP: bad time formatting in HTTP logs for negative timezones fixed.
 	 
 
 v0.9.19 - 01/03/2009

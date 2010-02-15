@@ -53,7 +53,7 @@ context [
 			insert tail dt #" "
 			insert tail dt any [all [negative? date/zone #"-"] #"+"]
 			if lesser? tmp: date/zone/hour 10 [insert tail dt #"0"]
-			insert tail dt tmp
+			insert tail dt abs tmp
 			if lesser? tmp: date/zone/minute 10 [insert tail dt #"0"]
 			insert tail dt tmp
 			insert tail dt #"]"
