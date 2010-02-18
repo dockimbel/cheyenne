@@ -1,8 +1,8 @@
 REBOL [
 	Title: "SMTP Async Protocol"
 	Author: "SOFTINNOV / Nenad Rakocevic"
-	Version: 1.0.0
-	Date: 03/09/2009
+	Version: 1.0.1
+	Date: 18/02/2010
 ]
 
 install-protocol [
@@ -12,6 +12,7 @@ install-protocol [
 	connect-retries: 4
 		
 	stop-at: crlf
+	whoami: system/network/host
 	
 	get-params: does [stop-at: "250 "]
 	reset: 		does [stop-at: crlf]
@@ -34,8 +35,8 @@ install-protocol [
 		if verbose > 1 [log/info [su/id " state = " su/state]]
 		
 		either action: select [
-			helo ["220" [["HELO " system/network/host crlf]] mail]
-			ehlo ["220" [["EHLO " system/network/host crlf] get-params] ext1]
+			helo ["220" [["HELO " whoami crlf]] mail]
+			ehlo ["220" [["EHLO " whoami crlf] get-params] ext1]
 			ext1 ["250" [reset] ext2]
 			ext2 [  -   [["MAIL FROM:<" job/from "> BODY=8BITMIME" crlf]] rcpt]
 			mail ["250" [["MAIL FROM:<" job/from "> BODY=8BITMIME" crlf]] rcpt]

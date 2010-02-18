@@ -44,16 +44,17 @@
 	if block? file: param/file [
 		file/1: to-file file/1
 		
-		if file? file/2 [	; check case where uploaded file has been streamed on disk
-			if any [not exists? file/2 ten-mega < size? file/2][
+		param/file: either zero? sz: size? file/2 [
+			none
+		][
+			if ten-mega < sz [
 				print "Attached file not found or size above 10MB limit!"
 				response/end
-			]
+			]		
 			file/2: read/binary file/2
+			reduce [param/file]
 		]
-		param/file: reduce [param/file]
 	]
-
 	if not invalid [	
 		param/id: send-email [
 			from: 	 param/from

@@ -23,6 +23,7 @@ email: context [
 	]
 
 	system/standard/email: make system/standard/email [
+		MIME-Version: "1.0"
 		Content-Transfer-Encoding: "8bit"
 		X-Rebol: none
 		attach: charset: report: none

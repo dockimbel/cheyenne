@@ -421,10 +421,10 @@ Connection: Upgrade^M
 				thru bound b?:
 				opt ["--" (append req/in/content data exit)]
 				thru {name="} thru {"}
-				opt [ {; filename="} thru crlfcrlf pos: to end]
+				opt [ {; filename="} [ {"} | thru crlfcrlf pos:] to end]
 			]
 		]
-		either pos [								;-- found, switch to disk
+		either pos [								;-- found, switch to disk		
 			insert/part tail req/in/content data pos 
 			open-tmp-file tmp req/in/content
 			stream-to-disk req pos
