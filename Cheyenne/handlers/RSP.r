@@ -212,6 +212,7 @@ install-module [
 			__txt: func [s o][
 				insert/part tail response/buffer at current s o
 			]
+			__emit: func [data][if data [insert tail response/buffer data]]
 			__cat: []
 		]
 
@@ -232,7 +233,7 @@ install-module [
 							mold value #"]"
 						]
 					)
-					| "<%" [#"=" (append out " prin ") | none]
+					| "<%" [#"=" (append out " __emit ") | none]
 						copy value [to "%>" | none] 2 skip (
 							if value [repend out [value #" "]]
 						)
@@ -1143,14 +1144,14 @@ install-module [
 		any [
 			all [
 				exists? file
-				block? conf: load/all file
+				block? cheyenne-conf: load/all file
 			]
 			all [
 				exists?-cache file
-				block? conf: load-cache file
+				block? cheyenne-conf: load-cache file
 			]
 		]
-		parse conf [
+		parse cheyenne-conf [
 			thru 'globals into [
 				any [
 					'databases set value block! (

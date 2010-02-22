@@ -208,6 +208,9 @@ v0.9.20 - ??/??/2009
 	o CGI: environment variables now sanitized after each request (not sure it is necessary).
 	
 	o HTTP: bad time formatting in HTTP logs for negative timezones fixed.
+
+	o RSP: optimized <%=...%> evaluation, now NONE values will be silently ignored instead of
+	  being printed out.
 	 
 
 v0.9.19 - 01/03/2009
