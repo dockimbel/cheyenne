@@ -10,7 +10,7 @@ install-HTTPd-extension [
 	redirects: make hash! 32
 	aliases: make hash! 32
 	
-	url-to-filename: func [req /local list pattern action url][
+	url-to-filename: func [req /local list pattern action url ext][
 		; --- Test matching virtual host		
 		if list: select redirects req/vhost [
 			; -- Test matching patterns on request path	
@@ -31,7 +31,11 @@ install-HTTPd-extension [
 				if find/any/match req/in/url pattern [
 					req/in/file: rejoin [req/cfg/root-dir slash action]  ;-- make a smart rejoin!!!
 					req/in/script-name: copy pattern
-					req/handler: select service/handlers to word! as-string suffix? action					
+					if ext: find/last action #"." [
+						req/in/ext: to word! as-string ext
+						req/handler: select service/handlers req/in/ext
+					]
+					;req/handler: select service/handlers to word! as-string suffix? action
 					return false			;-- let mod-static finish the work
 				]
 			]

@@ -371,5 +371,10 @@ install-HTTPd-extension [
 		allow-ip-banning: [opt [time!]] in globals do [
 			service/banning?: any [all [time? args/1 args/1] 0:01:00]
 		]
+		
+		;--- User defined incoming folder for uploaded files
+		incoming-dir: [file!] in main do [
+			if slash <> last args/1 [append args/1 slash]
+		]
 	]
 ]

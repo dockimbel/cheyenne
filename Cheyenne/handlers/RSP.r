@@ -986,9 +986,13 @@ install-module [
 		request/posted: request/parsed/content
 		request/headers: request/parsed/headers
 		request/web-socket?: request/parsed/ws?
-		request/translated: join request/config/root-dir [
-			request/parsed/path
-			request/parsed/target
+		request/translated: either request/parsed/script-name [
+			request/parsed/file
+		][
+			join request/config/root-dir [
+				request/parsed/path
+				request/parsed/target
+			]
 		]
 		if all [
 			find request/config 'debug
