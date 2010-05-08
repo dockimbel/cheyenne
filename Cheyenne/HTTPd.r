@@ -191,7 +191,7 @@ Connection: Upgrade^M
 			clear out
 			loop 8 [insert tail out #"`" + random 26]
 			insert tail out ".tmp"
-			not exists? incoming-dir/out
+			not exists? incoming-dir/:out
 		]
 		join incoming-dir out
 	]
