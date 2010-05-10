@@ -5,6 +5,8 @@ all [
 		exists? libc: %libc.so.6
 		exists? libc: %/lib32/libc.so.6
 		exists? libc: %/lib/libc.so.6
+		exists? libc: %/System/Index/lib/libc.so.6  ; GoboLinux package
+		exists? libc: %/system/index/framework/libraries/libc.so.6  ; Syllable
 		exists? libc: %/lib/libc.so.5
 	]
 	libc: load/library libc
