@@ -211,6 +211,11 @@ v0.9.20 - ??/??/2009
 
 	o RSP: optimized <%=...%> evaluation, now NONE values will be silently ignored instead of
 	  being printed out.
+	  
+	o RSP: internal change to make database connection port accessible (for RSP database API
+	  improvement).
+	  
+	 o RSP: fix for do-sql error when used from outside a webapp context.
 	 
 
 v0.9.19 - 01/03/2009

@@ -20,7 +20,7 @@ install-module [
 	apps: make block! 1 	; [app-dir events ctx ...]
 	databases: [global []] 	; [global [db1 def1 cache1...] domain1 [app [db1 def1 cache1...] app2 [...] ...] domain2 [...] ...]
 	jobs: make block! 1
-	splitted: none
+	splitted: port: none
 	
 	evt-class: context [
 		on-application-start: 
@@ -466,7 +466,7 @@ install-module [
 
 	set 'do-sql func [
 		[catch] db [word! path!] data [string! block! word!]
-		/flat /local port out res defs pos
+		/flat /local out res defs pos
 	][
 		unless pos: any [
 			all [
@@ -1003,7 +1003,7 @@ install-module [
 	]
 	
 	fire-event: func [event [word!] /local fun][
-		if fun: get in session/events :event [
+		if all [session/events fun: get in session/events :event][
 			protected-exec/event request/parsed/file :fun :event
 		]
 	]
