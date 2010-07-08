@@ -60,11 +60,12 @@ Some of these will be bumped to "Work in Progress" as the engine evolves.
 
 ---Possible future improvements
 
-Ideas which are collected while implementing, but which fall outside of project outline.
+Ideas which are collected while implementing, but which fall outside of current project outline.
 
+* HTML/RSP page which runs & reports the full cheyenne self-test once a server is up and running.
 * CSV or DB driven reporting of tests
-* Itemized Launch GUI
-* Regression viewer GUI
+* Itemized Launch GUI (desktop or web)
+* Regression viewer GUI (desktop or web)
 * Direct integration with cure-code, as regression/bug tickets
 
 
@@ -143,4 +144,3 @@ on what is supposed to be working in order to detect & report bugs in the engine
 * TEST:  'CHECK-HEADER  verifies header tokens & status line for expected response values
 * TEST:  'DO  run arbitrary REBOL code after a test is performed, for more complex failure assessment
 * extensive source documentation of each and every property, function, and algorithm for posterity.
-* 
