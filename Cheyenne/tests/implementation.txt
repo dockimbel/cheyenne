@@ -1,0 +1,146 @@
+Cheyenne's Units Tests implementation notes
+
+    Maxim Olivier-Adlhoch
+    latest update: 2010-07-08
+    applicable to cheyenne test-suite version 0.5.1
+
+
+===Important notes:
+
+* Current version of the testing engine expects v2.7.7 of REBOL.
+* ALL code is implemented with Extensive reference to Internet RFCs, duly noted in the source where appropriate
+* ALL HTTP/web code is implemented from scratch, using TCP sockets directly.  No internal web-handling REBOL code is used.
+* The use of binary datatypes and modes is used in all TCP transfers, to ensure data integrity on network operations.
+
+
+
+
+
+===Current Work in progress
+
+---Finish low-level HTTP header tests
+
+* Date:
+* Server:
+
+---Testing engine
+
+* Re-use previous unit test response as the basis for next one
+* Redirection detection, testing, and follow-thru
+
+
+
+
+===Itemized TO DO 
+
+---Work in Progress
+
+important items discovered/detailed while performing current work, will usually become work in progress 
+since these items are required for prior implementation or potential show stoppers.
+
+Known bugs/limitations will also be detailed here.
+
+* Launching/grouping dialect
+* GET url parameter passing
+* POST html form parameter passing
+
+
+---Don't forget
+
+Items which fall in-between cracks which must not be forgotten, but not priority ATM.
+
+These items might eventually be addressed since they make overall testing better, but do not prevent
+the engine from working at its current implementation state.
+
+Some of these will be bumped to "Work in Progress" as the engine evolves.
+
+* Web socket request
+* Improved reporting on test results
+
+
+---Possible future improvements
+
+Ideas which are collected while implementing, but which fall outside of project outline.
+
+* CSV or DB driven reporting of tests
+* Itemized Launch GUI
+* Regression viewer GUI
+* Direct integration with cure-code, as regression/bug tickets
+
+
+
+
+===Current Priorities (in order of implementation, top-down)
+
+---HTTP protocol (priority 1)
+
+Tests should be written using latest HTTP RFC (should be 2616) and other related RFCs as reference documentation.
+
+* request line parsing
+* client headers parsing and semantics
+* server headers correctness
+* adequate response codes
+* correct HTTP1.0 answers (when client asks for 1.0)
+* correct HTTP1.1 specific features support (like pipelining)
+
+
+---Cheyenne (priority 2)
+
+The following tests also include testing configuration keywords declared in each mod.
+
+* mod-static specific features testing
+
+
+---RSP (priority 3)
+
+* POST data handling (with cheyenne's specific features tests)
+* GET & POST data decoding (including multipart encoding)
+* RSP API complete cover (http://cheyenne-server.org/docs/rsp-api.html)
+* Webapp's events
+* Webapps isolation
+* Sessions life cycle
+
+
+---CGI (priority 4)
+
+* REBOL CGI's compliant interface (simulation of REBOL -cgi startup mode)
+* General CGI compliance (using simple Perl CGI scripts from Perl's units tests)
+
+
+---Cheyenne (priority 5)
+
+The following tests also include testing configuration keywords declared in each mod.
+
+* mod-ssi specific features testing
+* mod-fastcgi & mod-extapp specific features testing (using PHP as backend)
+
+---Environment (priority 6)
+* OS specific tests
+
+
+
+
+===History
+
+As items are completed, they will be moved here, so we can easily keep tabs
+on what is supposed to be working in order to detect & report bugs in the engine.
+
+---GENERAL
+
+* Split-up of testing code into separate files: unit.r, tests.r, classes.r & core.r
+
+
+---HTTP protocol
+
+* basic !unit test class
+* http request header parsing & creation
+* GET, POST, HEAD HTTP methods support in various !unit functions and callbacks
+* unit test execute() model
+* explicit control over use of HTTP 1.0 or 1.1 within testing
+* capability to store request as SENT in addition to request data, so we can debug testing engine itself.
+* request and response stored individually for comparison tests.
+* /stop refinement to control if testing should continue or not after a failed test.
+* TEST:  'CHECK-HEADER  verifies header tokens & status line for expected response values
+* TEST:  'DO  run arbitrary REBOL code after a test is performed, for more complex failure assessment
+* extensive source documentation of each and every property, function, and algorithm for posterity.
+* 
