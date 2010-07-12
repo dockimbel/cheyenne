@@ -3,16 +3,16 @@
     10.1 Informational 1xx              <rfc 2616 section>
     -----
 [ ] 100 Continue                         10.1.1 
-[ ] 101 Switching Protocols              10.1.2 
+[x] 101 Switching Protocols              10.1.2 		; supported for websockets only
     
     
     10.2 Successful 2xx
     -----
-[ ] 200 OK                               10.2.1
+[x] 200 OK                               10.2.1
 [ ] 201 Created                          10.2.2
 [ ] 202 Accepted                         10.2.3
 [ ] 203 Non-Authoritative Information    10.2.4
-[ ] 204 No Content                       10.2.5
+[x] 204 No Content                       10.2.5
 [ ] 205 Reset Content                    10.2.6
 [ ] 206 Partial Content                  10.2.7
     
@@ -20,10 +20,10 @@
     10.3 Redirection 3xx                  
     -----                                 
 [ ] 300 Multiple Choices                 10.3.1  
-[ ] 301 Moved Permanently                10.3.2  
-[ ] 302 Found                            10.3.3  
+[x] 301 Moved Permanently                10.3.2  
+[x] 302 Found                            10.3.3  
 [ ] 303 See Other                        10.3.4  
-[ ] 304 Not Modified                     10.3.5  
+[x] 304 Not Modified                     10.3.5  
 [ ] 305 Use Proxy                        10.3.6
 [ ] 307 Temporary Redirect               10.3.8
                           
@@ -34,8 +34,8 @@
 [ ] 401 Unauthorized                     10.4.2 
 [ ] 402 Payment Required                 10.4.3 
 [ ] 403 Forbidden                        10.4.4 
-[ ] 404 Not Found                        10.4.5 
-[ ] 405 Method Not Allowed               10.4.6 
+[x] 404 Not Found                        10.4.5 
+[x] 405 Method Not Allowed               10.4.6 
 [ ] 406 Not Acceptable                   10.4.7 
 [ ] 407 Proxy Authentication Required    10.4.8 
 [ ] 408 Request Timeout                  10.4.9 
@@ -52,9 +52,9 @@
     
     10.5 Server Error 5xx
     -----
-[ ] 500 Internal Server Error            10.5.1 
+[x] 500 Internal Server Error            10.5.1 
 [ ] 501 Not Implemented                  10.5.2 
 [ ] 502 Bad Gateway                      10.5.3 
-[ ] 503 Service Unavailable              10.5.4 
+[ ] 503 Service Unavailable              10.5.4 			
 [ ] 504 Gateway Timeout                  10.5.5 
 [ ] 505 HTTP Version Not Supported       10.5.6 
