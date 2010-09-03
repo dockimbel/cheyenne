@@ -491,19 +491,42 @@ Connection: Upgrade^M
 		]
 	]
 	
-	ws-handshake: func [req][
+	ws-make-key: func [key1 key2 /local key z pos][
+		key: make string! 16
+       	foreach k reduce [key1 key2][
+       		z: 0
+        	remove-each c k [if c = #" " [z: z + 1] not find digit c]
+        	append key any [
+        		attempt [as-string debase/base to-hex (to integer! (to integer! k) / z) 16]
+        		""
+        	]
+        ]       
+        ;-- hack in uniserve's buffer to support ws HTTP specs violation
+		append key pos: skip tail client/locals/in-buffer -8
+		clear pos	
+		as-string checksum/method key 'md5
+	]
+	
+	ws-handshake: func [req /local roh rih value][
+		roh: req/out/headers
+		rih: req/in/headers
 		client/locals/expire: none			;-- timeout disabled for web socket ports
 		req/in/ws?: yes
 		req/out/code: 101
-		h-store req/out/headers 'Connection none
-		h-store req/out/headers 'WebSocket-Origin join "http://" req/in/headers/host
-        h-store req/out/headers 'WebSocket-Location rejoin [
-        	"ws://" req/in/headers/host req/in/url: join req/in/path req/in/target
+		h-store roh 'Connection none
+		h-store roh 'Sec-WebSocket-Origin join "http://" rih/Host
+        h-store roh 'Sec-WebSocket-Location rejoin [
+        	"ws://" rih/Host req/in/url: join req/in/path req/in/target	;-- TBD: add support for wss://
+        ]       
+        req/out/content: ws-make-key rih/Sec-WebSocket-Key1 rih/Sec-WebSocket-Key2
+        
+        if value: select rih 'Sec-WebSocket-Protocol [
+        	h-store roh 'Sec-WebSocket-Protocol value	; echo back whatever protocol is asked for
         ]
 		req/state: 'ws-handshake
 		send-response req
 		if verbose > 0 [
-			log/info ["[WebSocket] Opened=> " req/out/headers/WebSocket-Location]
+			log/info ["[WebSocket] Opened=> " roh/Sec-WebSocket-Location]
 		]
 		req/socket-port: client
 		do-phase req 'socket-connect
@@ -863,7 +886,7 @@ Connection: Upgrade^M
 							"[WebSocket] => "
 							head remove back tail copy/part as-string start 80
 						]
-					]
+					]				
 					either data: find data #"^(FF)" [
 						insert/part req/in/content start data
 						either req/socket-app [
