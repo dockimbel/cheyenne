@@ -64,7 +64,7 @@ unit: make !unit [
 	;
 	; note that user:password and :port-number are all supported within the url, if required
 	; by tests themselves.
-	set-url http://www.cheyenne-unit-tests.com
+	set-url http://localhost
 	
 	; do the http request for this test
 	execute
