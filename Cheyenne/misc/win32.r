@@ -3,6 +3,7 @@ REBOL []
 app-name: "Cheyenne"
 
 kernel32: load/library %kernel32.dll
+user32:   load/library %user32.dll
 advapi32: load/library %advapi32.dll
 shell32:  load/library %shell32.dll
 iphlpapi: load/library %iphlpapi.dll
@@ -86,6 +87,14 @@ SHGetFolderPath: make routine! [
 	pszPath		[string!]
 	return: 	[integer!]
 ] shell32 "SHGetFolderPathA"
+
+MessageBox: make routine! [
+	hWnd		[integer!]
+	lpText		[string!]
+	lpCaption	[string!]
+	uType		[integer!]
+	return: 	[integer!]
+] user32 "MessageBoxA"
 
 ; === Service API ===
 
@@ -457,4 +466,8 @@ set 'list-listen-ports has [size buf-size buffer out len state value][
 	]
 	buffer: none
 	sort out
+]
+
+set 'alert func [msg [string!]][
+	MessageBox 0 msg "Cheyenne" 0
 ]

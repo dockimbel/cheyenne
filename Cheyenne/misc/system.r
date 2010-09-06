@@ -2,27 +2,6 @@ REBOL []
 
 ;--- TBD: trap errors !
 
-; TBD: replace alert function by a call to MessageBox win32 API (would work with both Core&View)
-alert: func [msg /local svs][
-	svs: system/view/screen-face
-	svs/pane: reduce [
-		make face [
-			offset: (system/view/screen-face/size - 200x50) / 2
-			size: 400x100
-			pane: make face [
-				size: 380x80
-				offset: 0x24
-				text: msg
-			]
-		]
-	]
-	show svs
-	open-events
-	wait []
-	clear svs/pane
-	show svs
-]
-
 make log-class [
 	name: 'system
 	verbose: 2
