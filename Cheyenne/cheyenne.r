@@ -133,7 +133,7 @@ cheyenne: make log-class [
 	
 	value: evt: port-id: none
 	data-dir: system/options/path
-	pid-file: %/tmp/cheyenne.pid
+	pid-file: %/var/run/cheyenne.pid
 	
 	sub-args: ""
 	args: []

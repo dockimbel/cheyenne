@@ -1,4 +1,8 @@
-REBOL []
+REBOL [
+	History: {
+		08/09/2010 - Applied Kaj's big patch 
+	}
+]
 
 install-HTTPd-extension [
 	name: 'mod-userdir
@@ -12,40 +16,81 @@ install-HTTPd-extension [
 	on-started: does [do boot-code]
 	on-reload:  does [clear boot-code]
 	
-	get-ugid: func [name [string!] /local file uid gid][
-		if none? attempt [file: read %/etc/passwd][
+	get-ugid: func [name [string!] /local file line uid gid][
+		unless attempt [file: read/lines %/etc/passwd][
 			log/error "accessing /etc/passwd failed"
 			return none
 		]
-		unless parse/all file [
-			thru name 2 [thru col]
-			copy uid to col skip
-			copy gid to col
-			to end
-		][
-			log/error "reading /etc/passwd failed"
-			return none
+		foreach line file [
+			if all [line: find/case/match line name  col = first line][
+				return either parse/all next line [
+					thru col
+					copy uid to col skip
+					copy gid to col
+					to end
+				][
+					reduce [to-integer uid to-integer gid]
+				][
+					log/error "invalid format reading /etc/passwd !"
+					none
+				]
+			]
 		]
-		reduce [to-integer uid to-integer gid]
+		log/error "user not found in /etc/passwd"
+		none
 	]
 	
-	change-id: func [id [word! integer!] /user /group][
-		if word? id [
-			if none? id: get-ugid mold id [return none]
-			id: pick id to-logic user
+	get-gid: func [name [string!] /local file line gid][
+		unless attempt [file: read/lines %/etc/group][
+			log/error "accessing /etc/group failed"
+			return none
 		]
-		either user [
+		foreach line file [
+			if all [line: find/case/match line name  col = first line][
+				return either parse/all next line [
+					thru col
+					copy gid to col
+					to end
+				][
+					to-integer gid
+				][
+					log/error "invalid format reading /etc/group !"
+					none
+				]
+			]
+		]
+		log/error "group not found in /etc/group"
+		none
+	]
+	
+	change-id: func [id [string! integer!] /user /group /local gid][
+		either string? id [
+			unless id: get-ugid id [return none]
+			set [id gid] id
+		][
+			gid: id
+		]
+		if group [setgid gid]
+		if user [
 			;logger/file.log: join logger/file ["-" id %.log]
 			setuid id
-		][setgid id]
+		]
+	]
+	
+	change-gid: func [id [string! integer!]][
+		if string? id [
+			unless id: get-gid id [return none]
+		]
+		setgid id
 	]
 	
 	words: [
-		user: [word! | integer!] in globals do [
-			repend boot-code ['change-id/user to-lit-word args/1]
+		user: [string! | integer!] in globals do [
+			repend boot-code either string? args/1 [['change-id/user/group args/1]] [['change-id/user args/1]]
 		]
-		group: [word! | integer!] in globals do [
-			repend boot-code ['change-id/group to-lit-word args/1]
+		group: [string! | integer!] in globals do [
+			unless empty? boot-code [change boot-code [change-id/user]]
+			insert boot-code reduce ['change-gid args/1]
 		]
 	]
 ]
