@@ -192,18 +192,22 @@ cheyenne: make log-class [
 			if port-id [
 				;-- ensure that pid filename won't collide with other instances
 				insert find/reverse tail pid-file #"." join "-" port-id/1
-
+				
 				;-- relocate non-HTTPd listen ports to allow several instances to run				
 				offset: port-id/1 // 63516 + 2020
 				in-use: list-listen-ports			
-				list: make block! 8
 				foreach svc [task-master RConsole logger MTA][
 					n: services/:svc/port-id + offset
-					if in-use [until [not find in-use n: n + 1]]
-					services/:svc/port-id: n
-					repend list [svc n]
+					if all [in-use find in-use n][
+						until [not find in-use n: n + 1]
+						services/:svc/port-id: n
+						unless list [list: make block! 8]
+						repend list [svc n]
+					]
 				]
-				log/info ["servers port relocated: ^/" mold new-line/all/skip copy list on 2]
+				if list [
+					log/info ["servers port relocated: ^/" mold new-line/all/skip copy list on 2]
+				]
 			]
 			share [server-ports: list]
 			
