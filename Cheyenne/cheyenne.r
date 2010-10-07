@@ -133,7 +133,7 @@ cheyenne: make log-class [
 	
 	value: evt: port-id: none
 	data-dir: system/options/path
-	pid-file: %/var/run/cheyenne.pid
+	pid-file: %cheyenne.pid
 	
 	sub-args: ""
 	args: []
@@ -210,8 +210,6 @@ cheyenne: make log-class [
 				]
 			]
 			share [server-ports: list]
-			
-			if not OS-Windows? [attempt [write pid-file process-id?]]
 
 			control/start/only 'RConsole none
 			control/start/only 'Logger none
@@ -225,7 +223,7 @@ cheyenne: make log-class [
 			
 			set-verbose verbosity			;-- for SMTP and dig protocols
 			verbose: max verbosity - 2 0	;-- lower down UniServe's and Task-Master's verbosity 
-			uniserve/services/task-master/verbose: max verbosity - 1 0
+			services/task-master/verbose: max verbosity - 1 0
 			
 			if OS-Windows? [
 				if not service? [
@@ -240,6 +238,12 @@ cheyenne: make log-class [
 			control/start/only 'MTA none
 			foreach p any [port-id [80]][control/start/only 'HTTPd p]
 			control/start/only 'task-master none
+			
+			;-- PID file written at this step to get right file owner (in case of setuid)
+			if not OS-Windows? [
+				insert pid-file any [select services/httpd/conf/globals 'pid-dir %/tmp/]
+				attempt [write pid-file process-id?]
+			]
 		]
 		if flag? 'embed [exit]
 		

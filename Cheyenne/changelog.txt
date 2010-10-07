@@ -130,7 +130,7 @@ v0.9.20 - ??/??/2009
 	  		allow-ip-banning 08:00:00		;-- ban for 8 hours
 	
 	o Added support for running multiple Cheyenne instances on same server (relocating internal
-	  listening ports if necessary). Trace files, PID file and other files used for c
+	  listening ports if necessary). Trace files, PID file and other files
 	  (RSP sessions, MTA jobs,...) will now include HTTPd's port number in the file name if
 	  server is running on port(s) other than the default one (80).
 	  
@@ -141,7 +141,7 @@ v0.9.20 - ??/??/2009
 
 			socket-app "/ws.rsp" ws-test-app
 
-	  Currently, the URL must point to a valid RSP script. The application name following must exists in
+	  Currently, the URL must point to a valid RSP script. The application name (2nd argument) must exists in
  	  host's or webapp's root folder under %/ws-apps sub-folder.
  	  
  	o RSP: user errors from included scripts were sent to browser even in production mode. Fixed.
@@ -215,7 +215,13 @@ v0.9.20 - ??/??/2009
 	o RSP: internal change to make database connection port accessible (for RSP database API
 	  improvement).
 	  
-	 o RSP: fix for do-sql error when used from outside a webapp context.
+	o RSP: fix for 'do-sql error when used from outside a webapp context.
+	
+	o New config keyword in global section: pid-dir. Allow to relocate Cheyenne's PID file
+	  from %/tmp/ to any other folder. Requires a file! argument.
+	  
+	o Cheyenne SVN revision number now included in the 'Server response header for
+	  encapped binary revisions.
 	 
 
 v0.9.19 - 01/03/2009

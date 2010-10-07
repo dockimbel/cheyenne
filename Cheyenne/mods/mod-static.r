@@ -376,5 +376,10 @@ install-HTTPd-extension [
 		incoming-dir: [file!] in main do [
 			if slash <> last args/1 [append args/1 slash]
 		]
+		
+		;--- User defined PID file folder
+		pid-dir: [file!] in globals do [
+			if slash <> last args/1 [append args/1 slash]
+		]
 	]
 ]
