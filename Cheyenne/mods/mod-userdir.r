@@ -45,9 +45,14 @@ install-HTTPd-extension [
 				if string? group [gid: second get-id/group group]
 			]
 		]
+		if all [exists? logger/file.log not zero? uid not zero? gid][
+			if not zero? chown to-local-file logger/file.log uid gid [
+				log/error ["chown " uid ":" gid " " logger/file.log " failed!"]
+			]
+		]
 		;-- change group id first to inherit privileges from group first
-		if not zero? setgid gid [log/error "setgid failed!"]
-		if not zero? setuid uid [log/error "setuid failed!"]
+		if any [zero? gid not zero? setgid gid][log/error ["setgid '" group " failed!"]]
+		if any [zero? uid not zero? setuid uid][log/error ["setuid '" user " failed!"]]
 	]
 	
 	words: [

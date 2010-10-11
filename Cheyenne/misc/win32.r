@@ -437,7 +437,7 @@ set 'NT-service-running? has [ss][
 	to logic! find SERVICE_ANY_RUNNING ss/dwCurrentState
 ]
 
-set [setuid setgid] none
+set [setuid setgid chown] 0		;-- 0 is the OK result
 
 
 set 'list-listen-ports has [size buf-size buffer out len state value][

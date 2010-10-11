@@ -1,12 +1,12 @@
 REBOL [
 	Title: "UniServe kernel"
 	Author: "SOFTINNOV / Nenad Rakocevic"
-	Copyright: "@ 2002-2009 SOFTINNOV"
+	Copyright: "@ 2002-2010 SOFTINNOV"
 	Email: nr@softinnov.com
 	Date: 17/01/2010
 	File: %uni-engine.r
 	Version: 0.9.38
-	Purpose: "Multi-protocol asynchrone client/server framework"
+	Purpose: "Multi-protocol asynchronous client/server framework"
 	License: {
 		BSD License, read the complete text in %docs/license.txt
 		This license covers this source code and all files in this
@@ -666,7 +666,9 @@ uniserve: make log-class [
 	][
 		if start [
 			exec: [
-				log/info ["starting " mold name " on port " any [id svc/port-id] "..."]
+				if verbose > 0 [
+					log/info ["starting " mold name " on port " any [id svc/port-id] "..."]
+				]
 				unless find-service name id [
 					out: open-service name any [id svc/port-id]
 				]			
@@ -800,7 +802,7 @@ uniserve: make log-class [
 		]
 		append body none
 		plugin: install-plugin body
-		log/info ["Async Protocol " mold plugin/name " loaded"]
+		if verbose > 0 [log/info ["Async Protocol " mold plugin/name " loaded"]]
 	]
 	
 	shared: context [control: none]

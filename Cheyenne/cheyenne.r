@@ -138,7 +138,7 @@ cheyenne: make log-class [
 	sub-args: ""
 	args: []
 	flags: []
-	set-flag: func [w][any [find flags w append flags w]]
+	set-flag: func [w][unless find flags w [append flags w]]
 	flag?: func [w][to logic! find flags w]
 	flags?: func [b][equal? length? b length? intersect flags b]
 	propagate: func [arg][append sub-args arg]
@@ -151,9 +151,9 @@ cheyenne: make log-class [
 		do bind body in obj 'self
 	]
 	
-	do-cheyenne-app: has [vlevel service? home verbosity offset n list][	
+	do-cheyenne-app: has [vlevel service? home verbosity offset n list sys][	
 		if flag? 'custom-port [port-id: args/port-id]
-		if flag? 'verbose [verbosity: verbose: args/verbosity]
+		if flag? 'verbose [verbosity: args/verbosity]
 		verbosity: any [verbosity 0]
 		
 		do-cache uniserve-path/libs/scheduler.r
@@ -166,7 +166,7 @@ cheyenne: make log-class [
 			launch-service				;-- launch service thread
 			do-cache %misc/admin.r
 		]
-		do-cache %misc/system.r		;-- install system port and tray icon support for Windows
+		sys: do-cache %misc/system.r	;-- install system port and tray icon support for Windows
 
 		do-cache uniserve-path/services/task-master.r		
 		do-cache uniserve-path/services/RConsole.r	
@@ -224,6 +224,7 @@ cheyenne: make log-class [
 			set-verbose verbosity			;-- for SMTP and dig protocols
 			verbose: max verbosity - 2 0	;-- lower down UniServe's and Task-Master's verbosity 
 			services/task-master/verbose: max verbosity - 1 0
+			sys/verbose: verbosity
 			
 			if OS-Windows? [
 				if not service? [
@@ -248,7 +249,7 @@ cheyenne: make log-class [
 		if flag? 'embed [exit]
 		
 		until [
-			evt: wait []							;-- main event loop
+			evt: do-events							;-- main event loop
 			either none? evt [
 				scheduler/on-timer					;-- scheduler job event
 			][
@@ -351,21 +352,18 @@ cheyenne: make log-class [
 		]
 		
 		parse-cmd-line
-		
-		unless flag? 'bg-process [do-cache %misc/os.r]	; -- can't use any OS calls before that
-			
-		logger/level: either flag? 'verbose [
+		if flag? 'verbose [verbose: args/verbosity]
+
+		either flag? 'bg-process [
+			logger/level: none		; TBD: improve worker processes logs consistency
+		][
+			do-cache %misc/os.r		; -- can't use any OS calls before that
 			logger/level: either flag? 'no-screen [
 				logger/file.log: join %chey-pid- [process-id? %.log]
 				'file
 			][
 				'screen
 			]
-		][
-			none
-		]
-		
-		unless flag? 'bg-process [
 			if OS-Windows? [
 				if encap? [
 					set-working-folders
@@ -380,7 +378,7 @@ cheyenne: make log-class [
 				log/info ["data folder  : " mold data-dir]
 			]
 		]
-
+		
 		; --- applications dispatcher ---
 		if error? set/any 'err try [
 			case [

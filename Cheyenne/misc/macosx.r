@@ -20,6 +20,13 @@ all [
 
 	set 'setuid make routine! [uid [integer!] return: [integer!]] libc "setuid"
 	set 'setgid make routine! [gid [integer!] return: [integer!]] libc "setgid"
+	
+	set 'chown make routine! [
+		path 	[string!]
+		owner 	[integer!]
+		group 	[integer!]
+		return: [integer!]
+	] libc "chown"	
 ]
 
 set 'launch-app func [cmd [string!] /local ret][

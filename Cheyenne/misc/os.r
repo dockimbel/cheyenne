@@ -26,7 +26,8 @@ OS-ctx: make log-class [
 				call join "kill " pid
 			]
 		]
-		set [set-env setuid setgid process-id? NT-Service? list-listen-ports] none
+		set [set-env process-id? NT-Service? list-listen-ports] none
+		set [setuid setgid chown] 0		;-- 0 is the OK result
 	]
 ]
 

@@ -4,7 +4,7 @@ REBOL []
 
 make log-class [
 	name: 'system
-	verbose: 2
+	verbose: 0
 
 	sys: system-awake: modes: none
 	
@@ -121,7 +121,7 @@ make log-class [
 ;--- All others platforms	
 		system-awake: func [port /local evt][
 			evt: pick port 1
-			if verbose > 1 [
+			if verbose > 0 [
 				log/info ["raw event:" mold evt]
 			]
 			if evt: select evt 'signal [

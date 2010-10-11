@@ -1,7 +1,7 @@
 REBOL [
 	Title: "SVN Version"
-	Date: 4-Oct-2010
-	Version: 1.0.0
+	Date: 11-Oct-2010
+	Version: 1.0.1
 	File: %svn-version.r
 	Author: "Nenad Rakocevic"
 	Usage: {
@@ -47,7 +47,7 @@ context [
 	
 	dive: func [path /local file][
 		if exists? file: path/:svn-dir/all-wcprops [process file]
-		foreach file read path/. [
+		foreach file read path [
 			if all [
 				dir? file
 				file <> svn-dir/all-wcprops
