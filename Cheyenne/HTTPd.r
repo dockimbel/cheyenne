@@ -38,7 +38,7 @@ install-service [
 	version: #do [							;-- Cheyenne's version (tuple!) including SVN revision
 		do %svn-version.r					;--   when encapped from a SVN repository
 		rejoin [
-			vers: get in first load/header %httpd.r 'version #"."
+			vers: get in first load/header %HTTPd.r 'version #"."
 			svn-version? %../
 		]
 	]
