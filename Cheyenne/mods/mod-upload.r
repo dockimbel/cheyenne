@@ -60,7 +60,7 @@ install-HTTPd-extension [
 					ro/mime: 'text/plain
 				]
 			]
-			true
+			return true
 		]
 		none
 	]

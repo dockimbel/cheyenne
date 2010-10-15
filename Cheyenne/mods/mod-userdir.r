@@ -51,8 +51,8 @@ install-HTTPd-extension [
 			]
 		]
 		;-- change group id first to inherit privileges from group first
-		if any [zero? gid not zero? setgid gid][log/error ["setgid '" group " failed!"]]
-		if any [zero? uid not zero? setuid uid][log/error ["setuid '" user " failed!"]]
+		if any [zero? gid not zero? set-gid gid][log/error ["setgid '" group " failed!"]]
+		if any [zero? uid not zero? set-uid uid][log/error ["setuid '" user " failed!"]]
 	]
 	
 	words: [

@@ -17,13 +17,13 @@ all [
 		return: 	[integer!]
 	] libc "setenv"
 	
-	getpid: make routine! [return: [integer!]] libc "getpid"
+	get-pid: make routine! [return: [integer!]] libc "getpid"
 	
 	set 'set-env func [name [string!] value [string!]][
 		_setenv name value 1
 	]
-	set 'setuid make routine! [uid [integer!] return: [integer!]] libc "setuid"
-	set 'setgid make routine! [gid [integer!] return: [integer!]] libc "setgid"
+	set 'set-uid make routine! [uid [integer!] return: [integer!]] libc "setuid"
+	set 'set-gid make routine! [gid [integer!] return: [integer!]] libc "setgid"
 	
 	set 'chown make routine! [
 		path 	[string!]
@@ -31,15 +31,21 @@ all [
 		group 	[integer!]
 		return: [integer!]
 	] libc "chown"
+	
+	set 'kill make routine! [
+		pid 	[integer!]
+		sig 	[integer!]
+		return: [integer!]
+	] libc "kill"
 ]
 set 'launch-app func [cmd [string!] /local ret][
 	ret: call/info cmd
 	reduce ['OK ret/id]
 ]
 set 'kill-app func [pid][
-	call join "kill " pid
+	kill pid 15			; SIGTERM
 ]
-set 'process-id? does [getpid]
+set 'process-id? does [get-pid]
 
 tcp-states: [
 	ESTABLISHED

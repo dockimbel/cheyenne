@@ -151,7 +151,9 @@ cheyenne: make log-class [
 		do bind body in obj 'self
 	]
 	
-	do-cheyenne-app: has [vlevel service? home verbosity offset n list sys][	
+	do-cheyenne-app: has [vlevel service? home verbosity offset n list sys][
+		if OS-Windows? [init-JobObject]		;-- Windows specific processes closing management
+		
 		if flag? 'custom-port [port-id: args/port-id]
 		if flag? 'verbose [verbosity: args/verbosity]
 		verbosity: any [verbosity 0]
@@ -258,7 +260,6 @@ cheyenne: make log-class [
 			uniserve/flag-stop
 		]
 		if verbose > 0 [log/info "exit from event loop"]
-		halt
 	]
 	
 	do-bg-process-app: does [
@@ -388,11 +389,13 @@ cheyenne: make log-class [
 				true 				[do-cheyenne-app]
 			]
 		][
+			err: disarm err
 			either flag? 'no-screen [
-				write/append %crash.log reform [now ":" mold disarm err]
+				write/append %crash.log reform [now ":" mold err]
+				quit/return err/code
 			][
 				if value? 's-print [print: :s-print]
-				print mold disarm err
+				print mold err
 				halt
 			]
 		]
@@ -405,3 +408,4 @@ cheyenne: make log-class [
 ]
 
 cheyenne/boot
+quit/return 0

@@ -16,10 +16,10 @@ all [
 		_setenv name value 1
 	]
 	
-	getpid: make routine! [return: [integer!]] libc "getpid"
+	get-pid: make routine! [return: [integer!]] libc "getpid"
 
-	set 'setuid make routine! [uid [integer!] return: [integer!]] libc "setuid"
-	set 'setgid make routine! [gid [integer!] return: [integer!]] libc "setgid"
+	set 'set-uid make routine! [uid [integer!] return: [integer!]] libc "setuid"
+	set 'set-gid make routine! [gid [integer!] return: [integer!]] libc "setgid"
 	
 	set 'chown make routine! [
 		path 	[string!]
@@ -27,6 +27,12 @@ all [
 		group 	[integer!]
 		return: [integer!]
 	] libc "chown"	
+	
+	set 'kill make routine! [
+		pid 	[integer!]
+		sig 	[integer!]
+		return: [integer!]
+	] libc "kill"
 ]
 
 set 'launch-app func [cmd [string!] /local ret][
@@ -34,9 +40,9 @@ set 'launch-app func [cmd [string!] /local ret][
 	reduce ['OK ret/id]
 ]
 set 'kill-app func [pid][
-	call join "kill " pid
+	kill pid 15			; SIGTERM
 ]
-set 'process-id? does [getpid]
+set 'process-id? does [get-pid]
 
 set 'list-listen-ports has [buffer out value][
 	buffer: make string! 10000
@@ -46,11 +52,10 @@ set 'list-listen-ports has [buffer out value][
 		2 [thru newline]		;-- skip header lines
 		any [
 			thru "*." [
-				#"*" 
-				| copy value to #" " (
+				#"*" | copy value to #" " (
 					if not find out value: to-integer value [append out value]
 				)
-		]
+			]
 		]
 	]
 	sort out

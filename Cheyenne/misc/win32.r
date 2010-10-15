@@ -230,6 +230,28 @@ PROCESS_INFORMATION: make struct! process-info-struct: [
 	dwThreadID	[integer!]
 ] none
 
+JOBOBJECT_EXTENDED_LIMIT_INFORMATION: make struct! jeli-struct: [
+	PerProcessUserTimeLimit	[double]
+	PerJobUserTimeLimit		[double]
+	LimitFlags				[integer!]
+	MinimumWorkingSetSize	[integer!]
+  	MaximumWorkingSetSize	[integer!]
+  	ActiveProcessLimit		[integer!]
+  	Affinity				[integer!]
+  	PriorityClass			[integer!]
+  	SchedulingClass			[integer!]
+	ReadOperationCount		[double]
+	WriteOperationCount		[double]
+	OtherOperationCount		[double]
+	ReadTransferCount		[double]
+	WriteTransferCount		[double]
+	OtherTransferCount		[double]
+	ProcessMemoryLimit		[integer!]
+	JobMemoryLimit			[integer!]
+	PeakProcessMemoryUsed	[integer!]
+	PeakJobMemoryUsed		[integer!]
+] none 
+
 CreateProcess: make routine! compose/deep [
 	lpApplicationName	 [integer!]
 	lpCommandLine		 [string!]	
@@ -244,15 +266,34 @@ CreateProcess: make routine! compose/deep [
 	return:				 [integer!]
 ] kernel32 "CreateProcessA"
 
-TerminateProcess: make routine! [
-	hProcess  [integer!]
-	uExitCode [integer!]
-	return:   [integer!]
-] kernel32 "TerminateProcess"
-
 GetCurrentProcessId: make routine! [
 	return:   [integer!]
 ] kernel32 "GetCurrentProcessId"
+
+GetProcessId: make routine! [
+	hProcess  [integer!]
+	return:   [integer!]
+] kernel32 "GetProcessId"
+
+CreateJobObject: make routine! [
+  lpJobAttributes 	[integer!]
+  lpName			[integer!]
+  return: 			[integer!]
+] kernel32 "CreateJobObjectA"
+
+SetInformationJobObject: make routine! compose/deep [
+	hJob					[integer!]
+	JobObjectInfoClass 		[integer!]
+	lpJobObjectInfo			[struct! [(jeli-struct)]]
+	cbJobObjectInfoLength 	[integer!]
+ 	return: 				[integer!]
+] kernel32 "SetInformationJobObject"
+
+AssignProcessToJobObject: make routine! [
+	hJob		[integer!]
+	hProcess	[integer!]
+  	return: 	[integer!]
+] kernel32 "AssignProcessToJobObject"
 
 tcp-states: [
 	CLOSED
@@ -282,6 +323,7 @@ GetTcpTable: make routine! compose/deep [
 
 null: to-char 0
 last-error: none
+ghJob: none			;-- global handle to JobObject object
 
 make-null-string!: func [len [integer!]][
 	head insert/dup make string! len null len
@@ -354,23 +396,38 @@ set 'OS-get-dir func [dir [word!] /local type path][
 	dirize to-rebol-file trim path
 ]
 
-set 'launch-app func [cmd [string!] /local si pi ret][
+set 'init-JobObject has [jeli][
+	if zero? ghJob: CreateJobObject 0 0 [
+		log/error get-error-msg
+	]
+	jeli: make struct! JOBOBJECT_EXTENDED_LIMIT_INFORMATION none
+	jeli/LimitFlags: 8192
+	if zero? SetInformationJobObject ghJob 9 jeli length? third jeli [
+		log/error get-error-msg
+	]
+]
+
+set 'launch-app func [cmd [string!] /local si pi ret pid][
 	si: make struct! start-info second start-info
 	pi: make struct! PROCESS_INFORMATION none
 	cmd: join cmd null
-	ret: CreateProcess 0 cmd 0 0 #"^(00)" 0 0 0 si pi
+	ret: CreateProcess 0 cmd 0 0 null 0 0 0 si pi
 	ret: either zero? ret [
 		reduce ['ERROR get-error-msg]
 	][
-		reduce ['OK pi/hProcess]	
+		if zero? AssignProcessToJobObject ghJob pi/hProcess [
+			log/error get-error-msg
+		]
+		pid: GetProcessID pi/hProcess	
+		CloseHandle pi/hThread
+		CloseHandle pi/hProcess
+		reduce ['OK pid]	
 	]
-	CloseHandle pi/hThread
 	ret
 ]
-set 'kill-app func [pid][
-	TerminateProcess pid 0
-	CloseHandle pid
-]
+
+set 'kill-app none	;-- Cheyenne relies on JobObject to gracefully shutdown all child processes
+	
 set 'set-env func [name [string!] value [string!]][
 	_setenv name value
 ]
@@ -437,7 +494,7 @@ set 'NT-service-running? has [ss][
 	to logic! find SERVICE_ANY_RUNNING ss/dwCurrentState
 ]
 
-set [setuid setgid chown] 0		;-- 0 is the OK result
+set [set-uid set-gid chown] 0		;-- 0 is the OK result
 
 
 set 'list-listen-ports has [size buf-size buffer out len state value][

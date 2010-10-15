@@ -27,7 +27,7 @@ OS-ctx: make log-class [
 			]
 		]
 		set [set-env process-id? NT-Service? list-listen-ports] none
-		set [setuid setgid chown] 0		;-- 0 is the OK result
+		set [set-uid set-gid chown] 0		;-- 0 is the OK result
 	]
 ]
 
