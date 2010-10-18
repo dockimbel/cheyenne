@@ -3,7 +3,7 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Purpose: "Full-featured Web Server"
 	Encap: [quiet secure none title "Cheyenne" no-window] 
-	Version: 0.9.20
+	Version: 0.9.19
 	Date: 08/03/2009
 ]
 
@@ -131,6 +131,15 @@ cheyenne: make log-class [
 	name: 'boot
 	verbose: 0
 	
+	version: #do [							;-- Cheyenne's version (tuple!) including SVN revision
+		do %svn-version.r					;--   when encapped from a SVN repository
+		rejoin [
+			vers: get in first load/header %cheyenne.r 'version #"."
+			svn-version? %.
+		]
+	]
+	if issue? version [version: system/script/header/version]
+	
 	value: evt: port-id: none
 	data-dir: system/options/path
 	pid-file: %cheyenne.pid
@@ -231,7 +240,9 @@ cheyenne: make log-class [
 			if OS-Windows? [
 				if not service? [
 					set-tray-help-msg rejoin [
-						"Cheyenne is listening on port"
+						"Cheyenne Web Server^/"
+						"version: " version newline
+						"port"
 						either all [port-id 1 < length? port-id]["s"][""] ": " 
 						replace/all mold/only any [port-id 80] " " ","
 					]
@@ -281,6 +292,10 @@ cheyenne: make log-class [
 		]
 	]
 	
+	do-version-app: does [
+		print version
+	]
+	
 	set-working-folders: has [home][
 		home: dirize first split-path system/options/boot
 		change-dir system/options/home: system/options/path: home
@@ -302,7 +317,7 @@ cheyenne: make log-class [
 	parse-cmd-line: has [ssa digit value][
 		digit: charset [#"0" - #"9"]
 		if ssa: system/script/args [
-			parse ssa [
+			parse/case ssa [
 				any [
 					"-worker" (set-flag 'bg-process) break 
 					| "-p" copy value any [1 5 digit opt #","] (
@@ -332,6 +347,7 @@ cheyenne: make log-class [
 						set-flag 'verbose repend args ['verbosity length? value]
 						propagate join " -" value
 					)
+					| ["-V" | "--version"] (set-flag 'version)
 					| skip
 				]
 			]
@@ -386,6 +402,7 @@ cheyenne: make log-class [
 				flag? 'bg-process	[do-bg-process-app]
 				flag? 'uninstall	[do-uninstall-app]
 				flag? 'tray-only	[do-tray-app]
+				flag? 'version		[do-version-app]
 				true 				[do-cheyenne-app]
 			]
 		][

@@ -1,7 +1,7 @@
 REBOL [
 	Title: "HTTPd service"
 	Author: "SOFTINNOV / Nenad Rakocevic"
-	Version: 0.9.20
+	Version: 0.9.19
 	Date: 01/03/2009
 ]
 
@@ -35,13 +35,6 @@ install-service [
 	mod-dir: %mods/
 	default-incoming-dir: join cheyenne/data-dir %incoming/	;-- used for temporary holding uploaded files
 	incoming-dir: none						;-- incoming folder resolved at runtime						
-	version: #do [							;-- Cheyenne's version (tuple!) including SVN revision
-		do %svn-version.r					;--   when encapped from a SVN repository
-		rejoin [
-			vers: get in first load/header %HTTPd.r 'version #"."
-			svn-version? %../
-		]
-	]
 
 	block-list: none						;-- list of HTTP request line patterns to block
 	block-ip-host?: no						;-- yes: block Host headers using an IP address
@@ -141,7 +134,7 @@ Connection: Upgrade^M
 	]
 
 	proto-header: compose [
-		Server			(append "Cheyenne/" either issue? version [system/script/header/version][version])
+		Server			(append "Cheyenne/" cheyenne/version)
 		Date			(none)
 		Last-Modified	(none)
 		Content-Length	(none)

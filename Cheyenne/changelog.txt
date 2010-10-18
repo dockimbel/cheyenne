@@ -222,6 +222,10 @@ v0.9.20 - ??/??/2009
 	  
 	o Cheyenne SVN revision number now included in the 'Server response header for
 	  encapped binary revisions.
+	  
+	o (UNIX) Added a new boot option: -V or --version. Displays Cheyenne's version, then quits.
+	
+	o (Windows) Cheyenne's version is now displayed in the tray icon help message.
 	 
 
 v0.9.19 - 01/03/2009
