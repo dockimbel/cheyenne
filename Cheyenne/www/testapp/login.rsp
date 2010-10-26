@@ -7,7 +7,7 @@
 	
 	if all [user = in-user pass = in-pass][
 		session/content/login?: yes
-		response/redirect "/testapp/"
+		response/redirect "index.rsp"
 	]
 %>
 <html>

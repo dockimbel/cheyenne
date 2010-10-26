@@ -135,7 +135,7 @@ cheyenne: make log-class [
 		do %svn-version.r					;--   when encapped from a SVN repository
 		rejoin [
 			vers: get in first load/header %cheyenne.r 'version #"."
-			svn-version? %.
+			svn-version? %../cheyenne-server/
 		]
 	]
 	if issue? version [version: system/script/header/version]
@@ -296,6 +296,35 @@ cheyenne: make log-class [
 		print version
 	]
 	
+	do-help-app: does [
+		print {The command line usage is:
+
+    cheyenne <options>
+
+Supported options are:
+
+    -e               Run Cheyenne in embedded mode to integrate it in
+                     another REBOL application.
+    
+    -h, --help      Displays this help message.   
+
+    -p port-id	     Listen for HTTP requests on the given port number. 
+                     Several port numbers can be specified separated by
+                     a comma.
+                     
+    -u               Manually uninstal Cheyenne NT Service (Windows).
+    
+    -w number        Set the maximum number of worker processes. If
+                     set to 0, all workers will be closed after each
+                     CGI/RSP requests (for debugging purpose).
+                     
+    -v[vv...]        Enable the verbose mode. Use 1 to 6 'v to set the
+                     verbose level.
+    
+    -V, --version    Displays Cheyenne version number.
+		}
+	]
+	
 	set-working-folders: has [home][
 		home: dirize first split-path system/options/boot
 		change-dir system/options/home: system/options/path: home
@@ -348,6 +377,7 @@ cheyenne: make log-class [
 						propagate join " -" value
 					)
 					| ["-V" | "--version"] (set-flag 'version)
+					| ["-h" | "--help"] (set-flag 'help)
 					| skip
 				]
 			]
@@ -403,6 +433,7 @@ cheyenne: make log-class [
 				flag? 'uninstall	[do-uninstall-app]
 				flag? 'tray-only	[do-tray-app]
 				flag? 'version		[do-version-app]
+				flag? 'help			[do-help-app]
 				true 				[do-cheyenne-app]
 			]
 		][

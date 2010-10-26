@@ -95,6 +95,7 @@ install-HTTPd-extension [
 			in 	 (req/in)
 			ip 	 (service/client/remote-ip)
 			port (service/client/local-port)
+			log	 (uniserve/services/logger/trace-file)
 			session
 		]
 		either sess [
@@ -398,7 +399,7 @@ install-HTTPd-extension [
 		error-page: [string!] in main		
 
 		;--- Trigger the debugging mode
-		debug: in main
+		debug: [opt [block!]] in main
 		
 		;--- Define the localization resources directory (relative to the webapp)
 		locales-dir: [file!] in main do [

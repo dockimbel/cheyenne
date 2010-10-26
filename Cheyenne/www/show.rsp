@@ -5,7 +5,7 @@
 <BODY bgcolor="white">
 <a href="/">Back</a><br><br>
 <FONT FACE="Arial" SIZE='-1'>
-<B>Timestamp: </B><%=now %>
+<B>Timestamp: </B><%?now/date " " now/time%>
 <BR><BR>
 <H4>Request parameters :</H4>
 <UL>

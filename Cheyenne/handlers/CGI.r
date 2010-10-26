@@ -149,13 +149,13 @@ install-module [
 <HTML>
 	<HEAD>
 		<TITLE>
-			REBOL Error Caught
+			REBOL Error Trapped
 		</TITLE>
 	</HEAD>
 	<BODY><FONT face="Arial">
 		<BR>
 		<CENTER>
-		<H2>&gt; Caught Error &lt;</H2><BR>
+		<H2>&gt; Trapped Error &lt;</H2><BR>
 		<TABLE border="1">
 		<TR><TD align="right"><FONT face="Arial"><B>Error Code :</B></FONT></TD>
 		<TD align="left"><FONT face="Arial">}prin mold err-obj/code prin{</FONT></TD></TR>

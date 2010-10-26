@@ -1,8 +1,6 @@
 REBOL [
 	Title: "RSP handler"
 	Author: "SOFTINNOV / Nenad Rakocevic"
-	Version: 1.0.0
-	Date: 27/05/2007
 ]
 
 do-cache uniserve-path/libs/html.r
@@ -48,34 +46,39 @@ install-module [
 	saved-print-funcs: reduce [:prin :print :probe]
 	print-funcs: [prin print probe]
 	
+	set 'emit func [data [series!]][insert tail response/buffer reduce data]
+	
 	exit-value: 987123654		;-- value used to mark script ending
 	system/error/throw/no-function/1: "Return or Exit not in function, or Break not in loop"
 
+
+	reduce-error: func [err [object!] /local desc][
+		;-- workaround for 'arg1 usage instead of :arg1 in some error blocks
+		err/arg1: either unset? get/any in err 'arg1 [none][err/arg1]
+		;-- extend error object with a locally bound description field
+		desc: system/error/(err/type)/(err/id)	
+		make err compose/only [desc: (desc)]
+	]
+	
 	sandboxed-exec: func [rsp-script [function!] /local res][
 		any [
 			all [
 				error? set/any 'res try [catch [rsp-script exit-value]]
-				disarm :res
+				reduce-error disarm :res
 			]
 			all [
 				any [
 					not value? 'res
 					not :res == exit-value
 				]
-				make system/standard/error [type: 'throw id: 'no-function near: []]
+				reduce-error make system/standard/error [type: 'throw id: 'no-function near: []]
 			]
 		]
 	]
 	
-	form-error: func [err [object!] /local type id desc][	
-		type: err/type
-		id: err/id
-		arg1: either unset? get/any in err 'arg1 [none][err/arg1]
-		arg2: err/arg2
-		arg3: err/arg3
-		desc: reduce system/error/:type/:id
+	form-error: func [err [object!]][	
 		reform [
-			"^-**" system/error/:type/type #":" reduce system/error/:type/:id newline
+			"^-**" system/error/(err/type)/type #":" reduce err/desc newline
 			"^-** Where:" mold/flat err/where newline
 			"^-** Near: " mold/flat err/near newline
 		]
@@ -97,13 +100,7 @@ install-module [
 		]
 	]
 
-	html-form-error: func [err [object!] file /event evt /local type id desc][	
-		type: err/type
-		id: err/id
-		arg1: either unset? get/any in err 'arg1 [none][err/arg1]
-		arg2: err/arg2
-		arg3: err/arg3
-		desc: reduce system/error/:type/:id
+	html-form-error: func [err [object!] file /event evt][
 		print {
 <HTML>
 	<HEAD>
@@ -118,21 +115,21 @@ install-module [
 		<TABLE border="1" cellspacing="0" cellpadding="0">}
 		either event [ 
 			print {
-		<TR><TD align="right"><FONT face="Arial"><B>Event :</B></FONT></TD>
+		<TR><TD align="right"><FONT face="Arial"><B>Event&nbsp;</B></FONT></TD>
 		<TD align="left"><FONT face="Arial">}print mold evt print{</FONT></TD></TR>}
 		][
 			print {
-		<TR><TD align="right"><FONT face="Arial"><B>Script :</B></FONT></TD>
+		<TR><TD align="right"><FONT face="Arial"><B>Script&nbsp;</B></FONT></TD>
 		<TD align="left"><FONT face="Arial">}print mold file print{</FONT></TD></TR>}
 		]
 		print {
-		<TR><TD align="right"><FONT face="Arial"><B>Error Code :</B></FONT></TD>
+		<TR><TD align="right"><FONT face="Arial"><B>Error Code&nbsp;</B></FONT></TD>
 		<TD align="left"><FONT face="Arial">}print mold err/code print{</FONT></TD></TR>
-		<TR><TD align="right"><FONT face="Arial"><B>Description :</B></FONT></TD>
-		<TD align="left"><FONT face="Arial">}print ["<I>"type " error ! </I><BR>"desc] print{</FONT></TD></TR>
-		<TR><TD align="right"><FONT face="Arial"><B>Near :</B></FONT></TD>
+		<TR><TD align="right"><FONT face="Arial"><B>Description&nbsp;</B></FONT></TD>
+		<TD align="left"><FONT face="Arial">}print ["<I>" err/type " error ! </I><BR>" err/desc] print{</FONT></TD></TR>
+		<TR><TD align="right"><FONT face="Arial"><B>Near&nbsp;</B></FONT></TD>
 		<TD align="left"><FONT face="Arial">}print html-encode mold/flat err/near print{</FONT></TD></TR>
-		<TR><TD align="right"><FONT face="Arial"><B>Where :</B></FONT></TD>
+		<TR><TD align="right"><FONT face="Arial"><B>Where&nbsp;</B></FONT></TD>
 		<TD align="left"><FONT face="Arial">}print html-encode mold/flat err/where print{</FONT></TD></TR>
 		</TABLE>
 		</CENTER>
@@ -164,9 +161,12 @@ install-module [
 	]
 	
 	protected-exec: func [file code [block! function!] /event evt /local err thru?][
-		unless thru?: :print = :rsp-print [set print-funcs rsp-print-funcs]
-		if err: sandboxed-exec :code [		
-			html-form-error err file			
+		unless thru?: :print = :rsp-print [set print-funcs rsp-print-funcs]		
+		if err: sandboxed-exec :code [
+			switch debug-banner/opts/error [
+				inline [html-form-error err file]
+				popup  [debug-banner/rsp-error: make err [src: file]]
+			]
 			either event [
 				log-script-error/with file err rejoin ["##Error in '" :evt " event"]
 			][
@@ -216,35 +216,42 @@ install-module [
 			__cat: []
 		]
 
-		compile: func [entry /no-lang /local out value s e word id ctx][
+		compile: func [entry /no-lang /local out value s e word id ctx close?][
 			unless no-lang [
 				id: locale/lang
 				locale/set-default-lang
 			]
-
-			out: make string! 1024	
-			parse/all current: fourth entry [
-				any [
-					end break
-					| "#[" copy value to #"]" skip (
-						append out reform [
-							" prin any [pick __cat"
-							locale/id? value
-							mold value #"]"
-						]
-					)
-					| "<%" [#"=" (append out " __emit ") | none]
-						copy value [to "%>" | none] 2 skip (
-							if value [repend out [value #" "]]
+			either out: attempt [load/header current: fourth entry][
+				remove out 		;-- discards the header object
+			][
+				out: make string! 1024	
+				parse/all current: fourth entry [
+					any [
+						end break
+						| "#[" copy value to #"]" skip (
+							append out reform [
+								" prin any [pick __cat"
+								locale/id? value
+								mold value #"]"
+							]
 						)
-					| s: copy value [any [e: "<%" :e break | e: "#[" :e break | skip]] e: (
-						append out reform [" __txt" index? s offset? s e #" "]
-					)
+						| "<%" (close?: no) [
+							#"=" (append out " __emit ")
+							| #"?" (append out " __emit reduce [" close?: yes)
+							| none
+						   ] copy value [to "%>" | none] 2 skip (
+								if value [repend out [value #" "]]
+								if close? [append out #"]"]
+							)
+						| s: copy value [any [e: "<%" :e break | e: "#[" :e break | skip]] e: (
+							append out reform [" __txt" index? s offset? s e #" "]
+						)
+					]
 				]
-			]
-			unless no-lang [locale/set-lang id]
-			if error? try [out: load out][
-				out: reduce ['load out]
+				unless no-lang [locale/set-lang id]
+				if error? try [out: load out][
+					out: reduce ['load out]
+				]
 			]
 			unless block? out [out: reduce [out]]
 			if all [
@@ -302,14 +309,22 @@ install-module [
 	]
 		
 	debug-banner: context [
-		active?: t0: none
+		active?: t0: opts: trace.log: rsp-error: none
 		menu-head: read-cache %misc/debug-head.html
 		menu-code: read-cache %misc/debug-menu.rsp
 		menu: reduce [none 01/01/3000 none menu-code]
 		engine/compile/no-lang menu
+		bind second pick menu 3 self
 		
-		insert-menu: has [buf pos body][
+		opts-default: context [
+			lines: 50
+			colors: [lawngreen black]
+			error: 'popup
+		]
+		
+		insert-menu: has [buf pos body][	
 			unless active? [exit]
+			wait .1						;-- give time to the IPC system to write down last log
 			buf: copy response/buffer
 			clear response/buffer
 			protected-exec %misc/debug-menu.rsp pick menu 3
@@ -322,6 +337,9 @@ install-module [
 					insert body "^/</head>^/"
 				]
 			]
+			replace buf "$COLOR1$" opts/colors/1
+			replace buf "$COLOR2$" opts/colors/2
+			
 			if any [body body: find buf "<body"] [
 				insert find/tail body ">" response/buffer
 			]
@@ -335,7 +353,7 @@ install-module [
 				<html>
 					<head></head>
 					<body><font face="Arial"><center>
-						<h2>Redirection Intercepted</h2>
+						<h2>Redirection Trapped</h2>
 						<br><br>Destination URL: }
 			append response/buffer rejoin [
 				{<a href="} url {">} url
@@ -343,13 +361,18 @@ install-module [
 			]
 		]
 
-		on-page-start: does [
+		on-page-start: func [/with spec /local value][
+			unless active? [exit]
+			rsp-error: none
+			response/stats/1: 0
+			response/stats/2: 0
+			value: select request/config 'debug
+			opts: construct/with any [spec all [block? value value] []] opts-default
 			t0: now/time/precise
-			poke response/stats 1 0
-			poke response/stats 2 0
 		]
 
 		on-page-end: has [pos time][
+			unless active? [exit]
 			if pos: find response/buffer "</body>" [
 				time: to-integer 1000 * to-decimal (now/time/precise - t0)
 				insert pos reform [
@@ -363,8 +386,35 @@ install-module [
 				]
 			]
 		]
-;		set 'debug? does [active?]
-;		set 'show-debug does [active?: yes]
+		
+		tail-file: func [file [file!] n [integer!] /local p buf sz out][
+			unless exists? file [return ""]
+			p: tail open/seek file
+			sz: 8190
+			out: clear any [out make string! sz]	
+			until [
+				pos: tail buf: copy/part p: skip p negate sz sz
+				while [pos: find/reverse pos lf][if zero? n: n - 1 [break]]
+				pos: any [pos buf]	
+				insert/part tail out pos length? pos
+				any [zero? n head? p]
+			]
+			as-string out
+		]
+		
+		unprotect 'debug
+		set 'debug make debug [
+			on: func [/options spec [block!]][
+				active?: yes
+				on-page-start/with spec
+			]
+			off: does [
+				active?: no
+			]
+		]
+		protect 'debug
+				
+		set 'debug? does [active?]
 	]
 	
 	;--- public API ---
@@ -771,7 +821,7 @@ install-module [
 				content: make block! 1
 				id: none
 			]
-			true
+			active?
 		]
 		
 		reset: does [
@@ -822,8 +872,8 @@ install-module [
 			value: pick [[name type m?][name type]] to logic! full
 			foreach :value spec [
 				either pos: find vars name [
-					either empty? value: pick pos 2 [
-						poke pos 2 value: none
+					either empty? value: pos/2 [
+						pos/2: value: none
 					][
 						if any [
 							all [
@@ -832,7 +882,7 @@ install-module [
 							]
 							all [
 								type <> '-
-								not attempt [poke pos 2 to get type value]
+								not attempt [pos/2: to get type value]
 							]
 						][
 							unless invalid [invalid: make block! 1]
@@ -842,10 +892,16 @@ install-module [
 				][
 					insert tail vars name
 					insert tail vars value: none
-				]
-				if all [none? :value m? m? = '*][
-					unless invalid [invalid: make block! 1]
-					insert tail invalid name
+				]				
+				if all [none? :value m?][
+					if m? = '* [
+						unless invalid [invalid: make block! 1]
+						insert tail invalid name
+					]
+					unless find [* -] m? [
+						pos: find vars name
+						pos/2: any [all [series? m? copy m?] m?]
+					]
 				]
 			]
 		][throw make error! "invalid spec block!"]
@@ -863,11 +919,10 @@ install-module [
 		depth: [0]		
 		either request/web-app [
 			if arg: find apps request/config/root-dir [
-				;bind value: load value arg/3
 				value: load value
 				depth/1: depth/1 + 1
 				either depth/1 = 1 [
-					if 1 < length? depth [				
+					if 1 < length? depth [
 						foreach blk at depth 2 [arg/3: make arg/3 blk] ; triggers sub 'do
 						clear at depth 2
 					]
@@ -876,10 +931,6 @@ install-module [
 					append/only depth :value
 				]
 				depth/1: depth/1 - 1
-				;if all [zero? depth/1 1 < length? depth][
-				;	foreach blk at depth 2 [arg/3: make arg/3 blk] ; trigger sub 'do
-				;	clear at depth 2
-				;]
 			]
 		][*do value]
 	]
@@ -965,6 +1016,7 @@ install-module [
 			'in	  set value object!	 (request/parsed: value)
 			'ip   set value tuple!	 (request/client-ip: value)
 			'port set value integer! (request/server-port: value)
+			'log  set value file!	 (debug-banner/trace.log: value)
 			'session [
 				into [
 					(session/active?: yes)
@@ -982,10 +1034,11 @@ install-module [
 				)
 			]
 		]
-		request/method: request/parsed/method
-		request/posted: request/parsed/content
-		request/headers: request/parsed/headers
+		request/method: 	 request/parsed/method
+		request/posted: 	 request/parsed/content
+		request/headers: 	 request/parsed/headers
 		request/web-socket?: request/parsed/ws?
+		
 		request/translated: either request/parsed/script-name [
 			request/parsed/file
 		][
@@ -1101,7 +1154,7 @@ install-module [
 		
 		page-events?: all [session/events not request/web-socket?]
 		
-		if debug-banner/active? [debug-banner/on-page-start]
+		debug-banner/on-page-start
 		if page-events? [fire-event 'on-page-start]
 		
 		unless all [
@@ -1112,7 +1165,7 @@ install-module [
 		]
 		
 		if page-events? [fire-event 'on-page-end]
-		if debug-banner/active? [debug-banner/on-page-end]
+		debug-banner/on-page-end
 		
 		if verbose > 2 [log/info mold response/buffer]
 		unless empty? response/buffer [debug-banner/insert-menu]
@@ -1172,5 +1225,5 @@ install-module [
 
 protect [
 	do-sql db-cache request response session include
-	include-file validate locale say do
+	include-file validate locale say do debug?
 ]

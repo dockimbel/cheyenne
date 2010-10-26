@@ -21,6 +21,12 @@ install-HTTPd-extension [
 		user: group: none
 	]
 	
+	try-chown: func [file [file!]][
+		if not zero? chown to-local-file file uid gid [
+			log/error ["chown " uid ":" gid " " file " failed!"]
+		]
+	]
+	
 	get-id: func [name [string!] /group /local file rule uid gid][
 		set [file rule] pick [
 			[%/etc/group  []]
@@ -35,7 +41,7 @@ install-HTTPd-extension [
 		reduce [to-integer uid to-integer gid]
 	]
 
-	set-process-to: func [user [string! integer!] group [string! integer!] /local uid gid][
+	set-process-to: func [user [string! integer!] group [string! integer!] /local uid gid file][
 		set [uid gid] reduce [user group]
 		if any [string? user string? group][
 			either user = group [
@@ -45,10 +51,13 @@ install-HTTPd-extension [
 				if string? group [gid: second get-id/group group]
 			]
 		]
-		if all [exists? logger/file.log not zero? uid not zero? gid][
-			if not zero? chown to-local-file logger/file.log uid gid [
-				log/error ["chown " uid ":" gid " " logger/file.log " failed!"]
-			]
+		if all [not zero? uid not zero? gid][
+			if exists? file: logger/file.log [try-chown file]								;-- %trace.log
+			if exists? file: service/mod-list/mod-rsp/sessions/ctx-file [try-chown file]	;-- %.rsp-sessions
+			
+			file: uniserve/services/MTA/q-file												;-- %.mta-queue
+			if cheyenne/port-id [append copy file join "-" cheyenne/port-id/1]
+			if exists? file [try-chown file]
 		]
 		;-- change group id first to inherit privileges from group first
 		if any [zero? gid not zero? set-gid gid][log/error ["setgid '" group " failed!"]]

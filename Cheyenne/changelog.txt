@@ -215,18 +215,73 @@ v0.9.20 - ??/??/2009
 	o RSP: internal change to make database connection port accessible (for RSP database API
 	  improvement).
 	  
-	o RSP: fix for 'do-sql error when used from outside a webapp context.
+	o RSP: fix for 'do-sql error when used from outside of a webapp context.
 	
-	o New config keyword in global section: pid-dir. Allow to relocate Cheyenne's PID file
+	o New config keyword in global section: pid-dir. Allows to relocate Cheyenne's PID file
 	  from %/tmp/ to any other folder. Requires a file! argument.
 	  
 	o Cheyenne SVN revision number now included in the 'Server response header for
 	  encapped binary revisions.
 	  
-	o (UNIX) Added a new boot option: -V or --version. Displays Cheyenne's version, then quits.
+	o (UNIX) Added a new boot option: -V or --version. Displays Cheyenne's version and quits.
 	
 	o (Windows) Cheyenne's version is now displayed in the tray icon help message.
-	 
+	
+	o RSP: debug mode extended to display tail of trace.log file using a new [show trace] button
+  	  on the RSP debug bar.
+  	  
+  	o RSP: debug bar look improved, menu horizontal alignement fixed, direct link to RSP API
+  	  online documentation added. RSP errors are now displayed in an overlay popup instead of
+  	  being inlined in the page.
+  	  
+  	o RSP: debug bar javascript code footprint reduced to a single object: rspdbg.
+  	  
+	o RSP: new API function: debug. Switches on or off, the debug mode for the current RSP
+	  script. A /options refinement is available to set some displays options. Example: 
+	  
+	  	   debug/off				;-- disables debug mode for the current RSP
+	  	   debug/on					;-- forces debug mode for the current RSP
+	       debug/on/options	[...]	;-- enter debug mode with given options
+	       
+	       current options: 
+	           o lines: integer!		 ;-- number of lines to display from the trace file
+	           o colors: [color1 color2] ;-- font and bg colors for trace file display
+	           o error: 'popup | 'inline ;-- controls how RSP errors are displayed
+	  
+	o RSP: new API function: debug?. Returns TRUE if debug mode is active.
+	
+	o Config: 'debug config keyword definition extended to accept an optional block of parameters.
+	  See 'debug function description for parameters list.
+	  
+	o RSP: session/start now returns the session/active? flag as result (proposed by Carl).
+	
+	o (UNIX) Added a new boot option: -h or --help. Displays the command line syntax help
+	  and quits.
+	  
+	o RSP: Improved function 'validate to accept default values for optional parameters when
+	  using the /full refinement. Example: 
+	  
+	  		validate/full [
+			    name	string!  *			;-- mandatory parameter
+			    code	string!  -			;-- optional parameter 
+			    size	integer! 0			;-- optional parameter with default value
+			    country string! "USA"		;-- optional parameter with default value
+  			]
+  	  
+  	o RSP: now plain REBOL scripts can also be run by the RSP engine! Code caching and RSP API
+  	  is fully available (remember to BIND the RSP handler to .r files in httpd.cfg).
+  	  
+  	o RSP: new RSP API function: emit. Does a REDUCE on its argument before APPENDing to
+  	  response/buffer. It's a shortcut for [print reduce].
+  	  
+  	o RSP: added new RSP syntax for emit-action : <%? ... %>. Does the same as 'emit, but
+  	  inlined in a template page. Example :
+  	  
+  	  		<%? now/date " " now/time%>
+  	   
+  	    	will output: 25-Oct-2010 15:06:17
+  	  
+  	  		
 
 v0.9.19 - 01/03/2009
 

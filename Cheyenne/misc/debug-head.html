@@ -1,71 +1,142 @@
 	<script language="javascript">
-		var folded = true;
+		var rspdbg = {
+			folded: 	  true,
+			trace_folded: true,
+			pop_show:     true,
+			valigned:     false,
+			y:			  0,
+			pop_y:		  0,
+			timer:		  0,
+			popup:		  null,
 
-		function show(ref) {
-			var node;
-			node = document.getElementById('menu' + ref);
-			node.style.visibility = 'visible';
-			node = document.getElementById('dbgmenu' + ref);
-			node.style.backgroundColor = '#FFFFE0';
-		}
-		function hide(ref) {
-			var node;
-			node = document.getElementById('menu' + ref);
-			node.style.visibility = 'hidden';
-			node = document.getElementById('dbgmenu' + ref);
-			node.style.backgroundColor = 'silver';
-		}
-		function toggle_folding() {
-			var id, node;
-			for(id = 1; id < 5; id++) {
-				if (node = document.getElementById('menu' + id)) {
-					node.style.visibility = folded ? 'visible' : 'hidden';
-					node.style.position = folded ? 'static' : 'absolute';
-					node = node.firstChild;
-					node.style.width = folded ? '100%' : '';
+			getPosX: function(node) {
+				for (var x=0; node != null; x += node.offsetLeft, node = node.offsetParent);
+				return x;
+			},
+			show: function(ref) {
+				var label = document.getElementById('dbgmenu' + ref);
+				label.style.backgroundColor = '#FFFFE0';
+				label.style.color = 'blue';
+				var submenu = document.getElementById('menu' + ref)
+				submenu.style.visibility = 'visible';
+				submenu.style.left = rspdbg.getPosX(label);
+			},
+			hide: function(ref) {
+				document.getElementById('menu' + ref).style.visibility = 'hidden';
+				var node = document.getElementById('dbgmenu' + ref).style;
+				node.backgroundColor = 'silver';
+				node.color = 'black';
+			},
+			toggle_folding: function() {
+				var id, node;
+				for(id = 1; id < 5; id++) {
+					if (node = document.getElementById('menu' + id)) {
+						node.style.visibility = rspdbg.folded ? 'visible' : 'hidden';
+						node.style.position = rspdbg.folded ? 'static' : 'absolute';
+						node = node.firstChild;
+						node.style.width = rspdbg.folded ? '100%' : '';
+					}
 				}
+				document.getElementById('but-fold').value = rspdbg.folded ? 'Hide Menus' : 'Show Menus';
+				rspdbg.folded = !rspdbg.folded;
+			},
+			unfold: function() {
+				rspdbg.y = rspdbg.y + 20;
+				rspdbg.pop_y = rspdbg.pop_y + 20;
+				document.getElementById('dbg-trace').style.height = rspdbg.y + 'px';
+				if (rspdbg.popup) rspdbg.popup.style.top = rspdbg.pop_y + 'px';
+				if (rspdbg.y == 400) window.clearTimeout(rspdbg.timer); else rspdbg.timer = window.setTimeout(rspdbg.unfold, 10);
+			},
+			fold: function() {
+				rspdbg.y = rspdbg.y - 20;
+				rspdbg.pop_y = rspdbg.pop_y - 20;
+				var node = document.getElementById('dbg-trace').style;
+				node.height = rspdbg.y + 'px';
+				if (rspdbg.popup) rspdbg.popup.style.top = rspdbg.pop_y + 'px';
+				if (rspdbg.y == 0) {
+					window.clearTimeout(rspdbg.timer);
+					node.visibility = 'hidden';
+					node.position = 'absolute';
+				} else
+					rspdbg.timer = window.setTimeout(rspdbg.fold, 10);
+			},
+			toggle_trace: function() {
+				var node = document.getElementById('dbg-trace');
+				if (!rspdbg.valigned) {
+					node.scrollTop = node.scrollHeight;
+					rspdbg.valigned = true;
+				}
+				node.style.height = rspdbg.trace_folded ? '20px' : '400px';
+				node.style.visibility = 'visible';
+				node.style.position = 'static';
+				document.getElementById('but-trace').value = rspdbg.trace_folded ? 'Hide Trace' : 'Show Trace';
+				rspdbg.popup = document.getElementById('dbg-error-popup');
+				rspdbg.y = rspdbg.trace_folded ? 0 : 400;
+				rspdbg.pop_y = rspdbg.trace_folded ? 180 : 580;
+				rspdbg.timer = window.setTimeout(rspdbg.trace_folded ? rspdbg.unfold : rspdbg.fold, 10);
+				rspdbg.trace_folded = !rspdbg.trace_folded;
+			},
+			toggle_error: function() {
+				document.getElementById('dbg-error-popup').style.visibility = rspdbg.pop_show ? 'hidden' : 'visible';
+				document.getElementById('but-error').value = rspdbg.pop_show ? 'Show Error' : 'Hide Error';
+				rspdbg.pop_show = !rspdbg.pop_show;
 			}
-			node = document.getElementById('but-fold');
-			node.value = folded ? 'hide all' : 'show all';
-			folded = !folded;
 		}
 	</script>
 	<style type="text/css">
 		.dbgzone {
 			width: 100%;
-			background-color: silver;
-			border: solid #444 1px;
 			margin: 0;
-			padding: 4
+			padding: 2px 3px 0;
+			line-height: 100%;
+			-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+			-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+			background: #8b8b8b;
+			filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#a9a9a9', endColorstr='#7a7a7a');
+			background: -webkit-gradient(linear, left top, left bottom, from(#a9a9a9), to(#7a7a7a));
+			background: -moz-linear-gradient(top,  #a9a9a9,  #7a7a7a);
+			border: solid 1px #6d6d6d;
 		}
-		.dbgtitle {
+		.dbgzone a {
+			font-weight: bold;
+			background-color: silver;
+			color: black;
+			text-decoration: none;
+			display: block;
+			padding:  2px 10px;
+			margin: 0;
+			-webkit-border-radius: 1.6em;
+			-moz-border-radius: 1.6em;
+			text-shadow: 0 1px 1px rgba(0, 0, 0, .3);
+			font-family: Verdana, Helvetica, Arial;
 			font-weight: bold;
 			font-variant: small-caps;
 			font-size: 14px;
-			font-family: Verdana, Helvetica, Arial;
-			margin: 2;
-			padding: 2 4;
 		}
-		.dbgmenu {
-			font-weight: bold;
+		#dbgtitle {
 			font-variant: small-caps;
-			font-size: 14px;
+			font-size: 12pt;
 			font-family: Verdana, Helvetica, Arial;
-			color: blue;
-			border-width:1;
-			background-color:silver;
-			margin: 2;
-			padding: 4
-			border: solid black thin;
+			padding: 2 2;
+			filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#ebebeb', endColorstr='#a1a1a1');
+			display: block;
+			color: #ccc;
+			box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+			text-shadow: 0 0 1px rgba(255, 255, 255, .8);
 		}
 		.dbgmenubut {
 			font-weight: bold;
-			font-variant: small-caps;
-			font-size: 10px;
+			font-size: 8pt;
 			font-family: Verdana, Helvetica, Arial;
+			width: 90px;
+			padding: 2px 0;
+		}
+		#dbghelp {
+			width: 16px;
+			display: inline;
+		}
+		#dbghelp:hover {
 			color: blue;
-			border-width:1;
-			background-color:silver;
 		}
 		.dbginfo-frame {
 			background-color:silver;
@@ -75,7 +146,7 @@
 			z-index:100;
 			position:absolute;
 		}
-		.dgbinfo-name {
+		.dbginfo-name {
 			font-weight: bold;
 			font-size: 11px;
 			font-family: Verdana, Helvetica, Arial;
@@ -83,11 +154,79 @@
 			padding-left: 2;
 			width: 100px;
 		}
-		.dgbinfo-value {
+		.dbginfo-value {
 			font-weight: normal;
 			font-size: 11px;
 			font-family: Verdana, monospace;
 			background-color:#FFFFE0;
 			padding-left: 2;
+		}
+		#dbg-trace {
+			width: 99%;
+			height: 400px;
+			font: 9pt monospace;
+			overflow-y: scroll;
+			overflow-x: auto;
+			border: 2px solid silver;
+			padding: 4px;
+			margin: 2px;
+			visibility:hidden;
+			position:absolute;
+			text-align:left;
+			color: $COLOR1$;
+			background-color: $COLOR2$;
+		}
+		#dbg-error-popup {
+			position: absolute;
+			top: 180px;
+			left: 30%;
+			width: 400px;
+			border: 2px solid white;
+			background-color: dimgray;
+   			color: white;
+			-webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+			-moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+			-webkit-border-radius: .4em;
+			-moz-border-radius: .4em;
+			text-align: center;
+			color: white;
+		}
+		#dbg-error-popup hr {
+			width: 90%;
+		}
+		#dbg-error-popup h2 {
+			font-family: Tahoma, Arial;
+			font-size: 16pt;
+			font-weight: normal;
+			margin: 10px 10px 15px 10px;
+		}
+		.dbg-error-form {
+			width: 100%;
+			background-color: brown;
+			font-family: Arial;
+			font-size: 10pt;
+			text-align: left;
+			color: white;
+			border-top: 4px;
+			border-bottom: 4px;
+			border-color: brown;
+			border-style: solid;
+			-webkit-border-radius: .4em;
+			-moz-border-radius: .4em;
+		}
+		.dbg-error-form tr {
+			height: 20px;
+			text-align: right;
+		}
+		.dbg-error-form th {
+			width: 70px;
+			padding-right: 4px;
+		}
+		.dbg-error-form td {
+			font-family: monospace;
+			background-color: black;
+			color: lawngreen;
+			text-align: left;
+			padding-left: 2px;
 		}
  	</style>

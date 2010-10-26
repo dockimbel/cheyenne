@@ -1,55 +1,76 @@
-<% offx: 265 %>
+<% dbg-menu-offx: 265 %>
 <div class="dbgzone">
-<table width="100%"><tr>
-	<td class="dbgtitle" width="100">rsp debug:</td>
-	<td width="60" align="left"><a class="dbgmenu" id="dbgmenu1" onMouseOver="show(1)" onMouseOut="hide(1)">request</a></td>
-	<td width="60"><a class="dbgmenu" id="dbgmenu2" onMouseOver="show(2)" onMouseOut="hide(2)">headers</a></td>
-	<%if not empty? request/content [%>
-	<td width="60"><a class="dbgmenu" id="dbgmenu3" onMouseOver="show(3)" onMouseOut="hide(3)">parameters</a></td>
-	<%]%>
-	<%if session/content [%>
-	<td width="60"><a class="dbgmenu" id="dbgmenu4" onMouseOver="show(4)" onMouseOut="hide(4)">session</a></td>
-	<%]%>
-	<td align="right">
-		<input type="button"id="but-fold" onClick="toggle_folding()"  class="dbgmenubut" value="show all">
-	</td>
-</tr></table>
-
+	<table width="100%"><tr>
+		<td width="100"><span id="dbgtitle">rsp debug</span></td>
+		<td width="60" align="left"><a class="dbgmenu" id="dbgmenu1" onMouseOver="rspdbg.show(1)" onMouseOut="rspdbg.hide(1)">request</a></td>
+		<td width="60"><a class="dbgmenu" id="dbgmenu2" onMouseOver="rspdbg.show(2)" onMouseOut="rspdbg.hide(2)">headers</a></td>
+		<%if not empty? request/content [%>
+		<td width="60"><a class="dbgmenu" id="dbgmenu3" onMouseOver="rspdbg.show(3)" onMouseOut="rspdbg.hide(3)">parameters</a></td>
+		<%]%>
+		<%if session/content [%>
+		<td width="60"><a class="dbgmenu" id="dbgmenu4" onMouseOver="rspdbg.show(4)" onMouseOut="rspdbg.hide(4)">session</a></td>
+		<%]%>
+		<td align="right">
+			<input type="button" id="but-fold" onClick="rspdbg.toggle_folding()" class="dbgmenubut" value="Show Menus">
+			<input type="button" id="but-trace" onClick="rspdbg.toggle_trace()" class="dbgmenubut" value="Show Trace">
+			<%if rsp-error [%>
+			<input type="button" id="but-error" onClick="rspdbg.toggle_error()" class="dbgmenubut" value="Hide Error">
+			<%]%>
+			<a id="dbghelp" href="http://cheyenne-server.org/docs/rsp-api.html" target="_new">?</a>
+		</td>
+	</tr></table>
 </div>
 <div id="menu1" class="dbginfo-frame" style="left:130px;"><table cellspacing="1">
-		<tr><td class="dgbinfo-name">HTTP Method</td><td class="dgbinfo-value"><%=mold request/method%></td></tr>
-		<tr><td class="dgbinfo-name">URL</td><td class="dgbinfo-value"><%=mold request/parsed/url%></td></tr>
-		<tr><td class="dgbinfo-name">HTTP Port</td><td class="dgbinfo-value"><%=mold request/server-port%></td></tr>
-		<tr><td class="dgbinfo-name">Client IP</td><td class="dgbinfo-value"><%=mold request/client-ip%></td></tr>
-		<tr><td class="dgbinfo-name">Translated file</td><td class="dgbinfo-value"><%=mold request/translated%></td></tr>
-		<tr><td class="dgbinfo-name">Config bloc</td><td class="dgbinfo-value"><pre class="dgbinfo-value"><%=mold request/config%></pre></td></tr>
+		<tr><td class="dbginfo-name">HTTP Method</td><td class="dbginfo-value"><%=mold request/method%></td></tr>
+		<tr><td class="dbginfo-name">URL</td><td class="dbginfo-value"><%=mold request/parsed/url%></td></tr>
+		<tr><td class="dbginfo-name">HTTP Port</td><td class="dbginfo-value"><%=mold request/server-port%></td></tr>
+		<tr><td class="dbginfo-name">Client IP</td><td class="dbginfo-value"><%=mold request/client-ip%></td></tr>
+		<tr><td class="dbginfo-name">Translated file</td><td class="dbginfo-value"><%=mold request/translated%></td></tr>
+		<tr><td class="dbginfo-name">Config bloc</td><td class="dbginfo-value"><pre class="dbginfo-value"><%=mold request/config%></pre></td></tr>
 		<%if request/web-app [%>
-		<tr><td class="dgbinfo-name">Application</td><td class="dgbinfo-value"><%=mold request/web-app%></td></tr>
+		<tr><td class="dbginfo-name">Application</td><td class="dbginfo-value"><%=mold request/web-app%></td></tr>
 		<%]%>
 	</table>
 </div>
 <div id="menu2" class="dbginfo-frame" style="left:200px;"><table cellspacing="1">
 		<%foreach [name value] request/headers [%>
-		<tr><td class="dgbinfo-name"><%=name%></td><td class="dgbinfo-value"><%=mold value%></td></tr>
+		<tr><td class="dbginfo-name"><%=name%></td><td class="dbginfo-value"><%=mold value%></td></tr>
 		<%]%>
 	</table>
 </div>
-<%if not empty? request/content [%>
+<%unless empty? request/content [%>
 <div id="menu3" class="dbginfo-frame" style="left:250px;"><table cellspacing="1">
 		<%foreach [name value] request/content [%>
-		<tr><td class="dgbinfo-name"><%=name%></td><td class="dgbinfo-value"><%=mold value%></td></tr>
+		<tr><td class="dbginfo-name"><%=name%></td><td class="dbginfo-value"><%=mold value%></td></tr>
 		<%]%>
 	</table>
 </div>
-<%	offx: 345
+<%	 dbg-menu-offx: 345
 ]
 if session/content [%>
-<div id="menu4" class="dbginfo-frame" style="left:<%=offx%>px;"><table cellspacing="1">
-		<tr><td class="dgbinfo-name">Session ID</td><td class="dgbinfo-value"><%=mold session/id%></td></tr>
-		<tr><td class="dgbinfo-name">timeout (hh:mm[:ss])</td><td class="dgbinfo-value"><%=mold session/timeout%></td></tr>
+<div id="menu4" class="dbginfo-frame" style="left:<%=dbg-menu-offx%>px;"><table cellspacing="1">
+		<tr><td class="dbginfo-name">Session ID</td><td class="dbginfo-value"><%=mold session/id%></td></tr>
+		<tr><td class="dbginfo-name">timeout (hh:mm[:ss])</td><td class="dbginfo-value"><%=mold session/timeout%></td></tr>
 		<%foreach [name value] session/content [%>
-		<tr><td class="dgbinfo-name"><%=name%></td><td class="dgbinfo-value"><%=mold value%></td></tr>
+		<tr><td class="dbginfo-name"><%=name%></td><td class="dbginfo-value"><%=mold value%></td></tr>
 		<%]%>
 	</table>
 </div>
-<%]%><HR>
+<%]%>
+<div id="dbg-trace">
+	<pre><%=html-encode tail-file trace.log opts/lines%></pre>
+</div>
+<%if all [rsp-error opts-default/error = 'popup][%>
+<div id="dbg-error-popup" align="center">
+	<h2>RSP Runtime Error</h2><hr>
+	<table class="dbg-error-form">
+		<tr><th>Script</th><td><%=mold rsp-error/src%></td></tr>
+		<tr><th>Error Code</th><td><%=rsp-error/code%></td></tr>
+		<tr><th>Description</th><td><%=system/error/(rsp-error/type)/type%> : <%=reform rsp-error/desc%></td></tr>
+		<tr><th>Near</th><td><%=mold rsp-error/near%></td></tr>
+		<tr><th>Where</th><td><%=mold rsp-error/where%></td></tr>
+	</table>
+</div>
+<%]%>
+<!-- -------------- End of RSP Debug Banner ------------------ -->
+<br>
