@@ -135,7 +135,7 @@ cheyenne: make log-class [
 		do %svn-version.r					;--   when encapped from a SVN repository
 		rejoin [
 			vers: get in first load/header %cheyenne.r 'version #"."
-			svn-version? %../cheyenne-server/
+			svn-version? %./
 		]
 	]
 	if issue? version [version: system/script/header/version]
