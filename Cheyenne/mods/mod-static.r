@@ -53,6 +53,14 @@ install-HTTPd-extension [
 	]
 	;===================================
 	
+	on-quit: does [
+		foreach [vhost cache] second second :logging [			;-- flush logs
+			unless empty? cache/2 [
+				write/append join log-dir [vhost #"-" log-file] cache/2
+			]
+		]
+	]
+	
 	method-support: func [req][
 		unless find [HEAD GET POST PUT] req/in/method [
 			req/out/code: 405
