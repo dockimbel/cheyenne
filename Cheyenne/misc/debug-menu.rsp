@@ -4,7 +4,7 @@
 		<td width="100"><span id="dbgtitle">rsp debug</span></td>
 		<td width="60" align="left"><a class="dbgmenu" id="dbgmenu1" onMouseOver="rspdbg.show(1)" onMouseOut="rspdbg.hide(1)">request</a></td>
 		<td width="60"><a class="dbgmenu" id="dbgmenu2" onMouseOver="rspdbg.show(2)" onMouseOut="rspdbg.hide(2)">headers</a></td>
-		<%if not empty? request/content [%>
+		<%unless empty? request/content [%>
 		<td width="60"><a class="dbgmenu" id="dbgmenu3" onMouseOver="rspdbg.show(3)" onMouseOut="rspdbg.hide(3)">parameters</a></td>
 		<%]%>
 		<%if session/content [%>

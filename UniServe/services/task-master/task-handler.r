@@ -22,7 +22,7 @@ logger: context [
 		off: pick [-3 -6] system/version/4 = 3
 		if col = time/2 [insert time zero]
 		if dot = pick tail time off [insert tail time zero]
-		if not find time dot [
+		unless find time dot [
 			insert tail time pick [".000" ".000000"] system/version/4 = 3
 		]
 		data: rejoin [now/day slash now/month dash time dash data newline]
@@ -34,7 +34,7 @@ logger: context [
 
 	notify: func [msg module [word!] type [word!] /local out][
 		out: either block? msg [rejoin msg][copy msg]
-		if not string? out [out: mold out]
+		unless string? out [out: mold out]
 		uppercase/part out 1
 		out: reform switch type [
 			warn  [["# Warning in" mold reduce [module] col out excl]]
@@ -96,8 +96,8 @@ if ssa: system/script/args [
 		uniserve-port: servers-port
 	]
 ]
-if all [not value? 'uniserve-path not encap?][uniserve-path: what-dir]
-if not value? 'modules-path  [modules-path: dirize uniserve-path/modules]
+unless any [value? 'uniserve-path all [value? 'encap? encap?]][uniserve-path: what-dir]
+unless value? 'modules-path  [modules-path: dirize uniserve-path/modules]
 
 change-dir system/options/path
 
@@ -181,7 +181,7 @@ ctx-task-class: make log-class [
 			if verbose > 0 [t0: now/time/precise]
 			req: load as-string request
 			either error? set/any 'err try [
-				if not find modules req/2 [
+				unless find modules req/2 [
 					do-cache join modules-path [req/2 %.r]
 					change-dir system/options/path
 				]
@@ -202,7 +202,7 @@ ctx-task-class: make log-class [
 ]
 
 if error? set/any 'err try [
-	if not encap-fs/cache [ctx-task-class/connect]
+	unless encap-fs/cache [ctx-task-class/connect]
 ][
 	attempt [close ctx-task-class/server]
 	change-dir system/options/path

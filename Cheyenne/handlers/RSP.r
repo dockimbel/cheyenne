@@ -163,9 +163,11 @@ install-module [
 	protected-exec: func [file code [block! function!] /event evt /local err thru?][
 		unless thru?: :print = :rsp-print [set print-funcs rsp-print-funcs]		
 		if err: sandboxed-exec :code [
-			switch debug-banner/opts/error [
-				inline [html-form-error err file]
-				popup  [debug-banner/rsp-error: make err [src: file]]
+			if debug-banner/active? [
+				switch debug-banner/opts/error [
+					inline [html-form-error err file]
+					popup  [debug-banner/rsp-error: make err [src: file]]
+				]
 			]
 			either event [
 				log-script-error/with file err rejoin ["##Error in '" :evt " event"]
@@ -221,11 +223,11 @@ install-module [
 				id: locale/lang
 				locale/set-default-lang
 			]
-			either out: attempt [load/header current: fourth entry][
+			either out: attempt [load/header current: as-string fourth entry][
 				remove out 		;-- discards the header object
 			][
 				out: make string! 1024	
-				parse/all current: fourth entry [
+				parse/all current [
 					any [
 						end break
 						| "#[" copy value to #"]" skip (

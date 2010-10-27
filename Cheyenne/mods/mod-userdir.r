@@ -21,8 +21,8 @@ install-HTTPd-extension [
 		user: group: none
 	]
 	
-	try-chown: func [file [file!]][
-		if not zero? chown to-local-file file uid gid [
+	try-chown: func [file [file!] uid gid][
+		unless zero? chown to-local-file file uid gid [
 			log/error ["chown " uid ":" gid " " file " failed!"]
 		]
 	]
@@ -52,12 +52,14 @@ install-HTTPd-extension [
 			]
 		]
 		if all [not zero? uid not zero? gid][
-			if exists? file: logger/file.log [try-chown file]								;-- %trace.log
-			if exists? file: service/mod-list/mod-rsp/sessions/ctx-file [try-chown file]	;-- %.rsp-sessions
+			;-- %trace.log
+			if exists? file: logger/file.log [try-chown file uid gid]
+			;-- %.rsp-sessions
+			if exists? file: service/mod-list/mod-rsp/sessions/ctx-file [try-chown file uid gid]
 			
-			file: uniserve/services/MTA/q-file												;-- %.mta-queue
+			file: uniserve/services/MTA/q-file		;-- %.mta-queue
 			if cheyenne/port-id [append copy file join "-" cheyenne/port-id/1]
-			if exists? file [try-chown file]
+			if exists? file [try-chown file uid gid]
 		]
 		;-- change group id first to inherit privileges from group first
 		if any [zero? gid not zero? set-gid gid][log/error ["setgid '" group " failed!"]]
