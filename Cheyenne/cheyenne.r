@@ -206,10 +206,11 @@ cheyenne: make log-class [
 				
 				;-- relocate non-HTTPd listen ports to allow several instances to run				
 				offset: port-id/1 // 63516 + 2020
-				in-use: list-listen-ports			
+				in-use: list-listen-ports
 				foreach svc [task-master RConsole logger MTA][
-					n: services/:svc/port-id + offset
+					n: services/:svc/port-id
 					if all [in-use find in-use n][
+						n: n + offset
 						until [not find in-use n: n + 1]
 						services/:svc/port-id: n
 						unless list [list: make block! 8]
