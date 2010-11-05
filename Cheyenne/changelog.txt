@@ -230,23 +230,25 @@ v0.9.20 - ??/??/2009
 	o RSP: debug mode extended to display tail of trace.log file using a new [show trace] button
   	  on the RSP debug bar.
   	  
-  	o RSP: debug bar look improved, menu horizontal alignement fixed, direct link to RSP API
+  	o RSP: debug bar look improved, menu horizontal alignment fixed, direct link to RSP API
   	  online documentation added. RSP errors are now displayed in an overlay popup instead of
   	  being inlined in the page.
   	  
   	o RSP: debug bar javascript code footprint reduced to a single object: rspdbg.
   	  
-	o RSP: new API function: debug. Switches on or off, the debug mode for the current RSP
-	  script. A /options refinement is available to set some displays options. Example: 
+	o RSP: new API functions: debug/on, debug/off, debug/options. Switches on or off, the debug mode
+	  for the current RSP script. The 'options function sets mainly displays options. Example: 
 	  
 	  	   debug/off				;-- disables debug mode for the current RSP
 	  	   debug/on					;-- forces debug mode for the current RSP
-	       debug/on/options	[...]	;-- enter debug mode with given options
+	       debug/options	[...]	;-- set debug mode options
 	       
 	       current options: 
 	           o lines: integer!		 ;-- number of lines to display from the trace file
 	           o colors: [color1 color2] ;-- font and bg colors for trace file display
 	           o error: 'popup | 'inline ;-- controls how RSP errors are displayed
+	           o ip: tuple!				 ;-- restricts debug mode to requests coming from
+	                                     ;-- this client only
 	  
 	o RSP: new API function: debug?. Returns TRUE if debug mode is active.
 	

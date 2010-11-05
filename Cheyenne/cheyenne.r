@@ -313,7 +313,7 @@ Supported options are:
                      Several port numbers can be specified separated by
                      a comma.
                      
-    -u               Manually uninstal Cheyenne NT Service (Windows).
+    -u               Manually uninstall Cheyenne NT Service (Windows).
     
     -w number        Set the maximum number of worker processes. If
                      set to 0, all workers will be closed after each

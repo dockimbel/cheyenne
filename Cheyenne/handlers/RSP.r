@@ -318,15 +318,57 @@ install-module [
 		engine/compile/no-lang menu
 		bind second pick menu 3 self
 		
+		default-page: "<html><head><title>RSP Error</title></head><body></body></html>"
+		
 		opts-default: context [
 			lines: 50
 			colors: [lawngreen black]
 			error: 'popup
+			ip: none
 		]
 		
-		insert-menu: has [buf pos body][	
-			unless active? [exit]
+		reset: does [
+			opts: rsp-error: none
+			active?: no
+			response/stats/1: 0
+			response/stats/2: 0
+		]
+		
+		allowed-ip?: does [
+			any [
+				none? opts/ip
+				opts/ip = request/client-ip
+			]
+		]
+		
+		no-menu?: does [
+			any [
+				not active?
+				not allowed-ip?
+				file? response/buffer
+				all [
+					block? response/headers
+					type: select response/headers 'Content-Type
+					not find type "html"
+				]
+			]
+		]
+		
+		insert-menu: has [buf pos body type][	
+			if no-menu? [exit]
 			wait .1						;-- give time to the IPC system to write down last log
+			if all [
+				object? rsp-error
+				any [
+					26 <= length? response/buffer
+					not any [
+						find response/buffer "</head>" 
+						find response/buffer "<body>"
+					]
+				]
+			][
+				append response/buffer default-page
+			]
 			buf: copy response/buffer
 			clear response/buffer
 			protected-exec %misc/debug-menu.rsp pick menu 3
@@ -338,10 +380,7 @@ install-module [
 					insert body menu-head
 					insert body "^/</head>^/"
 				]
-			]
-			replace buf "$COLOR1$" opts/colors/1
-			replace buf "$COLOR2$" opts/colors/2
-			
+			]	
 			if any [body body: find buf "<body"] [
 				insert find/tail body ">" response/buffer
 			]
@@ -363,18 +402,17 @@ install-module [
 			]
 		]
 
-		on-page-start: func [/with spec /local value][
+		on-page-start: has [value][
 			unless active? [exit]
-			rsp-error: none
-			response/stats/1: 0
-			response/stats/2: 0
-			value: select request/config 'debug
-			opts: construct/with any [spec all [block? value value] []] opts-default
+			unless opts [
+				value: select request/config 'debug
+				opts: construct/with any [all [block? value value] []] opts-default
+			]
 			t0: now/time/precise
 		]
 
 		on-page-end: has [pos time][
-			unless active? [exit]
+			if no-menu? [exit]
 			if pos: find response/buffer "</body>" [
 				time: to-integer 1000 * to-decimal (now/time/precise - t0)
 				insert pos reform [
@@ -406,12 +444,15 @@ install-module [
 		
 		unprotect 'debug
 		set 'debug make debug [
-			on: func [/options spec [block!]][
+			on: does [
 				active?: yes
-				on-page-start/with spec
+				on-page-start
 			]
 			off: does [
 				active?: no
+			]
+			options: func [spec [block!]][
+				opts: construct/with spec opts-default
 			]
 		]
 		protect 'debug
@@ -1141,7 +1182,7 @@ install-module [
 			log/info "New job received :" 
 			log/info mold data
 		]
-		debug-banner/active?: no
+		debug-banner/reset
 		session/reset-object
 		decode-msg data
 		process-events
@@ -1170,7 +1211,7 @@ install-module [
 		debug-banner/on-page-end
 		
 		if verbose > 2 [log/info mold response/buffer]
-		unless empty? response/buffer [debug-banner/insert-menu]
+		debug-banner/insert-menu
 		change-dir save-path
 		
 		compress-output

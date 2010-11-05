@@ -57,7 +57,7 @@ if session/content [%>
 	</table>
 </div>
 <%]%>
-<div id="dbg-trace">
+<div id="dbg-trace" style="color:<%=opts/colors/1%>;background-color:<%=opts/colors/2%>;">
 	<pre><%=html-encode tail-file trace.log opts/lines%></pre>
 </div>
 <%if all [rsp-error opts-default/error = 'popup][%>

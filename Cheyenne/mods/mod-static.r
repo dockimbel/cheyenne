@@ -43,6 +43,11 @@ install-HTTPd-extension [
 		]
 		file
 	]
+	
+	form-host: func [vhost /local pos][
+		if pos: find vhost: form vhost #":" [change pos "-"]
+		vhost
+	]
 
 	;====== Server events handling ======
 	on-started: does [
@@ -52,11 +57,15 @@ install-HTTPd-extension [
 		false
 	]
 	;===================================
-	
+
 	on-quit: does [
 		foreach [vhost cache] second second :logging [			;-- flush logs
 			unless empty? cache/2 [
-				write/append join log-dir [vhost #"-" log-file] cache/2
+				if error? set/any 'err try [
+					write/append join log-dir [form-host vhost #"-" log-file] cache/2
+				][
+					log/error mold disarm :err
+				]
 			]
 		]
 	]
@@ -282,7 +291,7 @@ install-HTTPd-extension [
 		if data <> first c [
 			c/1: data
 			if error? set/any 'err try [
-				write/append join log-dir [req/vhost #"-" log-file] second c
+				write/append join log-dir [form-host req/vhost #"-" log-file] second c
 			][
 				log/error mold disarm :err
 			]
