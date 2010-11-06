@@ -79,14 +79,12 @@ install-HTTPd-extension [
 	]
 	
 	filter-error: func [req /local page][
-		unless find req/cfg 'debug [
-			page: either page: select req/cfg 'error-page [
-				req/out/forward: page
-			][
-				req/out/content: default-error-page
-			]
-			replace page "$home" any [all [req/app dirize req/app] "/"]
+		page: either page: select req/cfg 'error-page [
+			req/out/forward: page
+		][
+			req/out/content: default-error-page
 		]
+		replace page "$home" any [all [req/app dirize req/app] "/"]
 	]
 
 	send-msg: func [req sess /local job][
@@ -116,7 +114,7 @@ install-HTTPd-extension [
 		service/do-task mold/all job req
 	]
 	
-	decode-msg: func [req /local ro value list sess close? login?][
+	decode-msg: func [req /local ro value list sess close? login? dbg?][
 		ro: req/out
 		if verbose > 2 [log/info ro/content]
 		
@@ -140,6 +138,7 @@ install-HTTPd-extension [
 			'forward set value [string! | url! | none!] (ro/forward: value)
 			'error   set value [logic! | object!] 		(ro/error: value)
 			'log?    set value [logic!] 				(ro/log?: value)
+			'debug?  set value [logic!] 				(dbg?: value)
 			'session [
 				into [
 					opt ['init (sess: sessions/create req)]
@@ -164,19 +163,7 @@ install-HTTPd-extension [
 				| none!
 			]
 		]
-;		if sess [
-;			sess/busy?: no
-;			if not close? [sessions/set-cookie sess req]
-;		]
-;		if all [
-;			login? == no				;-- catch the switch of 'login? from no to yes
-;			sess
-;			select sess 'login?
-;			select sess 'rescued
-;		][
-;			req/in: sess/rescued
-;			req/out/forward: req/in/url
-;		]
+		dbg?
 	]
 	
 	process-next-job: has [sess job req current][
@@ -196,13 +183,6 @@ install-HTTPd-extension [
 		][
 			sess: sessions/create req
 			repend sess/vars ['login? no]
-;			if all [
-;				find [PUT POST] req/in/method
-;				req/in/content
-;				100'000 > length? req/in/content
-;			][
-;				repend sess/vars ['rescued req/in]
-;			]
 		]
 		either url: select req/cfg 'auth [
 			either any [
@@ -324,9 +304,9 @@ install-HTTPd-extension [
 		true
 	]
 
-	task-done: func [req /local page][	
+	task-done: func [req /local page dbg?][	
 		if declined? req [return none]	;-- Check if this doesn't block some valid calls
-		decode-msg req
+		dbg?: decode-msg req
 		either req/in/ws? [
 			either all [req/socket-app not empty? req/tasks][
 				service/mod-list/mod-socket/on-task-done req
@@ -334,7 +314,7 @@ install-HTTPd-extension [
 				service/ws-send-response req
 			]
 		][
-			if req/out/error [filter-error req]
+			if all [not dbg? req/out/error][filter-error req]
 			process-next-job
 			service/process-queue
 		]

@@ -360,7 +360,7 @@ install-module [
 			if all [
 				object? rsp-error
 				any [
-					26 <= length? response/buffer
+					26 >= length? response/buffer
 					not any [
 						find response/buffer "</head>" 
 						find response/buffer "<body>"
@@ -1143,6 +1143,7 @@ install-module [
 			forward (response/forward-url)
 			error	(response/error?)
 			log?    (response/log?)
+			debug?	(debug?)
 			session
 		]
 		either any [session/active? session/_start?][
