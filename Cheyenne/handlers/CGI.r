@@ -100,9 +100,20 @@ install-module [
 					]
 					libc: load/library libc
 					_setenv: make routine! [
-						name	[string!]
-						value	[string!]
-						return: [integer!]
+						name		[string!]
+						value		[string!]
+						overwrite	[integer!]
+						return: 	[integer!]
+					] libc "setenv"
+					body: [_setenv name value 1]
+				]
+				all [
+					libc: load/library %libc.dylib
+					_setenv: make routine! [
+						name		[string!]
+						value		[string!]
+						overwrite	[integer!]
+						return: 	[integer!]
 					] libc "setenv"
 					body: [_setenv name value 1]
 				]

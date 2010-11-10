@@ -201,7 +201,7 @@ install-module [
 		repeat c i - 1 [if src/:c <> dst/:c [i: c break]]	
 		dst: to-file at dst i
 		src: at src i
-		if not tail? src [loop length? src [insert dst %../]]
+		unless tail? src [loop length? src [insert dst %../]]
 		dst
 	]
 	
@@ -630,7 +630,7 @@ install-module [
 		sync-list: none
 		
 		get-cache: func [name [word!] /init /local data][
-			if not any [
+			unless any [
 				all [
 					data: select databases request/headers/host
 					data: find data request/web-app
