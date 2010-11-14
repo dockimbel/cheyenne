@@ -4,11 +4,14 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Copyright: "2009 SOFTINNOV"
 	Email: nr@softinnov.com
-	Date: 31/12/2009
-	Version: 0.9.1
+	Date: 14/11/2010
+	Version: 0.9.2
 	Web: http://softinnov.org/rebol/scheduler.shtml
 	License: "BSD - see %LICENCE.txt file"
 	History: {
+		0.9.2 - 14/11/2010
+			o file! jobs are now LAUNCHed
+			
 		0.9.1 - 31/12/2009
 			o new function 'add-job for lower level adding of a new job
 			o fixed an issue with deleting queued job
@@ -37,7 +40,7 @@ scheduler: context [
 		switch type?/word action [
 			url!   	  [read action]
 			block! 	  [do action]
-			file! 	  [do action]
+			file! 	  [launch action]
 			function! [do :action]
 			word!	  [do get :action]
 		]
@@ -75,9 +78,9 @@ scheduler: context [
 	
 	update-sys-timer: has [timer][
 		remove find spwl time!	
-		if not empty? jobs [
+		unless empty? jobs [
 			sort/skip jobs 2
-			if not find/only queue jobs/2 [append/only queue jobs/2]
+			unless find/only queue jobs/2 [append/only queue jobs/2]
 			append spwl difference jobs/1 get-now
 		]
 	]
@@ -211,9 +214,9 @@ scheduler: context [
 	]
 	
 	blockify: func [name type /local blk][
-		if not block? get name [set name make block! 1]
+		unless block? get name [set name make block! 1]
 		name: get name
-		if not blk: select name type [
+		unless blk: select name type [
 			repend name [type blk: make block! 1]
 		]
 		blk
@@ -336,7 +339,7 @@ scheduler: context [
 				| skip
 			]
 		]		
-		if none? out: attempt [load/all src][
+		unless out: attempt [load/all src][
 			make error! join "Scheduler input syntax error in: " src
 		]	
 		out
@@ -346,7 +349,7 @@ scheduler: context [
 		if new [reset]
 		if string? spec [spec: pre-process spec]
 		
-		if not parse copy/deep spec dialect [
+		unless parse copy/deep spec dialect [
 			log/error ["Error parsing at rule:" mold copy/part err 10]
 		]	
 		update-sys-timer
@@ -377,7 +380,7 @@ scheduler: context [
 		job: jobs
 		forskip job 2 [
 			if job/2/name = name [
-				if not empty? queue [
+				unless empty? queue [
 					either queue/1 = job/2 [
 						remove queue
 						update-sys-timer

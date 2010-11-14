@@ -1,0 +1,29 @@
+<%
+	res: t0: none
+	servers: [
+		http://www.rebol.com
+		http://www.rebol.net
+		http://www.rebol.org
+		http://www.altme.com
+	]
+
+;--- Hack to make Chrome start rendering partial content --
+	print head insert/dup copy "" " " 2000
+	response/flush
+;---
+
+	system/schemes/HTTP/timeout: 5
+	foreach server servers [
+		t0: now/time/precise
+		res: attempt [read/custom server [HEAD]]
+		print [
+			server
+			now/time/precise - t0
+			pick ["OK" "KO"] to-logic res
+			<br><br>
+		]
+		response/flush
+	]
+	print "end"
+	;-- the RSP engine flushes the remaining buffer automatically
+%>

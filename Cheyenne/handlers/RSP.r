@@ -1217,10 +1217,8 @@ install-module [
 		
 		compress-output
 		
-		all [
-			not response/buffered?
-			not empty? response/buffer
-			response/flush
+		unless response/buffered? [
+			unless empty? response/buffer [response/flush]
 			response/flush/end
 		]
 		request/web-app: none	; disables 'do sandboxing (avoid side-effects with other modules)
