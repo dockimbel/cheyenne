@@ -1,8 +1,8 @@
 REBOL [
 	Title: "CGI handler"
-	Author: "SOFTINNOV / Nenad Rakocevic"
-	Version: 1.1.0
-	Date: 06/07/2007
+	Author: "Nenad Rakocevic"
+	Version: 1.2.0
+	Date: 17/11/2010
 ]
 
 install-module [
@@ -69,45 +69,15 @@ install-module [
 	
 	OS: context [
 		set 'set-env none
-		libc: _setenv: exec-cgi: body: none
-		cgi?: no
+		libc: _setenv: body: none
+		cgi?: yes
 		
-		all [
-			any [
-				encap?
-				all [
-					in system 'user-license			; test if REBOL version not too old
-					system/user-license/id			; test if a valid license key is loaded	
-				]
-			]
-			any [
-				all [
-					system/version/4 = 3			; Windows
-					libc: load/library %kernel32.dll
-					_setenv: make routine! [
-						name	[string!]
-						value	[string!]
-						return: [integer!]
-					] libc "SetEnvironmentVariableA"
-					body: [_setenv name value]
-				]
-				all [								; UNIX
-					any [
-						exists? libc: %libc.so.6
-						exists? libc: %/lib32/libc.so.6
-						exists? libc: %/lib/libc.so.6
-						exists? libc: %/lib/libc.so.5
-					]
-					libc: load/library libc
-					_setenv: make routine! [
-						name		[string!]
-						value		[string!]
-						overwrite	[integer!]
-						return: 	[integer!]
-					] libc "setenv"
-					body: [_setenv name value 1]
-				]
-				all [
+		either not find system/components 'library [
+			log/error "/Library component missing, can't setup CGI module"
+			cgi?: no
+		][
+			switch/default system/version/4 [
+				2 [ 									;-- OS X
 					libc: load/library %libc.dylib
 					_setenv: make routine! [
 						name		[string!]
@@ -117,10 +87,38 @@ install-module [
 					] libc "setenv"
 					body: [_setenv name value 1]
 				]
+				3 [										;-- Windows
+					do-cache %misc/call.r
+					set 'call :win-call
+				]
+			][											;-- UNIX
+				either any [
+					exists? libc: %libc.so.6
+					exists? libc: %/lib32/libc.so.6
+					exists? libc: %/lib/libc.so.6
+					exists? libc: %/System/Index/lib/libc.so.6  ; GoboLinux package
+					exists? libc: %/system/index/framework/libraries/libc.so.6  ; Syllable
+					exists? libc: %/lib/libc.so.5
+				][
+					libc: load/library libc
+					_setenv: make routine! [
+						name		[string!]
+						value		[string!]
+						overwrite	[integer!]
+						return: 	[integer!]
+					] libc "setenv"
+					body: [_setenv name value 1]
+				][
+					log/error "Can't find any suitable C library for CGI setup"
+					cgi?: no
+				]
 			]
-			cgi?: yes
-			set 'set-env func [name [string!] value [string!]] body
-			foreach [name value] vars/sys [set-env name value]
+			if body [
+				set 'set-env func [name [string!] value [string!]] body
+			]
+			foreach [name value] vars/sys [
+				set-env name value
+			]
 		]
 	]
 	
@@ -137,20 +135,21 @@ install-module [
 		any [s: 'read-io (change s 'cgi-read-io) | into rule | skip]
 	]
 	
-	cgi-prin: func [data][insert tail output reform data]
-	cgi-print:  func [data][insert tail output join reform data newline]
+	cgi-prin:  func [data][insert tail output reform data]
+	cgi-print: func [data][insert tail output join reform data newline]
 	cgi-probe: func [data][insert tail output mold data data]
+	
 	cgi-print-funcs: reduce [:cgi-prin :cgi-print :cgi-probe]
 	saved-print-funcs: reduce [:prin :print :probe]
 	print-funcs: [prin print probe]
 
-	protect-code: func [code [block!] bytes /local ret-val err-obj type id desc][
+	safe-exec: func [code [block!] bytes /local ret-val err-obj type id desc][
 		set 'input bytes
 		set print-funcs cgi-print-funcs
 		if error? set/any 'ret-val try [catch code][
 			err-obj: disarm ret-val
 			type: err-obj/type
-			id: err-obj/id
+			id:   err-obj/id
 			arg1: err-obj/arg1
 			arg2: err-obj/arg2
 			arg3: err-obj/arg3
@@ -163,7 +162,7 @@ install-module [
 			REBOL Error Trapped
 		</TITLE>
 	</HEAD>
-	<BODY><FONT face="Arial">
+	<BODY>
 		<BR>
 		<CENTER>
 		<H2>&gt; Trapped Error &lt;</H2><BR>
@@ -185,13 +184,13 @@ install-module [
 		set print-funcs saved-print-funcs
 	]
 	
-	header-error-page:	{Content-type: text/html
+	header-error-page:	{Content-type: text/plain
 	
-	<html><h2>Error in CGI :</h2> #! header not found!</html>
+	Error in CGI : shebang #! header not found!
 	}
 	
 	http-encode: func [data][
-		join "HTTP_" uppercase replace/all form data #"-" #"_"
+		join "HTTP_" uppercase replace/all form data #"-" #"_"	;-- not worth optimizing
 	]
 	
 	reset-env-vars: does [
@@ -238,24 +237,26 @@ install-module [
 	
 	decode-all: func [data /local soc][
 		soc: system/options/cgi
-		soc/server-software: "Cheyenne/1.0"
-		soc/server-name: any [select data/in/headers 'Host local-name]
+		
+		soc/server-software: 	"Cheyenne/1.0"
+		soc/server-name: 		any [select data/in/headers 'Host local-name]
 		soc/gateway-interface: "CGI/1.1"
-		soc/server-protocol: "HTTP/1.1"
-		soc/server-port: form data/port
-		soc/request-method: form any [data/in/method empty]
-		soc/path-info: join data/in/path data/in/target
-		soc/script-name: any [data/in/script-name join data/in/path data/in/target]
-		soc/path-translated: to-local-file join data/cfg/root-dir soc/script-name
-		soc/query-string: any [data/in/arg empty]
-		soc/remote-host: none
-		soc/remote-addr: form data/ip
-		soc/auth-type: none
-		soc/remote-user: none
-		soc/remote-ident: none
-		soc/content-type: select data/in/headers 'Content-Type
-		soc/content-length: any [all [data/in/content to-string length? data/in/content] none]
-		soc/other-headers: make block! 20
+		soc/server-protocol: 	"HTTP/1.1"
+		soc/server-port: 		form data/port
+		soc/request-method: 	form any [data/in/method empty]
+		soc/path-info:			join data/in/path data/in/target
+		soc/script-name: 		any [data/in/script-name join data/in/path data/in/target]
+		soc/path-translated: 	to-local-file join data/cfg/root-dir soc/script-name
+		soc/query-string: 		any [data/in/arg empty]
+		soc/remote-host: 		none
+		soc/remote-addr: 		form data/ip
+		soc/auth-type: 			none
+		soc/remote-user: 		none
+		soc/remote-ident: 		none
+		soc/content-type: 		select data/in/headers 'Content-Type
+		soc/content-length: 	any [all [data/in/content to-string length? data/in/content] none]
+		soc/other-headers: 		make block! 20
+		
 		foreach [name value] data/in/headers [
 			insert tail soc/other-headers http-encode name
 			insert tail soc/other-headers value
@@ -263,6 +264,7 @@ install-module [
 	]
 	
 	on-task-received: func [data /local file port header script cmd][
+		;-- this function needs full refactoring for readability
 		data: reduce load data
 		decode-all data		
 		clear output
@@ -279,17 +281,22 @@ install-module [
 		either all [
 			string? script
 			not empty? script
-		][
+			find data/cfg 'fast-rebol-cgi
+		][	
 			append script copy port			
 			close port
 			system/options/script: file
 			change-dir first split-path file	
 			set 'input any [data/in/content ""]
-			protect-code load as-string script input
+			safe-exec load as-string script input
 			script: none
 			change-dir save-path		
 			result: output
-		][
+		][		
+			unless OS/cgi? [
+				result: "CGI Error: can't run non-REBOL CGI scripts!"
+				exit
+			]
 			either "#!" = copy/part header 2 [
 				cmd: copy/part skip header 2 find header newline
 				cmd: to-local-file trim/tail cmd
@@ -298,7 +305,8 @@ install-module [
 			][
 				cmd: form file
 			]
-			close port		
+			close port
+			
 			set-env-vars data
 			either data/in/content [
 				call/output/error/wait/input
@@ -312,9 +320,7 @@ install-module [
 					output
 					err-log
 			]
-			unless empty? err-log [
-				print ["CGI error:" err-log]			; TBD: log stderr output
-			]
+			unless empty? err-log [log/info ["CGI error:" err-log]]
 			result: output
 			reset-env-vars
 		]

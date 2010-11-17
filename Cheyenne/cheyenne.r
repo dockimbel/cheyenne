@@ -38,6 +38,7 @@ set-cache [
 		%unix.r
 		%macosx.r
 		%admin.r
+		%call.r
 	]
 	%mods/ [
 		%mod-action.r
@@ -102,18 +103,12 @@ do-cache uniserve-path/libs/log.r
 
 ; === Patched functions ====
 
-set 'info? func [
-    "Returns information about a file or url."
-    [catch]
-    target [file! url!]
-][
+set 'info? func [[catch] target [file! url!]][
     throw-on-error [
         target: make port! target
         query target
     ]
-    either none? target/status [
-        none
-    ] [
+    either none? target/status [none][
         make object! [
             size: target/size 
             date: target/date

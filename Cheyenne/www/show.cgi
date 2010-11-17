@@ -1,4 +1,4 @@
-#!/usr/bin/rebol  --cgi
+#!c:\dev\sdk\tools\rebol.exe  --cgi
 
 REBOL [
     Title:      "show"
@@ -25,7 +25,7 @@ foreach name next first system/options/cgi [
 print "</UL>"
 
 if system/options/cgi/request-method = "POST" [
-	vars: make object! decode-cgi make string! input
+	vars: make object! decode-cgi as-string input
 	if not empty? next first vars [
 		print "<FONT FACE='ARIAL' SIZE='-1'><B> Variables passed :</B><BR><UL>"
 		foreach name next first vars [
