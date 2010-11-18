@@ -195,6 +195,7 @@ QueryServiceStatus: make routine! compose/deep [
 STARTF_USESTDHANDLES: 	int #{00000100}
 STARTF_USESHOWWINDOW: 	1
 SW_HIDE: 				0
+CREATE_BREAKAWAY_FROM_JOB: int #{01000000}
 
 SECURITY_ATTRIBUTES: make struct! [
 	nLength 			 [integer!]
@@ -255,8 +256,8 @@ JOBOBJECT_EXTENDED_LIMIT_INFORMATION: make struct! jeli-struct: [
 CreateProcess: make routine! compose/deep [
 	lpApplicationName	 [integer!]
 	lpCommandLine		 [string!]	
-	lpProcessAttributes	 [integer!]
-	lpThreadAttributes	 [integer!]
+	lpProcessAttributes	 [struct! [a [integer!] b [integer!] c [integer!]]]
+	lpThreadAttributes	 [struct! [a [integer!] b [integer!] c [integer!]]]
 	bInheritHandles		 [char!]
 	dwCreationFlags		 [integer!]
 	lpEnvironment		 [integer!]
@@ -269,11 +270,6 @@ CreateProcess: make routine! compose/deep [
 GetCurrentProcessId: make routine! [
 	return:   [integer!]
 ] kernel32 "GetCurrentProcessId"
-
-GetProcessId: make routine! [
-	hProcess  [integer!]
-	return:   [integer!]
-] kernel32 "GetProcessId"
 
 CreateJobObject: make routine! [
   lpJobAttributes 	[integer!]
@@ -328,6 +324,9 @@ ghJob: none			;-- global handle to JobObject object
 make-null-string!: func [len [integer!]][
 	head insert/dup make string! len null len
 ]
+
+sa: make struct! SECURITY_ATTRIBUTES [0 0 0]
+sa/nLength: length? third sa
 
 start-info: make struct! STARTUPINFO none
 start-info/cb: length? third start-info
@@ -398,30 +397,31 @@ set 'OS-get-dir func [dir [word!] /local type path][
 
 set 'init-JobObject has [jeli][
 	if zero? ghJob: CreateJobObject 0 0 [
-		log/error get-error-msg
+		log/error join "CreateJobObject: " get-error-msg
 	]
 	jeli: make struct! JOBOBJECT_EXTENDED_LIMIT_INFORMATION none
 	jeli/LimitFlags: 8192
 	if zero? SetInformationJobObject ghJob 9 jeli length? third jeli [
-		log/error get-error-msg
+		log/error join "SetInformationJobObject: " get-error-msg
 	]
 ]
 
-set 'launch-app func [cmd [string!] /local si pi ret pid][
+set 'launch-app func [cmd [string!] /local si pi ret flags][
 	si: make struct! start-info second start-info
 	pi: make struct! PROCESS_INFORMATION none
 	cmd: join cmd null
-	ret: CreateProcess 0 cmd 0 0 null 0 0 0 si pi
-	ret: either zero? ret [
-		reduce ['ERROR get-error-msg]
+	flags: CREATE_BREAKAWAY_FROM_JOB
+
+	ret: CreateProcess 0 cmd sa sa null flags 0 0 si pi
+	ret: either zero? ret [	
+		reduce ['ERROR join "CreateProcess: " get-error-msg]
 	][
 		if zero? AssignProcessToJobObject ghJob pi/hProcess [
-			log/error get-error-msg
+			log/error join "AssignProcessToJobObject: " get-error-msg
 		]
-		pid: GetProcessID pi/hProcess	
 		CloseHandle pi/hThread
 		CloseHandle pi/hProcess
-		reduce ['OK pid]	
+		reduce ['OK pi/dwProcessID]	
 	]
 	ret
 ]
