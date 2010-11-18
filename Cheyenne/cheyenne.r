@@ -302,7 +302,7 @@ Supported options are:
     -e               Run Cheyenne in embedded mode to integrate it in
                      another REBOL application.
     
-    -h, --help       Displays this help message.   
+    -h, --help       Display this help message.   
 
     -p port-id	     Listen for HTTP requests on the given port number. 
                      Several port numbers can be specified separated by
@@ -317,7 +317,7 @@ Supported options are:
     -v[vv...]        Enable the verbose mode. Use 1 to 6 'v to set the
                      verbose level.
     
-    -V, --version    Displays Cheyenne version number.
+    -V, --version    Display Cheyenne version number.
 		}
 	]
 	
