@@ -282,7 +282,23 @@ v0.9.20 - ??/??/2009
   	  		<%? now/date " " now/time%>
   	   
   	    	will output: 25-Oct-2010 15:06:17
-  	  
+  	
+  	o CGI: REBOL CGI scripts are now run as plain CGI scripts by default
+  	
+  	o CGI: new config keyword: fast-rebol-cgi. Forces running REBOL CGI scripts in FastCGI mode.
+
+	o CGI: (Windows) CGI handler rewritten to fix environment variables passing.
+	
+	o CGI: 'set-env mapping code refactored, setup errors are now properly logged. Missing 
+	  OS X support added.
+	  
+	o CGI: scripts errors are now logged in %trace.log file.
+	
+	o HTTP: fix an error when Host header is present but his value is empty.
+
+	o HTTP: fix a rare case minor error in client closing handler.
+	
+	o Mod-static: better catch malformed resources filenames.
   	  		
 
 v0.9.19 - 01/03/2009

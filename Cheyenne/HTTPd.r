@@ -246,11 +246,15 @@ Connection: Upgrade^M
 	]
 	
 	select-vhost: func [req /local domain port?][	
-		domain: select req/in/headers 'Host		
-		unless req/cfg: any [
+		if all [
+			domain: select req/in/headers 'Host
+			empty? lowercase trim domain
+		][
+			domain: none
+		]
+		req/cfg: any [
 			all [
 				domain
-				lowercase domain		
 				select conf req/vhost: any [
 					all [
 						port?: find domain #":"
@@ -258,12 +262,13 @@ Connection: Upgrade^M
 							attempt [load domain]
 							domain
 						]
-					]	
+					]
 					attempt [to tuple! domain]
 					to word! domain
 				]
 			]
 			all [
+				domain
 				port? 
 				select conf req/vhost: to word! domain: copy/part domain port?
 			]
@@ -273,8 +278,7 @@ Connection: Upgrade^M
 				domain: any [find/last domain dot domain]
 				req/vhost: to word! any [find/reverse/tail domain dot domain]
 			]
-		][
-			req/cfg: select conf req/vhost: 'default
+			select conf req/vhost: 'default
 		]			
 	]
 	
@@ -616,7 +620,7 @@ Connection: Upgrade^M
 			either out/content [
 				either file? out/content [
 ;TBD: exists? file? NO=>404				
-				req/in/file: any [
+					req/in/file: any [
 						all [
 							value: select out/headers 'Content-Disposition
 							value: find/tail value {filename="}
@@ -925,7 +929,7 @@ Connection: Upgrade^M
 	on-close-client: has [req][
 		if verbose > 1 [log/info "Connection closed"]
 		if all [
-			req: pick tail client/user-data -1
+			object? req: pick tail client/user-data -1
 			req/socket-app
 		][		
 			do-phase req 'socket-disconnect

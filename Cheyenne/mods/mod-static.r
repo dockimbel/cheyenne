@@ -137,7 +137,7 @@ install-HTTPd-extension [
 			req/out/code: 404		
 			return true
 		]
-		if not req/in/file [	;-- allow other modules to set req/in/file
+		unless req/in/file [	;-- allow other modules to set req/in/file
 			; --- Find and assign a default file if necessary		
 			if empty? trim req/in/target [		;-- trim should be done when target is parsed
 				foreach file to block! any [select cfg 'default []][
@@ -155,6 +155,7 @@ install-HTTPd-extension [
 			req/in/file: rejoin [cfg/root-dir req/in/path req/in/target]
 		]
 		if any [
+			not exists? req/in/file
 			not req/file-info: info? req/in/file
 			req/file-info/type <> 'file
 		][	
@@ -263,7 +264,7 @@ install-HTTPd-extension [
 
 		if any [not req/out/log? find req/cfg 'disable-log][return false]
 		
-		if not c: select cache req/vhost [
+		unless c: select cache req/vhost [
 			repend cache [req/vhost c: reduce [0:00:01 make string! 1024]]
 		]
 		out: second c
