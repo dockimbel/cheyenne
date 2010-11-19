@@ -15,7 +15,7 @@
 	system/schemes/HTTP/timeout: 5
 	foreach server servers [
 		t0: now/time/precise
-		res: attempt [modified? server]
+		res: attempt [exists? server]
 		print [
 			server
 			now/time/precise - t0

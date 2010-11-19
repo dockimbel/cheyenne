@@ -12,8 +12,8 @@ int: :to-integer
 
 ; === General API ===
 
-FORMAT_MESSAGE_FROM_SYSTEM:	   int #{00001000}
-FORMAT_MESSAGE_IGNORE_INSERTS: int #{00000200}
+FORMAT_MESSAGE_FROM_SYSTEM:	    int #{00001000}
+FORMAT_MESSAGE_IGNORE_INSERTS:  int #{00000200}
 ERROR_ACCESS_DENIED: 			5
 CSIDL_DESKTOPDIRECTORY:			int #{00000010}
 CSIDL_COMMON_APPDATA:			int #{00000023}
@@ -339,10 +339,15 @@ get-error-msg: has [out][
 	trim/tail out
 ]
 
-try*: func [body [block!] /quiet /local res][
+try*: func [body [block!] /quiet /local res msg][
 	if all [zero? res: do body not quiet][
+		msg: get-error-msg
+		if all [body/1 = 'OpenSCManager last-error = 5][
+			log/warn "You need administrator rights to switch to Windows Services mode"
+			return 0
+		]
 		log/error reform [
-			mold first body "failed :" get-error-msg
+			mold first body "failed :" msg
 		]
 	]
 	res
