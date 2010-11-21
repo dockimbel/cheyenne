@@ -301,6 +301,10 @@ v0.9.20 - ??/??/2009
 	o Mod-static: better catch malformed resources filenames.
 	
 	o Boot: better boot message to warn against Windows Services mode "access denied" error.
+	
+	o RSP: now when a file is returned by response/buffer and not found, it will result
+	  in a 404 and a error message in trace.log.
+	  
   	  		
 
 v0.9.19 - 01/03/2009

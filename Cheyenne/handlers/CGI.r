@@ -320,7 +320,7 @@ install-module [
 					output
 					err-log
 			]
-			unless empty? err-log [log/info ["CGI error:" trim/tail err-log]]
+			unless empty? err-log [log/info ["Error:" trim/tail err-log]]
 			result: output
 			reset-env-vars
 		]

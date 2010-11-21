@@ -610,6 +610,11 @@ Connection: Upgrade^M
 				do-request req
 				return false ;-- keep request in queue
 			]
+			if all [file? out/content not exists? out/content][
+				log/error ["File not found: " mold out/content]
+				out/code: 404
+				out/content: none
+			]
 			
 			do-phase req 'reform-headers
 
@@ -619,7 +624,6 @@ Connection: Upgrade^M
 			]		
 			either out/content [
 				either file? out/content [
-;TBD: exists? file? NO=>404				
 					req/in/file: any [
 						all [
 							value: select out/headers 'Content-Disposition
@@ -791,7 +795,7 @@ Connection: Upgrade^M
 				parse-headers data req/in
 				do-phase req 'parsed-headers
 				select-vhost req
-				if not req/out/code [
+				unless req/out/code [
 					do-phase req 'url-to-filename
 					if verbose > 1 [log/info ["translated file: " mold req/in/file]]
 					if "WebSocket" = select req/in/headers 'Upgrade [	
@@ -815,7 +819,7 @@ Connection: Upgrade^M
 							limit: any [
 								select conf/globals 'post-mem-limit
 								select req/cfg 'post-mem-limit
-								100'000
+								102'400
 							]
 							if any [stop-at > limit up?][
 								incoming-dir: any [
@@ -828,7 +832,7 @@ Connection: Upgrade^M
 								req/in/content: make string! 1024
 								req/tmp/remains: req/tmp/expected: stop-at						
 								req/state: 'stream-in
-								if not up? [stop-at: limit]
+								stop-at: min limit stop-at
 							]
 							exit
 						][

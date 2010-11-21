@@ -17,15 +17,15 @@
 		req: request/content
 	%>
 	<ul>
-		<li><b>file name :</b> <%=req/ufile/1%></li>
+		<li><b>file name :</b> <%=mold req/ufile/1%></li>
 		<li><b>file size :</b> <%=size? req/ufile/2%> bytes</li>
-		<li><b>temporary file name :</b> <%=req/ufile/2%></li>
+		<li><b>temporary file name :</b> <%=mold req/ufile/2%></li>
 		<%if req/keep [%>
-		<li><b>file stored to:</b>
+		<li><b>file stored at:</b>
 			<%either 'name-taken = catch [file: request/store req/ufile][%>
 			*** Error: a file with same name already exists!
 			<%][
-				prin file
+				probe file
 			  ]
 		]%>
 	</ul>
