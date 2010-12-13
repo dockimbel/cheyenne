@@ -17,17 +17,20 @@ set 'convert func [
 		
 		Do not use '__s and '__e words in the body.
 	}
-	/local out value __s __e 
+	/skip skip-rule [block!] 	"skip over these patterns without converting"
+	/local out specs value __s __e
 ][
 	out: make string! length? series
 	bind body 'out
+	specs: [
+		__e: copy value rule (
+			insert/part tail out __s __e
+			insert tail out do body
+		) __s: | skip
+	]
+	if skip [insert specs: copy specs [skip-rule |]]
 	parse/all series [
-		__s: any [
-			__e: copy value rule (
-				insert/part tail out __s __e
-				insert tail out do body
-			) __s: | skip
-		] __e:
+		__s: any specs __e:
 		(insert/part tail out __s __e)
 	]
 	out
@@ -90,8 +93,10 @@ context [
 	]
 	
 	set 'html-encode func [data [string! binary!] /no-tags][
-		convert data [entchar][
+		convert/skip data [entchar][
 			pick find entities to char! value -1
+		][
+			#"&" opt #"#" 2 6 alphanum #";"
 		]
 	]
 	
