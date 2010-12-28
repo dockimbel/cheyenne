@@ -53,7 +53,7 @@ install-HTTPd-extension [
 		]
 		if all [not zero? uid not zero? gid][
 			;-- %trace.log
-			if exists? file: logger/file.log [try-chown file uid gid]
+			if exists? file: uniserve/services/logger/trace-file [try-chown file uid gid]
 			;-- %.rsp-sessions
 			if exists? file: service/mod-list/mod-rsp/sessions/ctx-file [try-chown file uid gid]
 			

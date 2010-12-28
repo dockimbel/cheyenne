@@ -258,8 +258,8 @@ cheyenne: make log-class [
 		if flag? 'embed [exit]
 		
 		until [
-			evt: do-events							;-- main event loop
-			either none? evt [
+			set/any 'evt do-events					;-- main event loop
+			either all [value? 'evt none? evt][
 				scheduler/on-timer					;-- scheduler job event
 			][
 				unless uniserve/flag-stop [log/warn "premature exit from event loop"]
