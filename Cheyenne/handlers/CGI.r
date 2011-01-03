@@ -76,45 +76,47 @@ install-module [
 			log/error "/Library component missing, can't setup CGI module"
 			cgi?: no
 		][
-			switch/default system/version/4 [
-				2 [ 									;-- OS X
-					libc: load/library %libc.dylib
-					_setenv: make routine! [
-						name		[string!]
-						value		[string!]
-						overwrite	[integer!]
-						return: 	[integer!]
-					] libc "setenv"
-					body: [_setenv name value 1]
+			unless all [value? 'set-env native? :set-env][
+				switch/default system/version/4 [
+					2 [ 									;-- OS X
+						libc: load/library %libc.dylib
+						_setenv: make routine! [
+							name		[string!]
+							value		[string!]
+							overwrite	[integer!]
+							return: 	[integer!]
+						] libc "setenv"
+						body: [_setenv name value 1]
+					]
+					3 [										;-- Windows
+						do-cache %misc/call.r
+						set 'call :win-call
+					]
+				][											;-- UNIX
+					either any [
+						exists? libc: %libc.so.6
+						exists? libc: %/lib32/libc.so.6
+						exists? libc: %/lib/libc.so.6
+						exists? libc: %/System/Index/lib/libc.so.6  ; GoboLinux package
+						exists? libc: %/system/index/framework/libraries/libc.so.6  ; Syllable
+						exists? libc: %/lib/libc.so.5
+					][
+						libc: load/library libc
+						_setenv: make routine! [
+							name		[string!]
+							value		[string!]
+							overwrite	[integer!]
+							return: 	[integer!]
+						] libc "setenv"
+						body: [_setenv name value 1]
+					][
+						log/error "Can't find any suitable C library for CGI setup"
+						cgi?: no
+					]
 				]
-				3 [										;-- Windows
-					do-cache %misc/call.r
-					set 'call :win-call
+				if body [
+					set 'set-env func [name [string!] value [string!]] body
 				]
-			][											;-- UNIX
-				either any [
-					exists? libc: %libc.so.6
-					exists? libc: %/lib32/libc.so.6
-					exists? libc: %/lib/libc.so.6
-					exists? libc: %/System/Index/lib/libc.so.6  ; GoboLinux package
-					exists? libc: %/system/index/framework/libraries/libc.so.6  ; Syllable
-					exists? libc: %/lib/libc.so.5
-				][
-					libc: load/library libc
-					_setenv: make routine! [
-						name		[string!]
-						value		[string!]
-						overwrite	[integer!]
-						return: 	[integer!]
-					] libc "setenv"
-					body: [_setenv name value 1]
-				][
-					log/error "Can't find any suitable C library for CGI setup"
-					cgi?: no
-				]
-			]
-			if body [
-				set 'set-env func [name [string!] value [string!]] body
 			]
 			foreach [name value] vars/sys [
 				set-env name value

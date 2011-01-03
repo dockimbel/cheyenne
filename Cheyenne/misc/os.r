@@ -6,7 +6,10 @@ OS-ctx: make log-class [
 	
 	sys: none
 	
-	either find system/components 'library [
+	either any [
+		find system/components 'library					;-- /Library present?
+		all [value? 'access-os native? :access-os]		;-- 'access-os native present?
+	][
 		sys: make log-class [name: 'OS-API verbose: 2]
 		sys: make sys load-cache switch system/version/4 [
 			2 [%misc/macosx.r]
