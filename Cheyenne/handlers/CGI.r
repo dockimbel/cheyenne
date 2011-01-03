@@ -68,7 +68,6 @@ install-module [
 	]
 	
 	OS: context [
-		set 'set-env none
 		libc: _setenv: body: none
 		cgi?: yes
 		
