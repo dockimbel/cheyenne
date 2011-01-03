@@ -72,11 +72,11 @@ install-module [
 		libc: _setenv: body: none
 		cgi?: yes
 		
-		either not find system/components 'library [
-			log/error "/Library component missing, can't setup CGI module"
-			cgi?: no
-		][
-			unless all [value? 'set-env native? :set-env][
+		unless all [value? 'set-env native? :set-env][
+			either not find system/components 'library [
+				log/error "/Library component missing, can't setup CGI module"
+				cgi?: no
+			][
 				switch/default system/version/4 [
 					2 [ 									;-- OS X
 						libc: load/library %libc.dylib
@@ -118,9 +118,9 @@ install-module [
 					set 'set-env func [name [string!] value [string!]] body
 				]
 			]
-			foreach [name value] vars/sys [
-				set-env name value
-			]
+		]
+		foreach [name value] vars/sys [
+			set-env name value
 		]
 	]
 	
