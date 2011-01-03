@@ -1,8 +1,8 @@
 REBOL []
 
 either all [value? 'access-os native? :access-os][
-	set 'set-uid func [uid][attempt [os-action/set 'uid uid true]]
-	set 'set-gid func [gid][attempt [os-action/set 'gid gid true]]
+	set 'set-uid func [uid][attempt [access-os/set 'uid uid true]]
+	set 'set-gid func [gid][attempt [access-os/set 'gid gid true]]
 	set 'chown func [
 		path  [string!]
 		owner [integer!]
@@ -15,8 +15,8 @@ either all [value? 'access-os native? :access-os][
 			0
 		]
 	]
-	set 'kill-app func [pid][os-action/set 'pid pid] 	; SIGTERM
-	set 'process-id? does [os-action 'pid]
+	set 'kill-app func [pid][access-os/set 'pid pid] 	; SIGTERM
+	set 'process-id? does [access-os 'pid]
 ][
 	all [
 		any [
