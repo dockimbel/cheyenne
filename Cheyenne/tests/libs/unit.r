@@ -1,8 +1,8 @@
 REBOL [
 	file: %unit.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2010-07-08
-	version: 0.5.1
+	date: 2011-02-05
+	version: 0.5.2
 	title: "Basic test unit, defines the core testing mechanism.  Implements all HTTP testing requirements."
 	
 	license-type: 'MIT
@@ -95,7 +95,7 @@ default-port-spec: context [
 ;------
 !unit: context [
 
-	;- UNIT PROPERTIES
+	;-    UNIT PROPERTIES
 
 	;-    name:
 	; the name of this test, used as a label for other tools to refer to it.
@@ -113,7 +113,7 @@ default-port-spec: context [
 	
 	;-    http-method:
 	;
-	; how do we construct & post the request. (currently only supports HEAD, GET & POST)
+	; how do we construct & post the request. (currently supports HEAD, GET & POST)
 	http-method: 'GET
 	
 	
@@ -122,7 +122,7 @@ default-port-spec: context [
 	http-version: 1.0
 	
 	
-	;-    NEW-LINE-CHAR:
+	;-    new-line-char:
 	NEW-LINE-CHAR: CRLF
 	
 	
@@ -145,9 +145,36 @@ default-port-spec: context [
 	response: none
 	
 	
+	;-    test-passed?:
+	;
+	; when a test is performed on this unit, the result
+	; will be copied here.
+	;
+	; note that if you perform multiple calls to pass?() then only the
+	; latest result is stored.
+	test-passed?: true
 	
 	
-	;- LOW-LEVEL METHODS
+	;-    test-report:
+	;
+	; when a test is performed on this unit, the report
+	; will be stored here.
+	;
+	; note that ALL reports are tabulated within the same block.
+	;
+	; test reports are usefull to do comparisons on the results of the tests.
+	;
+	; when report storing and file comparison will be enabled, you will be able to 
+	; compare tests with previous runs, to see if any changes have occured with 
+	; previous test runs.    
+	;
+	; this is usefull to perform automatic regression tests...
+	test-report: []
+	
+	
+	
+	;-  
+	;-    LOW-LEVEL METHODS
 	
 	;-----------------
 	;-    connect()
@@ -215,8 +242,8 @@ default-port-spec: context [
 	
 	
 	
-	
-	;- UNIT METHODS
+	;-  
+	;-    UNIT METHODS
 	
 
 	
@@ -428,7 +455,7 @@ default-port-spec: context [
 
 		until [
 			if pkt: copy port [
-				prin "."
+				;prin "."
 				either empty? pkt [
 					wait 0.1
 				][
@@ -536,24 +563,22 @@ default-port-spec: context [
 	;-----------------
 	pass?: func [
 		tests [block!]
-		/report report-blk"returns a report on all tests"
-		/stop "stop at first failure"
-		/local data test test-func success? result
+		/report report-blk [block! none!] "returns a report on all tests"
+		/stop "stop at first failure, otherwise it tries all tests."
+		/local data test test-func success? result blk
 	][
 		vin [{pass?()}]
 		result: true
+		blk: copy []
 		foreach [test data] tests [
 			either do-test: select unit-tests test [
-				success?: true = do-test self data report-blk
+				success?: true = do-test self data blk
 			][
-				if report [
-					append report-blk reduce [to-set-word test #invalid-test]
-				]
+				append blk reduce [to-set-word test #invalid-test]
 			]
 			
-			if result [
-				result: success?
-			]
+			; will stay true until one test fails
+			result: result AND success?
 			
 			if all [
 				not success?
@@ -564,9 +589,13 @@ default-port-spec: context [
 		]
 		
 		; improve report readability
+		new-line/skip blk true 2 
 		if report-blk [
-			new-line/skip report-blk true 2 
+			append report-blk blk
 		]
+		
+		; we store all reports in the unit.
+		append test-report blk
 		
 		vout
 		result
@@ -574,8 +603,8 @@ default-port-spec: context [
 	
 	
 	
-	
-	;- REPORTING METHODS
+	;-  
+	;-    REPORTING METHODS
 	
 	;-----------------
 	;-    report-as-is()
@@ -596,7 +625,6 @@ default-port-spec: context [
 		v?? request
 		v?? response
 		v?? parameters
-		;v?? 
 		vout
 	]
 	
@@ -604,3 +632,56 @@ default-port-spec: context [
 	
 	
 ]
+
+
+;-  
+;- FUNCTIONS
+
+;-----------------
+;-    http-test()
+;
+; a simple entry point for a complete unit test. returns the unit which is was executed, which 
+; can be used to probe every part of the test cycle.
+;-----------------
+http-test: func [
+	url [url!]
+	test [block!]
+	/HEAD "do a HEAD request"
+	/POST "do a POST request"
+	/continue [object!] "Any required multi-part test data will be retrieved from the response in this previous unit."
+	/quiet "don't print out result and report"
+	/report rep-blk [block!]
+	/local unit
+][
+	vin [{test()}]
+	unit: make !unit [
+		; create all unit test internal data
+		init
+		
+		; set the following url to your testing site, usually, we setup this specific url
+		; within the hosts file, so it points to localhost
+		; and use a vhost on the web-server which handles it.
+		;
+		; note that user:password and :port-number are all supported within the url, if required
+		; by tests themselves.
+		set-url url
+		
+		; do the http request for this unit
+		execute
+	]
+	
+	either report [
+		unit/pass?/report test rep-blk
+	][
+		unit/pass? test
+	]
+	
+	unless quiet[
+		vprobe/always unit/test-report
+		vprint/always unit/test-passed?
+	]
+	
+	vout
+	unit
+]
+

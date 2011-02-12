@@ -40,12 +40,29 @@ skip*: :skip
 
 
 
-;- PARSE RUlES
-; as per RFC 1738
-unsafe-url-char: complement charset [#"a" - #"z" #"A" - #"Z" "0123456789" "$-_.+!*'()," ]  ;charset [#"^(00)" - #"^(1F)" #"^(7F)" #"^(80)" - #"^(FF)" "{}|\^^~[]`<>#^""]
-reserved-url-char: charset [";" "/" "?" ":" "@" "=" "&"]
-encode-url-char: exclude unsafe-url-char reserved-url-char
+;-  
+;- OBJECTS
+;-    !date:
+!date: context [
+	year:
+	month:
+	day:
+	day-lbl:
+	month-lbl:
+	hour:
+	minute:
+	second:
+	tz: none	
+]
 
+
+
+
+
+
+
+;- PARSE RUlES
+;-    -basic character sets
 =digit=: charset "0123456789"
 =digits=: [some =digit=]
 =alpha=: charset [#"a" - #"z" #"A" - #"Z"]
@@ -54,8 +71,14 @@ encode-url-char: exclude unsafe-url-char reserved-url-char
 =white-spaces=: [some =white-space=]
 =.=: charset "."
 
+;-    -URL character sets
+; as per RFC 1738
+unsafe-url-char: complement charset [#"a" - #"z" #"A" - #"Z" "0123456789" "$-_.+!*'()," ]  ;charset [#"^(00)" - #"^(1F)" #"^(7F)" #"^(80)" - #"^(FF)" "{}|\^^~[]`<>#^""]
+reserved-url-char: charset [";" "/" "?" ":" "@" "=" "&"]
+encode-url-char: exclude unsafe-url-char reserved-url-char
 
-; http based rules <RFC 2068 >
+
+;-    -http based rules <RFC 2068 >
 =SP=: charset " "
 =SPs=: [some =SP=]
 =CTL=: charset [#"^(0)" - #"^(1F)" #"^(7F)"]
@@ -75,6 +98,84 @@ encode-url-char: exclude unsafe-url-char reserved-url-char
 ]
 =token=: exclude exclude =CHAR= =CTL= =tspecials=
 =header-content=: complement charset [ #"^M" #"^/" ]
+
+
+;-    -http dates
+;
+;   Sun, 06 Nov 1994 08:49:37 GMT  ; RFC 822, updated by RFC 1123
+;   Sunday, 06-Nov-94 08:49:37 GMT ; RFC 850, obsoleted by RFC 1036
+;   Sun Nov  6 08:49:37 1994       ; ANSI C's asctime() format (note no timezone!)
+;
+; here is the grammar as stated in the RFC
+;
+;       HTTP-date    = rfc1123-date | rfc850-date | asctime-date
+;       rfc1123-date = wkday "," SP date1 SP time SP "GMT"
+;       rfc850-date  = weekday "," SP date2 SP time SP "GMT"
+;       asctime-date = wkday SP date3 SP time SP 4DIGIT
+;       date1        = 2DIGIT SP month SP 4DIGIT
+;                      ; day month year (e.g., 02 Jun 1982)
+;       date2        = 2DIGIT "-" month "-" 2DIGIT
+;                      ; day-month-year (e.g., 02-Jun-82)
+;       date3        = month SP ( 2DIGIT | ( SP 1DIGIT ))
+;                      ; month day (e.g., Jun  2)
+;       time         = 2DIGIT ":" 2DIGIT ":" 2DIGIT
+;                      ; 00:00:00 - 23:59:59
+;       wkday        = "Mon" | "Tue" | "Wed"
+;                    | "Thu" | "Fri" | "Sat" | "Sun"
+;       weekday      = "Monday" | "Tuesday" | "Wednesday"
+;                    | "Thursday" | "Friday" | "Saturday" | "Sunday"
+;       month        = "Jan" | "Feb" | "Mar" | "Apr"
+;                    | "May" | "Jun" | "Jul" | "Aug"
+;                    | "Sep" | "Oct" | "Nov" | "Dec"
+
+;------
+; these variables are used by the date rules below.
+;------
+date-parse-storage: dps: make !date [] 
+val: none
+
+=wkday=:      [ "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun"]
+wkdays: [ "Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"]
+
+=weekday=:    [ "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday" ]
+weekdays:  [ "Monday"  "Tuesday"  "Wednesday"  "Thursday"  "Friday"  "Saturday"  "Sunday" ]
+
+=month=:      [ "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec" ]
+months:      [ "Jan"  "Feb"  "Mar"  "Apr"  "May"  "Jun"  "Jul"  "Aug"  "Sep"  "Oct"  "Nov"  "Dec" ]
+
+ ; day month year (e.g., 02 Jun 1982)
+=date1=: [ 
+	copy val 2 =DIGIT= (dps/day: to-integer val) =SP= 
+	copy val   =month= (dps/month: index? find months val) =SP= 
+	copy val 4 =DIGIT= (dps/year: to-integer val)
+]
+
+; day-month-year (e.g., 02-Jun-82)       
+=date2=: [ 
+	copy val 2 =DIGIT= "-" (dps/day: to-integer val)
+	copy val   =month= "-" (dps/month: index? find months val)
+	copy val 2 =DIGIT=  (dps/year: 2000 + to-integer val   if (dps/year - now/year) >= 50 [dps/year: dps/year - 100][])
+]
+
+; month day (e.g., Jun  2)
+=date3=: [ 
+	copy val =month= =SP= (dps/month: index? find =month= val)
+	 [ copy val 2 =DIGIT= | [ =SP= copy val =DIGIT= ]] (dps/day: to-integer val)
+] 
+; 00:00:00 - 23:59:59
+=time=: [ 
+	copy val 2 =DIGIT= ":" (dps/hour:   to-integer val)
+	copy val 2 =DIGIT= ":" (dps/minute: to-integer val)
+	copy val 2 =DIGIT=     (dps/second: to-integer val)
+]       
+rfc1123-date: [ =wkday= "," =SP= =date1= =SP= =time= =SP= "GMT" (dps/tz: "GMT") ]
+rfc850-date:  [ =weekday= "," =SP= =date2= =SP= =time= =SP= "GMT" (dps/tz: "GMT")]
+asctime-date: [ =wkday= =SP= =date3= =SP= =time= =SP= copy val 4 =DIGIT= (dps/year: to-integer val) (print "asctime-date") ]
+
+; note that dates have to be parsed CASE SENSITIVE.
+HTTP-date: [rfc1123-date | rfc850-date | asctime-date]
+
+
 
 ;-  
 ;- SERIES FUNCTIONS 
@@ -139,6 +240,39 @@ merge: func [
 
 
 ;- NETWORK FUNCTIONS
+
+
+
+;-----------------
+;-    parse-http-date()
+;
+; breaks up the http date into its constituents.
+;
+; the RFC states that dates ARE case-sensitive (sect. 3.3.1)
+;
+
+
+;-----------------
+parse-http-date: func [
+	data "if input is not a string, it always returns none."
+	/local date
+][
+	vin [{parse-http-date()}]
+	either string? data [
+		if parse/case/all data HTTP-date [
+			; copy the date into a unique instance
+			date: make date-parse-storage []
+		]
+	][
+		date: none
+	]
+	vout
+	
+	date
+]
+
+
+
 URL-Parser: make object! [
 	scheme: none
 	user: none

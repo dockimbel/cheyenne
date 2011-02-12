@@ -29,10 +29,13 @@ REBOL [
 
 unit-tests: []
 
+; we expect this lib to already be loaded before running any command here.
+; do %mezz.r
+
 
 append unit-tests reduce [
 	;----
-	; TEST: 'DO
+	;- TEST: 'DO
 	;
 	; low level testing operation
 	;
@@ -70,7 +73,7 @@ append unit-tests reduce [
 	
 	
 	;----
-	; TEST: 'CHECK-HEADER
+	;- TEST: 'CHECK-HEADER
 	;
 	; this test operation compares the header for expected values
 	;
@@ -109,10 +112,41 @@ append unit-tests reduce [
 		]
 		
 		if report [
+			new-line/skip results true 2 
 			append report reduce ['check-header results]
 		]
 		result
 	]
 	
+	;----
+	;- TEST: 'IS-HTTP-DATE?
+	;
+	; here we expect the date to be http 1.1 encoded using the strict grammar rules defined below in the RFC
+	;
+	; 
+	'is-http-date? func [
+		unit [object!] 
+		params [block! none!]  "A none params always returns true (a stand-in empty test should not invalidate the test)."
+		report [block! none!]
+		/local result d date-string
+	][
+		; allow the params to refer to any value which may be contained in the tested unit.
+		params: bind/copy params unit
+		date-string: do params
+		d: parse-http-date date-string
+		
+		result: object? d
+		
+		
+		if report [
+			either d [
+				append report reduce ['is-http-date? true]
+			][
+				append report reduce ['is-http-date? date-string]
+			]
+		]
+		?? result
+		result
+	]
 ]
 

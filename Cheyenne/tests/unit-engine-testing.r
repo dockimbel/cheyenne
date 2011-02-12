@@ -64,9 +64,9 @@ unit: make !unit [
 	;
 	; note that user:password and :port-number are all supported within the url, if required
 	; by tests themselves.
-	set-url http://localhost
+	set-url http://localhost:81
 	
-	; do the http request for this test
+	; do the http request for this unit
 	execute
 ]
 
@@ -82,14 +82,14 @@ test-passed?: unit/pass?/report [
 	;
 	; this test operation compares the header for expected values
 	check-header [
-		Content-Length: "276"
+		Content-Length: "386"
 		Content-Type: "text/html"
 	]
 	
 	;----
 	; TEST: 'DO
 	;
-	; this test operation runs arbitrary REBOL source.
+	; this test operation runs arbitrary REBOL code.
 	; the return value of the block is used to qualify test as passed or failed.
 	;
 	; ONLY TRUE results will pass the test, anything else is considered a failure.
@@ -97,7 +97,7 @@ test-passed?: unit/pass?/report [
 	do [
 		all [
 			unit/response/status-code = 200
-			unit/response/Content-Length = "276"
+			unit/response/header/Content-Length = "386"
 			true
 		]
 	]
@@ -116,7 +116,7 @@ vprobe unit/response/status-line
 
 ;----
 ; what content was returned in the http response
-vprobe to-string unit/response/content
+vprobe to-string unit/response/header
 
 
 ;----
@@ -127,5 +127,10 @@ v?? test-passed?
 ;----
 ; print out the accumulated report of all test operations.
 v?? report
+
+
+;----
+; print out the full unit test report.
+unit/report-as-is
 
 ask "^/-------^/press enter to close console"
