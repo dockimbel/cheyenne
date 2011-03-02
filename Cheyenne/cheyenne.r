@@ -3,8 +3,8 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Purpose: "Full-featured Web Server"
 	Encap: [quiet secure none title "Cheyenne" no-window] 
-	Version: 0.9.19
-	Date: 08/03/2009
+	Version: 0.9.20
+	Date: 02/03/2011
 ]
 
 ; === Setting up the runtime context ===
