@@ -81,16 +81,21 @@ install-module [
 				log/error "/Library component missing, can't setup CGI module"
 				cgi?: no
 			][
-				either system/version/4 = 2 [				;-- OS X
-					libc: load/library %libc.dylib
-					_setenv: make routine! [
-						name		[string!]
-						value		[string!]
-						overwrite	[integer!]
-						return: 	[integer!]
-					] libc "setenv"
-					body: [_setenv name value 1]
-				][											;-- UNIX
+				switch/default system/version/4 [			;-- OS X
+					2 [
+						libc: load/library %libc.dylib
+						_setenv: make routine! [
+							name		[string!]
+							value		[string!]
+							overwrite	[integer!]
+							return: 	[integer!]
+						] libc "setenv"
+						body: [_setenv name value 1]
+					]
+					3 [										;-- Windows
+						;-- catch this case, but do nothing	
+					]
+				][											;-- Linux, *BSD, ...
 					either any [
 						exists? libc: %libc.so.6
 						exists? libc: %/lib32/libc.so.6
