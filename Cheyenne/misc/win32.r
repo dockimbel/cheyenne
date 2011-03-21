@@ -417,6 +417,8 @@ set 'launch-app func [cmd [string!] /local si pi ret flags][
 	cmd: join cmd null
 	flags: CREATE_BREAKAWAY_FROM_JOB
 
+	unless encap? [OS-change-dir what-dir]
+	
 	ret: CreateProcess 0 cmd sa sa null flags 0 0 si pi
 	ret: either zero? ret [	
 		reduce ['ERROR join "CreateProcess: " get-error-msg]

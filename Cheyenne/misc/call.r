@@ -88,11 +88,13 @@ context [
 		return: [integer!]
 	] kernel32 "GetEnvironmentStringsA"
 	
-	set 'set-env make routine! [
-		name	[string!]
-		value	[string!]
-		return: [integer!]
-	] kernel32 "SetEnvironmentVariableA"
+	unless all [value? 'set-env native? :set-env][
+		set 'set-env make routine! [
+			name	[string!]
+			value	[string!]
+			return: [integer!]
+		] kernel32 "SetEnvironmentVariableA"
+	]
 
 	CreateProcess: make routine! compose/deep [
 		lpApplicationName	 [integer!]

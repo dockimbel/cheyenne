@@ -1,4 +1,12 @@
-v0.9.20 - ??/??/2009
+v0.9.21 - ??/??/2011
+
+	o CGI: (Windows) 'set-env function not redefined if already available as native.
+	
+	o CGI: (Windows) call.r wasn't loaded properly (native CALL was active instead).
+	  Issue now fixed (so v2.7.8 native CALL/OUTPUT bug won't show up).
+	
+
+v0.9.20 - 02/03/2011
 
 	o RSP: databases definition can now be declared at webapp level allowing 
 	  multiple instances of a webapp to use the same virtual database name but,

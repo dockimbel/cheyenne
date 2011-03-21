@@ -71,26 +71,25 @@ install-module [
 		libc: _setenv: body: none
 		cgi?: yes
 		
+		if system/version/4 = 3 [							;-- Windows
+			do-cache %misc/call.r
+			set 'call :win-call
+		]
+		
 		unless all [value? 'set-env native? :set-env][
 			either not find system/components 'library [
 				log/error "/Library component missing, can't setup CGI module"
 				cgi?: no
 			][
-				switch/default system/version/4 [
-					2 [ 									;-- OS X
-						libc: load/library %libc.dylib
-						_setenv: make routine! [
-							name		[string!]
-							value		[string!]
-							overwrite	[integer!]
-							return: 	[integer!]
-						] libc "setenv"
-						body: [_setenv name value 1]
-					]
-					3 [										;-- Windows
-						do-cache %misc/call.r
-						set 'call :win-call
-					]
+				either system/version/4 = 2 [				;-- OS X
+					libc: load/library %libc.dylib
+					_setenv: make routine! [
+						name		[string!]
+						value		[string!]
+						overwrite	[integer!]
+						return: 	[integer!]
+					] libc "setenv"
+					body: [_setenv name value 1]
 				][											;-- UNIX
 					either any [
 						exists? libc: %libc.so.6
