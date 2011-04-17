@@ -135,11 +135,33 @@ install-module [
 		input: skip input len: length? len
 		len
 	]
-	;-- Patch READ-CGI 
+	;-- Patch READ-CGI
+	if not value? 'read-cgi [	;-- working around READ-CGI missing on /Core v2.7.8 - OS X
+		set 'read-cgi func [
+			{Read CGI data from web server input stream. Return data as string.}
+			/limit size "Option to limit to this number of bytes"
+			/local data buffer
+		][
+			either system/options/cgi/request-method = "post" [
+				data: make string! 1020
+				buffer: make string! 16380
+				while [positive? read-io system/ports/input buffer 16380] [
+					append data buffer
+					clear buffer
+					if all [limit (length? data) > size] [
+						do make error! reform [
+							"read-cgi aborted - posting is too long:"
+							length? data "limit:" size
+						]
+					]
+				]
+			] [data: system/options/cgi/query-string]
+			any [data copy ""]
+		]	
+	]
 	parse second :read-cgi rule: [
 		any [s: 'read-io (change s 'cgi-read-io) | into rule | skip]
 	]
-	
 	cgi-prin:  func [data][insert tail output reform data]
 	cgi-print: func [data][insert tail output join reform data newline]
 	cgi-probe: func [data][insert tail output mold data data]
