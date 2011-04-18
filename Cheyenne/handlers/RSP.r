@@ -9,6 +9,9 @@ do-cache uniserve-path/libs/decode-cgi.r
 do-cache uniserve-path/libs/url.r
 do-cache uniserve-path/libs/email.r
 
+;-- Patch for COLLECT internal 'do
+if all [value? 'collect pos: find second :collect 'do][pos/1: '*do]
+
 install-module [
 	name: 'RSP
 
@@ -54,7 +57,7 @@ install-module [
 
 	reduce-error: func [err [object!] /local desc][
 		;-- workaround for 'arg1 usage instead of :arg1 in some error blocks
-		err/arg1: either unset? get/any in err 'arg1 [none][err/arg1]
+		err/arg1: either unset? get/any in err 'arg1 [none][get/any in err 'arg1]
 		;-- extend error object with a locally bound description field
 		desc: system/error/(err/type)/(err/id)	
 		make err compose/only [desc: (desc)]
@@ -954,7 +957,7 @@ install-module [
 	set '*do :do
 	
 	set 'do func [[catch] value	/args arg /next /global /local depth][	
-		if global [return *do value]
+		if global [return *do :value]
 		if args [return *do/args value arg]
 		if next [return *do/next value]
 		unless file? :value [return *do :value]	
