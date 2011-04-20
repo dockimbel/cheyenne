@@ -139,5 +139,8 @@ install-HTTPd-extension [
 		
 		;--- allow domain or application specific local parameters (free-form content)
 		locals: [block!] in main
+		
+		;-- switches REBOL CGI scripts to FastCGI-like mode
+		fast-rebol-cgi: in globals
 	]
 ]
