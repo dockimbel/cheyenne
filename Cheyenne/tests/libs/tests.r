@@ -1,8 +1,8 @@
 REBOL [
 	file: %tests.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-04-24
-	version: 0.6.0
+	date: 2011-04-22
+	version: 0.6.1
 	title: "Testing operations for use in cheyenne test-suite."
 	
 	license-type: 'MIT
@@ -91,6 +91,8 @@ append unit-tests reduce [
 			]
 			params: context params
 			result: true
+			;probe params
+			;print "->"
 			foreach [word] words-of params [
 				success?: params/:word = value: get in unit/response/header word
 				if report [
@@ -108,6 +110,7 @@ append unit-tests reduce [
 				]
 			]
 		][
+			;probe error
 			result: disarm error
 		]
 		
@@ -127,21 +130,31 @@ append unit-tests reduce [
 		unit [object!] 
 		params [block! none!]  "A none params always returns true (a stand-in empty test should not invalidate the test)."
 		report [block! none!]
-		/local result d date-string
+		/local result d date-string done? err
 	][
 		; allow the params to refer to any value which may be contained in the tested unit.
 		params: bind/copy params unit
-		date-string: do params
-		d: parse-http-date date-string
-		
-		result: object? d
+		if error? err: try [
+			date-string: do params
+			d: parse-http-date date-string
+			result: object? d
+			done?: true
+		][
+			err: disarm err
+			result: false
+		]
 		
 		
 		if report [
-			either d [
-				append report reduce ['is-http-date? true]
+			either done? [
+				; code was executed without error
+				either d [
+					append report reduce ['is-http-date? true]
+				][
+					append report reduce ['is-http-date? date-string]
+				]
 			][
-				append report reduce ['is-http-date? date-string]
+				append report reduce ['is-http-date? mold err]
 			]
 		]
 		result
@@ -193,6 +206,67 @@ append unit-tests reduce [
 			append report reduce ['response-time any [result delta]]
 		]
 		result
+	]
+	
+	;----
+	;- TEST: 'STATUS
+	;
+	; just matches the status code of the HTTP response
+	;
+	'STATUS func [
+		unit [object!] 
+		code [integer!]
+		report [block! none!]
+		/local result
+	][
+		;probe unit/response
+		result: unit/response/status-code = code
+		
+		if report [
+			; we report true OR the actual time it took.
+			append report reduce ['status any [result rejoin ["Got " unit/response/status-code ", Expected " code]]]
+		]
+		result
+	]
+	
+	
+	;----
+	;- TEST: 'HTTP-VERSION
+	;
+	; just matches the http version of the response's status line
+	;
+	'HTTP-VERSION func [
+		unit [object!] 
+		http-version [decimal! word!]
+		report [block! none!]
+		/local success? msg
+	][
+		;probe http-version
+		;print type? http-version
+		
+		case [
+			word? http-version [
+				switch/default http-version [
+					same? [
+						success?: unit/response/status-version = unit/http-version
+						unless success?  [
+							msg: rejoin ["mismatch! request: " unit/http-version "  response: " unit/response/status-version]
+						]
+					]
+				][
+					msg: rejoin ["Invalid http-version test parameter: '" mold :http-version]
+				]
+			]
+			decimal? http-version [
+				result: unit/response/status-version = http-version
+			]
+		]
+		
+		if report [
+			; we report true OR the actual time it took.
+			append report reduce ['http-version any [success?  msg unit/response/status-version]]
+		]
+		success? 
 	]
 ]
 

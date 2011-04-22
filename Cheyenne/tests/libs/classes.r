@@ -1,8 +1,8 @@
 REBOL [
 	file: %classes.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-04-24
-	version: 0.6.0
+	date: 2011-04-22
+	version: 0.6.1
 	title: "Stores object base classes used by !unit object."
 	
 	license-type: 'MIT
@@ -42,12 +42,12 @@ REBOL [
 
 	;-        host:
 	; server's DNS name or an IP address 
-	host: "localhost"
+	host: none
 
 	
 	;-        port-id:
 	; tcp port to use on connection.
-	port-id: 80
+	port-id: none
 
 	
 	;-        uri:

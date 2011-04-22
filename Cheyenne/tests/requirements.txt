@@ -108,14 +108,18 @@ Others mods will be implicitly tested in other groups of tests.
 
 ---HTTP testing requirements
 
-[x] means  TO DO / Complete / Confirm
-[o] means DONE!
+labels for status of individual tests groups.
+[x] TO DO / Complete / Confirm
+[o] DONE!
+[|] In progress (there are already some tests which deal with this.)
+[.] Ready to start (framework is known to have some specific support to test this, it now needs actual tests to be added.)
+
 
 
 [ ] "OPTIONS"                ; Section 9.2
-[o] "GET"                    ; Section 9.3
-[o] "HEAD"                   ; Section 9.4
-[x] "POST"                   ; Section 9.5
+[|] "GET"                    ; Section 9.3
+[|] "HEAD"                   ; Section 9.4
+[.] "POST"                   ; Section 9.5
 [ ] "PUT"                    ; Section 9.6
 [ ] "DELETE"                 ; Section 9.7
 [ ] "TRACE"                  ; Section 9.8
@@ -126,7 +130,7 @@ GENERAL REQUEST FIELDS (request and response)
 ----
 [ ] Cache-Control            ; Section 14.9
 [x] Connection               ; Section 14.10		; supported: close, keep-alive
-[o] Date                     ; Section 14.18
+[|] Date                     ; Section 14.18
 [ ] Pragma                   ; Section 14.32
 [ ] Trailer                  ; Section 14.40
 [x] Transfer-Encoding        ; Section 14.41		; chunk-encoding only in response
@@ -139,13 +143,13 @@ REQUEST FIELDS
 [ ] Accept                   ; Section 14.1
 [ ] Accept-Charset           ; Section 14.2
 [ ] Accept-Encoding          ; Section 14.3
-[o] Accept-Language          ; Section 14.4
+[|] Accept-Language          ; Section 14.4
 [ ] Authorization            ; Section 14.8
 [ ] Expect                   ; Section 14.20
 [ ] From                     ; Section 14.22
-[o] Host                     ; Section 14.23
+[.] Host                     ; Section 14.23
 [ ] If-Match                 ; Section 14.24
-[x] If-Modified-Since        ; Section 14.25
+[.] If-Modified-Since        ; Section 14.25
 [ ] If-None-Match            ; Section 14.26
 [ ] If-Range                 ; Section 14.27
 [ ] If-Unmodified-Since      ; Section 14.28
@@ -174,10 +178,10 @@ ENTITY FIELDS
 [ ] Allow                    ; Section 14.7
 [x] Content-Encoding         ; Section 14.11
 [ ] Content-Language         ; Section 14.12
-[o] Content-Length           ; Section 14.13
+[|] Content-Length           ; Section 14.13
 [ ] Content-Location         ; Section 14.14
 [ ] Content-MD5              ; Section 14.15
 [ ] Content-Range            ; Section 14.16
-[o] Content-Type             ; Section 14.17
+[|] Content-Type             ; Section 14.17
 [x] Expires                  ; Section 14.21
 [x] Last-Modified            ; Section 14.29

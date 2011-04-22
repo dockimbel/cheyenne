@@ -1,8 +1,8 @@
 REBOL [
 	file: %mezz.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-04-24
-	version: 0.6.0
+	date: 2011-04-22
+	version: 0.6.1
 	title: "core functions, parse rules & data used throughout cheyenne test-suite"
 	
 	license-type: 'MIT
@@ -295,10 +295,10 @@ URL-Parser: make object! [
 	user-char: make bitset! #{00000000F87CFF2BFEFFFF87FEFFFF1700000000000000000000000000000000}
 	pass-char: make bitset! #{FFF9FFFFFEFFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
 	url-rules: [scheme-part user-part host-part path-part file-part tag-part]
-	scheme-part: [copy scheme some scheme-char #":" ["//" | none]]
+	scheme-part: [ opt [copy scheme some scheme-char #":" ["//" | none]] ]
 	user-part: [copy user uchars [#":" pass-part | none] #"@" | none (user: pass: none)]
 	pass-part: [copy pass to #"@" [skip copy p2 to "@" (append append pass "@" p2) | none]]
-	host-part: [copy host uchars [#":" copy port-id digits | none]]
+	host-part: [opt [copy host uchars [#":" copy port-id digits | none]] ]
 	path-part: [copy path [slash  path-node] | none]
 	path-node: [pchars slash path-node | none]
 	file-part: [copy target pchars | none]
@@ -342,7 +342,7 @@ URL-Parser: make object! [
 ; url parser object is taken fron net-utils and refurbished.
 ;-----------------
 split-url: func [
-	url [url!]
+	url [url! file!]
 	/local result
 ][
 	vin [{parse-url()}]
@@ -376,6 +376,35 @@ url-encode: func [
 	vout
 	str
 ]
+
+
+
+
+;-----------------
+;-    get-script-version()
+;
+; given a file name, try to get the rebol header, and 
+; return the version, as a tuple.  if there is no version
+; in the header, this returns none.
+;-----------------
+get-script-version: func [
+	script [file!]
+	/local data header
+][
+	vin [{get-script-version()}]
+	
+	if all [
+		exists? script
+		attempt [data: load/header script]
+		block? data
+		object? header: pick data 1
+		in header 'version
+	][
+		attempt [to-tuple to-string header/version]
+	]
+]
+
+
 
 
 

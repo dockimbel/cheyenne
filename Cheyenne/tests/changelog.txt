@@ -1,5 +1,41 @@
 versioning here is related to the version of the test framework, not cheyenne's version number.
 
+v0.6.1 - 22/04/2011
+	o Added new tests: HTTP-VERSION, STATUS, 
+	
+	o Error proofed 'IS-HTTP-DATE? test
+	
+	o Re-organized tests so they are grouped in separate files, under %test-groups/ 
+	
+	o cheyenne-http-tests.r, now rebuilt to act as a springboard to launch the various specific test scripts.
+	
+	o The system now uses vprint logging in order to store the complete unit test trace.
+	
+	o New functions:  %mezz.r/get-script-version(),  %vprint.r/vlog(), %unit.r/set-default-host()
+	
+	o Corrected rebol header datestamps in files... was set in the future!
+	
+	o mezz/parse-url can now cope with file paths and doesn't require host or schema parts of the url.
+	  this allows use of the default-port-spec, by only using the part part within the unit test,
+	  and using the host info from the default.
+	  
+	o improved overall unit engine setup so we can easily do tests over and over again, while only giving a new path or url.
+      makes HEAD/GET & Host header path testing much easier.
+      
+    o Added label parameter for unit testing stubs.  This allows reports to store *intent* of each test.
+    
+    o Completely rebuilt tracing of tests (console and logs), added stats at the end, and failed tests are now extremely obvious.
+   
+   	o GET currently has 7 tests
+   	
+   	o HEAD currently has 1 test
+   	
+   	o HEADERS-Accept-language currently has 3 tests.
+   	
+   	o Removed files from SVN: 
+   		unit-engine-testing.r - Its now pointless, the engine works well enough.
+		implementation.txt    - File has been replaced by this changelog.txt file, which is always up to date.
+
 
 v0.6.0 - 21/04/2011
 

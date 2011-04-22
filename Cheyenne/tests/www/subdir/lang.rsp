@@ -1,0 +1,7 @@
+<%
+	;--------------------------------------------------------
+	; THIS FILE IS BUILT TO PROOF THE HANDLING OF LOCALE 
+	; via support for the Accept-Language header field
+	;--------------------------------------------------------
+    prin say "Hello"
+%>

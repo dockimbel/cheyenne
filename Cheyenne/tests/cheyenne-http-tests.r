@@ -1,9 +1,9 @@
 REBOL [
 	file: %cheyenne-http-tests.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-04-24
+	date: 2011-04-22
 	version: 0.1.1
-	title: "Script which tests cheyenne's low-level http handling."
+	title: "Springboard script which calls all other http testing scritps in this suite."
 	notes: [
 		"requires rebol 2.7.7 or later"
 	]
@@ -31,59 +31,54 @@ REBOL [
 
 do %libs/unit.r
 
-print "======================================================================================="
-print "   HTTP  tests:"
-print "======================================================================================="
-print ""
-page: http://localhost:81/200bytes.html
 
-;--------------
-; just get a page, don't test it.
-;--------------
-unit-a: http-get page
+;----------------------------------
+; Setup unit test logging.
+;----------------------------------
+; note, the log file automatically adapts for cheyenne's version.
+cheyenne-version: get-script-version %../cheyenne.r
+log-file: clean-path rejoin [ %test-logs/ 'unit-test-vlog- cheyenne-version ".txt"]
+unless exists? %test-logs/ [make-dir %test-logs/]
+vlog/only log-file
+vlogclear ; clear the previous log, if it has the same name.
 
-;--------------
-; get a page header, test it and compare it to the get result
-;--------------
-http-test/head page [
-	;---
-	; compares header values
-	check-header [
-		Content-Length: "200"
-		Content-Type: "text/html"
-	]
-	
-	do [
-		probe request/header
-		probe response/header
-		true
-	]
-	;---
-	; returns true if the data is a valid internet date
-	is-http-date? [response/header/date]
-	is-http-date? [response/header/Last-Modified]
-	
-	;---
-	; returns true if our header is equivalent to given one
-	same-header?  [unit-a]
-	
-	;---
-	; returns true if response finishes within time limit
-	response-time 0:0:0.002
-] [ Accept-Language: "fr;fr-ca"]
+;----------------------------------
+; Setup unit test environment.
+;----------------------------------
+set-default-host/port 'localhost 80 ; used by %unit.r library stub functions like http-test(), http-get(), http-head(), etc.
 
 
-;--------------
-; test language header support
-;--------------
-http-test/with http://localhost:81/lang.rsp [
-	do [
-		"Bonjour" = response/content
-		true
-	]
+
+vprint/always "======================================================================================="
+vprint/always ""
+vprint/always ["    Unit testing for Cheyenne v" cheyenne-version "  performed: " now/date "/" now/time]
+vprint/always ""
+vprint/always "======================================================================================="
+
+; make sure we don't have console verbosity enabled during tests (this is very extensive)
+voff
+
+
+;von
+; launch test groups.
+do %test-groups/GET.r
+do %test-groups/HEAD.r
+do %test-groups/HEADERS_Accept-Langage.r
+
+
+
+vprint/always "^/^/======================================================================================="
+either all-tests-passed? [
+	vprint/always  [ "ALL  (" test-count ")  TESTS COMPLETED, SUCCESS"]
 ][
-	Accept-Language: "fr;fr-CA"
+	vprint/always "SOME TESTS FAILED"
+	vprint/always ""
+	vprint/always ["  total tests:   " test-count]
+	vprint/always ["  failed:        " failed-test-count]
+	vprint/always ["  success ratio: " round/to ((test-count - failed-test-count) / test-count * 100) 0.01 "%"]
 ]
-
+print ""
+print "Press enter to close window"
+vprint/always "======================================================================================="
 
 ask ""

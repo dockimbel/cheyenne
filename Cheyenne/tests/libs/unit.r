@@ -1,8 +1,8 @@
 REBOL [
 	file: %unit.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-04-24
-	version: 0.6.0
+	date: 2011-04-22
+	version: 0.6.1
 	title: "Basic test unit, defines the core testing mechanism.  Implements all HTTP testing requirements."
 	
 	notes: {
@@ -59,48 +59,50 @@ do %tests.r
 
 
 
+
+
 ;------------------------
 ; this is used after all setup has been done
 ; to supply the port-spec with default values
 ; for any property which was not explicitely set.
 ;
-;- DEFAULT-PORT-SPEC [
-default-port-spec: context [
+;- DEFAULT-PORT-SPEC []
+default-port-spec: make !http-port-spec [
 
 	;-    scheme:
 	scheme: 'http
 
-	;-        host:
+	;-    host:
 	; server's DNS name or an IP address 
 	host: "localhost"
 	
-	;-        port-id:
+	;-    port-id:
 	; tcp port to use on connection.
 	port-id: 80
 	
-	;-        uri:
+	;-    uri:
 	; the Uniform Resource Identifier used in request (complete path & target part of a URL).
 	uri: none
 	
-	;-        path:
+	;-    path:
 	path: none
 
-	;-        target:
+	;-    target:
 	target: none
 	
 	
-	;-        user:
+	;-    user:
 	; when connecting, do we need a user-name
 	user: none
 	
-	;-        pass:
+	;-    pass:
 	; when connecting, do we need a password
 	pass: none
 ]
-;-    ]
 
 
 
+;-  
 
 ;- !UNIT
 ; this is the core test unit.
@@ -178,6 +180,14 @@ default-port-spec: context [
 	; note that if you perform multiple calls to pass?() then only the
 	; latest result is stored.
 	test-passed?: true
+	
+	
+	
+	;-    test-label:
+	; optional, allows you to store a label for this test, which can be used
+	; in reports and logs.
+	test-label: none
+	
 	
 	
 	;-    test-report:
@@ -348,7 +358,7 @@ default-port-spec: context [
 	;-    set-url()
 	;-----------------
 	set-url: func [
-		url [url!]
+		url [url! file!]
 		/local ctx
 	][
 		vin [{set-url()}]
@@ -375,9 +385,7 @@ default-port-spec: context [
 		port-spec/pass: any [ctx/pass port-spec/pass default-port-spec/pass]
 		
 		v?? ctx
-		
 		v?? port-spec
-		
 		
 		vout
 	]
@@ -578,7 +586,7 @@ default-port-spec: context [
 				; parse status-line
 				copy status [
 					
-					copy val ["HTTP/" =digits= =.= =digits=] (response/status-version: load val)
+					 ["HTTP/" copy val [=digits= =.= =digits=]] (response/status-version: load val)
 					=SP=
 					copy val [=digits=] (response/status-code: load val)
 					=SP=
@@ -597,9 +605,13 @@ default-port-spec: context [
 					)
 				]
 				=CRLF=
-				copy val to end (response/content: to-string val)
+				copy val to end ( 
+					; in cases of response with no content, val is none, so we keep it that way.
+					if val [response/content: to-string val] 
+				)
 			]
 		]
+		
 		vout
 	]
 	
@@ -663,6 +675,10 @@ default-port-spec: context [
 		;------------
 		result: true? if response/success? [
 			result: true
+			
+			; make a copy, to be sure that any test setup reuse doesn't cause side-effects in later tests.
+			tests: copy/deep tests
+			
 			foreach [test data] tests [
 				either do-test: select unit-tests test [
 					success?: true = do-test self data blk
@@ -756,9 +772,40 @@ default-port-spec: context [
 	
 ]
 
+;-  
+;- GLOBALS
+
+;-    all-tests-passed?:
+; this used by unit test stubs to conform if ALL tests have succeeded.
+all-tests-passed?: true
+
+;-    failed-test-count:
+; every time a test is failed, we increase this, in order to keep statistics of pass/fail ratio.
+failed-test-count: 0
+
+;-    test-count:
+; how many tests launched?
+test-count: 0
+
+
 
 ;-  
 ;- FUNCTIONS
+
+;-----------------
+;-    set-default-host()
+;-----------------
+set-default-host: func [
+	hostname [word! string!]
+	/port pid [integer!]
+][
+	vin [{set-default-host()}]
+	default-port-spec/host: to-string hostname
+	if port [default-port-spec/port-id: pid]
+	vout
+]
+
+
 
 
 ;-----------------
@@ -768,7 +815,8 @@ default-port-spec: context [
 ; it can then be used to probe every part of the test cycle.
 ;-----------------
 http-test: func [
-	url [url!]
+	lbl [string!]
+	url [url! file!]
 	test [block!]
 	/HEAD "do a HEAD request"
 	/POST data "do a POST request"
@@ -776,10 +824,13 @@ http-test: func [
 	/quiet "don't print out result and report"
 	/report report-blk [block!]
 	/with headers [object! block!] "Give a set of headers to use in this request. These overide any automatic handling in the engine."
-	/local unit
+	/local unit dbg
 ][
 	vin [{test()}]
 	unit: make !unit [
+	
+		test-label: lbl
+	
 		; create all unit test internal data
 		init
 		
@@ -809,13 +860,36 @@ http-test: func [
 	apply get in unit 'assert [ test report report-blk false ]
 	
 	unless quiet [
-		vprint/always [
-			"^/^/TEST REPORT: " mold/all
-			unit/test-report
+		lbl: either unit/test-label [
+			;rejoin ["[ " unit/test-label " ]"]
+			unit/test-label
+		][
+			unit/http-url
 		]
-		vprint/always "^/^/----------------------------------"
-		vprint/always ["ALL TESTS PASSED?: " unit/test-passed?]
-		vprint/always "----------------------------------"
+			
+		either unit/test-passed? [
+			vprint/always ["OK... " lbl]
+		][
+			vprint/always ["***** " lbl]
+			dbg: rejoin [
+				"^-+---------------------" newline
+				"** FAILED **  " newline
+				 ;lbl newline
+				"---------------------" newline
+				"  details:  " mold/all unit/test-report 
+			]
+			replace/all dbg "^/" "^/^-|^-"
+			replace/all dbg "^/^-|^--" "^/^-+"
+			append dbg "^/^-+---------------------" 
+			vprint/always dbg
+		]
+	]
+	
+	; tracking of tests
+	test-count: test-count + 1
+	all-tests-passed?: (true? all-tests-passed?) AND (true? unit/test-passed?)
+	unless unit/test-passed? [
+		failed-test-count: failed-test-count + 1
 	]
 	
 	vout
@@ -828,7 +902,7 @@ http-test: func [
 ;-    http-get()
 ;-----------------
 http-get: func [
-	url [url!]
+	url [url! file!]
 ][
 	vin [{http-get()}]
 	unit: make !unit [
@@ -856,10 +930,13 @@ http-get: func [
 ;-    http-head()
 ;-----------------
 http-head: func [
-	url [url!]
+	url [url! file!]
 ][
 	vin [{http-head()}]
 	unit: make !unit [
+	
+		http-method: 'HEAD
+	
 		; create all unit test internal data
 		init
 		

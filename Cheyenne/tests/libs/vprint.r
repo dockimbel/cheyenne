@@ -70,6 +70,8 @@ lib-vprint-ctx: context [
 ;- VALUES
 ;-------------------------------
 verbose:    false   ; display console messages
+logverbose: false   ; manual overide to allow logging independently of vprinting.
+
 vtabs: []
 ltabs: []
 
@@ -150,14 +152,20 @@ print?: func [
 
 ;----------------
 ;-    LOG?()
+;
+; for logging to occur, vlogfile MUST be setup.
+;
+; by default the log follows the console, but if you 
+; set logverbose to true, all vprint goes to console.
 ;----
 log?: func [
 	error
 	always
-	tags
+	tags ; log tagging support removed for this version of vprint
 ][
 	either file? vlogfile [
 		any [
+			logverbose
 			error
 			all [
 				any [verbose always] 
@@ -290,6 +298,21 @@ set 'von func [/tags lit-tags  /log log-tags] [
 	]
 ]
 
+
+;----------------
+;-    VLOG()
+;
+; setup and enable logging in a single call
+;----
+set 'vlog func [
+	file   "NOTE: this CAN be a function which has no arguments!"
+	/only "prevents logging verbosity overide"
+][
+	unless only [
+		logverbose: true
+	]
+	vlogfile: :file 
+]
 
 
 ;----------------
@@ -503,6 +526,8 @@ set 'v?? func [
 
 ;----------------
 ;-    VLOGCLEAR()
+;
+; erases the current log file.
 ;----
 set 'vlogclear func [][
 	if all [file? vlogfile exists? vlogfile][
