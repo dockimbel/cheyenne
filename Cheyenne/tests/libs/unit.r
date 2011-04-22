@@ -1,12 +1,37 @@
 REBOL [
 	file: %unit.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-02-05
-	version: 0.5.2
+	date: 2011-04-24
+	version: 0.6.0
 	title: "Basic test unit, defines the core testing mechanism.  Implements all HTTP testing requirements."
 	
+	notes: {
+		I'd like to state that this unit testing engine is writen in a style which is
+		intentionally simple, explicit and void of any tricks.
+		
+		The unit engine itself, must be easy to debug and fix if any issue is found.
+		
+		It is purpose-built to manage client-server requests using the http protocol over TCP.
+		
+		I have separated many of the steps in handling a request into separate functions and data items,
+		specifically to make each one simple to track and allow as little side-effects as possible.
+		
+		ALL http message packing and unpacking follows the specifications in the appropriate RFCs, down to
+		each exact byte and whitespace allowance.  Generally, when some data parsing is required, the 
+		actual BNF grammar is copied directly from the RFC and converted to REBOL's own PARSE dialect.
+		
+		This unit testing engine puts absolutely no effort in optimizing speed or memory use.  In fact
+		it stores a lot more information than is required, in order to allow just about any type of assertion
+		to be performed related to the complete http request from start to stop.
+		
+		Application tracing is provided by the vprint module which allows hierarchical and programmable
+		control over application output.  Logging is also made transparently, allowing you to use the same
+		application tracing on screen AND/OR in a file, by simply setting up the vprint logging parameters.
+		
+	}
+
 	license-type: 'MIT
-	license:      {Copyright © 2010 Maxim Olivier-Adlhoch.
+	license:      {Copyright © 2011 Maxim Olivier-Adlhoch.
 
 		Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 		and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -54,7 +79,7 @@ default-port-spec: context [
 	port-id: 80
 	
 	;-        uri:
-	; the Uniform Resource Identifier used in request (path part of a URL).
+	; the Uniform Resource Identifier used in request (complete path & target part of a URL).
 	uri: none
 	
 	;-        path:
@@ -119,7 +144,7 @@ default-port-spec: context [
 	
 	;-    http-version:
 	; changes how various http-handling methods manage requests and responses.
-	http-version: 1.0
+	http-version: 1.1
 	
 	
 	;-    new-line-char:
@@ -169,6 +194,13 @@ default-port-spec: context [
 	; previous test runs.    
 	;
 	; this is usefull to perform automatic regression tests...
+	;
+	; note that the test-report can be used by all phases of the request,
+	; and is the only way to be aware of some errors, like connection errors.
+	;
+	; also note that there is no specific format to the test-report,
+	; it really is just a log of any and all newsworthy events which occured
+	; with this unit.
 	test-report: []
 	
 	
@@ -176,16 +208,26 @@ default-port-spec: context [
 	;-  
 	;-    LOW-LEVEL METHODS
 	
+	
+	
 	;-----------------
 	;-    connect()
 	;
 	; does the tcp connection with server
 	;-----------------
 	connect: func [
+		/local success?
 	][
 		vin [{connect()}]
-		port: open/binary/no-wait rejoin [tcp:// port-spec/host ":" port-spec/port-id] 
+		unless attempt [
+			port: open/binary/no-wait tcp-url
+			success?: true
+		][
+			append test-report reduce ['connection-failed  http-url]
+		
+		]
 		vout
+		success?
 	]
 	
 	
@@ -279,6 +321,30 @@ default-port-spec: context [
 	]
 	
 	;-----------------
+	;-    http-url()
+	;-----------------
+	http-url: func [
+		/local usr
+	][
+		[scheme-part user-part host-part path-part file-part tag-part]
+		usr: any  [
+			all [ port-spec/pass port-spec/user rejoin [port-spec/user ":" port-spec/pass "@"] ]
+			all [ port-spec/user rejoin [port-spec/user "@"] ]
+			""
+		]
+		rejoin [http:// usr port-spec/host ":" port-spec/port-id port-spec/uri] 
+	]
+	
+	;-----------------
+	;-    tcp-url()
+	;-----------------
+	tcp-url: func [][
+		rejoin [tcp:// port-spec/host ":" port-spec/port-id] 
+	]
+	
+	
+	
+	;-----------------
 	;-    set-url()
 	;-----------------
 	set-url: func [
@@ -320,16 +386,28 @@ default-port-spec: context [
 	
 	;-----------------
 	;-    build-http-content()
-	; using current unit data & params, construct the string which will be posted (if any).
+	;
+	; using current unit data & request/content params, construct the binary which will be posted (if any).
+	;
+	; this function is only ever called when the request is a POST.
+	;
+	; if the request/content-buffer is already filled up somehow, this function does nothing.
+	;
+	; you can also overide this function to provide custom post mechanisms to a funky unit test.
 	;-----------------
 	build-http-content: func [
+		/local param
 	][
 		vin [{build-http-content()}]
 		
-		request/content-buffer: rejoin [
-			#{} ; binary so rebol doesn't play around with string data {}
-			"login=" request/content/login NEW-LINE-CHAR
-			"password=" request/content/passwd NEW-LINE-CHAR
+		if all [
+			object? request/params
+			none? request/content-buffer
+		][
+			request/content-buffer: clear #{}  ; we reuse the same buffer, which will auto-grow as queries are performed. {}
+			foreach param words-of request/params [
+				append request/content-buffer rejoin [#{} to-string param "=" request NEW-LINE-CHAR] ;{}
+			]
 		]
 
 		vout
@@ -357,23 +435,33 @@ default-port-spec: context [
 		switch http-method [
 			POST [
 				; setup any dynamic fields in the header (usually based on url and content)
-				append request/header-buffer rejoin [
-					"Content-Type: " request/content-type CRLF
-					"Content-Length:" length? request/content-buffer CRLF
+				request/header: make request/header [
+					Content-Type: request/content-type
+					Content-Length: to-string length? request/content-buffer
 				]
 			]
 			
 			GET HEAD [
-				; no special fields for GET
+				; no special fields for GET or HEAD
 			]
 		]
 		
+		
+		; NOTE: CHEYENNE RFC discrepancy.  if http 1.0 is used and Host field is given, the server will 
+		;       react just like a 1.1 request.
 		if http-version = 1.1 [
-			
-		]
-			append request/header-buffer rejoin [
-				"Host: " port-spec/host CRLF
+			request/header: make request/header [
+				Host: to-string port-spec/host
 			]
+		]
+		
+		
+		; apply user overides if any
+		if object? request/user-header [
+			request/header: make request/header request/user-header
+		]
+		
+		
 		words: words-of request/header
 		values: values-of request/header
 		
@@ -431,6 +519,7 @@ default-port-spec: context [
 	][
 		vin [{send-request()}]
 		vprobe type? request/header-buffer
+		request/time: now/precise
 		switch http-method [
 			GET HEAD [
 				send request/header-buffer
@@ -465,6 +554,7 @@ default-port-spec: context [
 			]
 			none? pkt
 		]
+		response/time: now/precise
 		vprobe length? response/buffer
 		vout
 	]
@@ -526,7 +616,7 @@ default-port-spec: context [
 	; after execute is run, you can use unit/response directly.
 	;
 	; in order to determine the validity of the test, use various
-	; compare & report methods on the unit after execute.
+	; compare & report methods on the unit after execute().
 	;-----------------
 	execute: func [
 		/local content header
@@ -535,7 +625,6 @@ default-port-spec: context [
 		vprobe request
 		
 		if http-method = 'POST [
-		
 			build-http-content
 		]
 		
@@ -545,13 +634,11 @@ default-port-spec: context [
 		vprobe to-string request/header-buffer
 		vprobe to-string request/content-buffer
 		
-		connect
-		
-		send-request
-		receive-request
-		
-		parse-response
-		
+		if connect [
+			send-request
+			receive-request
+			parse-response
+		]
 		vout
 	]
 	
@@ -568,40 +655,76 @@ default-port-spec: context [
 		/local data test test-func success? result blk
 	][
 		vin [{pass?()}]
-		result: true
 		blk: copy []
-		foreach [test data] tests [
-			either do-test: select unit-tests test [
-				success?: true = do-test self data blk
-			][
-				append blk reduce [to-set-word test #invalid-test]
+		
+		;------------
+		; we only performed tests if the actual http request responded
+		; correctly at its lowest level (headers aren't malformed).
+		;------------
+		result: true? if response/success? [
+			result: true
+			foreach [test data] tests [
+				either do-test: select unit-tests test [
+					success?: true = do-test self data blk
+				][
+					append blk reduce [to-set-word test #invalid-test]
+				]
+				
+				; will stay true until one test fails
+				result: result AND success?
+				
+				if all [
+					not success?
+					stop
+				][
+					break
+				]
 			]
 			
-			; will stay true until one test fails
-			result: result AND success?
-			
-			if all [
-				not success?
-				stop
-			][
-				break
+			; improve report readability
+			new-line/skip blk true 2 
+			if report-blk [
+				append report-blk blk
 			]
+			
+			; we store all reports in the unit.
+			append test-report blk
+			result
 		]
-		
-		; improve report readability
-		new-line/skip blk true 2 
-		if report-blk [
-			append report-blk blk
-		]
-		
-		; we store all reports in the unit.
-		append test-report blk
-		
+				
 		vout
+		test-passed?: result
+	]
+	
+
+
+
+	;-----------------
+	;-    assert()
+	;
+	; execute and verify a unit test.
+	;-----------------
+	assert: func [
+		tests [block!] "A list of tests you want to perform."
+		/report report-blk "returns a report on all tests"
+		/stop "stop at first failure"
+		/local result
+	][
+		vin [{!unit/assert()}]
+		
+		; run the request 
+		execute
+		
+		; then run a series of tests on the responce.
+		result: apply :pass? [ tests report report-blk stop ]
+		vout
+		
 		result
 	]
 	
 	
+
+
 	
 	;-  
 	;-    REPORTING METHODS
@@ -637,20 +760,22 @@ default-port-spec: context [
 ;-  
 ;- FUNCTIONS
 
+
 ;-----------------
 ;-    http-test()
 ;
-; a simple entry point for a complete unit test. returns the unit which is was executed, which 
-; can be used to probe every part of the test cycle.
+; a simple entry point for a complete unit test. returns the unit which was executed.  
+; it can then be used to probe every part of the test cycle.
 ;-----------------
 http-test: func [
 	url [url!]
 	test [block!]
 	/HEAD "do a HEAD request"
-	/POST "do a POST request"
+	/POST data "do a POST request"
 	/continue [object!] "Any required multi-part test data will be retrieved from the response in this previous unit."
 	/quiet "don't print out result and report"
-	/report rep-blk [block!]
+	/report report-blk [block!]
+	/with headers [object! block!] "Give a set of headers to use in this request. These overide any automatic handling in the engine."
 	/local unit
 ][
 	vin [{test()}]
@@ -666,22 +791,93 @@ http-test: func [
 		; by tests themselves.
 		set-url url
 		
-		; do the http request for this unit
-		execute
 	]
 	
-	either report [
-		unit/pass?/report test rep-blk
-	][
-		unit/pass? test
+	if HEAD [
+		unit/http-method: 'HEAD
+	]
+
+	if POST [
+		unit/http-method: 'POST
 	]
 	
-	unless quiet[
-		vprobe/always unit/test-report
-		vprint/always unit/test-passed?
+	if with [
+		; save the given headers for use as overides in the request
+		unit/request/user-header: make context [] headers
+	]
+	
+	apply get in unit 'assert [ test report report-blk false ]
+	
+	unless quiet [
+		vprint/always [
+			"^/^/TEST REPORT: " mold/all
+			unit/test-report
+		]
+		vprint/always "^/^/----------------------------------"
+		vprint/always ["ALL TESTS PASSED?: " unit/test-passed?]
+		vprint/always "----------------------------------"
 	]
 	
 	vout
 	unit
 ]
+
+
+
+;-----------------
+;-    http-get()
+;-----------------
+http-get: func [
+	url [url!]
+][
+	vin [{http-get()}]
+	unit: make !unit [
+		; create all unit test internal data
+		init
+		
+		; set the following url to your testing site, usually, we setup this specific url
+		; within the hosts file, so it points to localhost
+		; and use a vhost on the web-server which handles it.
+		;
+		; note that user:password and :port-number are all supported within the url, if required
+		; by tests themselves.
+		set-url url
+		
+		execute
+	]
+	
+	vout
+	unit
+]
+
+
+
+;-----------------
+;-    http-head()
+;-----------------
+http-head: func [
+	url [url!]
+][
+	vin [{http-head()}]
+	unit: make !unit [
+		; create all unit test internal data
+		init
+		
+		; set the following url to your testing site, usually, we setup this specific url
+		; within the hosts file, so it points to localhost
+		; and use a vhost on the web-server which handles it.
+		;
+		; note that user:password and :port-number are all supported within the url, if required
+		; by tests themselves.
+		set-url url
+		
+		execute
+	]
+	
+	vout
+	unit
+]
+
+
+
 

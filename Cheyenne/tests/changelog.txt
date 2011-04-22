@@ -1,0 +1,23 @@
+versioning here is related to the version of the test framework, not cheyenne's version number.
+
+
+v0.6.0 - 21/04/2011
+
+	o Connection errors are now trapped and added to unit/test-report.
+
+	o Added http-url() and tcp-url() within !unit class.
+
+	o Added Assert() within !unit class.
+
+	o Setup a www site for unit testing.
+
+	o Added SAME-HEADER? test
+
+	o Added RESPONSE-TIME test
+
+	o !unit/Build-http-header now adds the fields to the actual request/header object as well as request/header-buffer
+
+	o added request/user-header.   Accessible via http-test/WITH .
+	
+	o added automated support for form post data, using new request/params.
+	

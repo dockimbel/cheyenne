@@ -1,12 +1,12 @@
 REBOL [
 	file: %mezz.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2010-07-08
-	version: 0.5.1
+	date: 2011-04-24
+	version: 0.6.0
 	title: "core functions, parse rules & data used throughout cheyenne test-suite"
 	
 	license-type: 'MIT
-	license:      {Copyright © 2010 Maxim Olivier-Adlhoch.
+	license:      {Copyright © 2011 Maxim Olivier-Adlhoch.
 
 		Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 		and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -37,6 +37,10 @@ at*: :at
 
 ;-    skip*()
 skip*: :skip
+
+;-    assert*:
+assert*: :assert
+
 
 
 

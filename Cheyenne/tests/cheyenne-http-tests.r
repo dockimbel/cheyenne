@@ -1,15 +1,15 @@
 REBOL [
 	file: %cheyenne-http-tests.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2011-02-05
-	version: 0.1.0
-	title: "Script which tests cheyenne's http handling."
+	date: 2011-04-24
+	version: 0.1.1
+	title: "Script which tests cheyenne's low-level http handling."
 	notes: [
-		"-requires rebol 2.7.7"
+		"requires rebol 2.7.7 or later"
 	]
 	
 	license-type: 'MIT
-	license:      {Copyright © 2010 Maxim Olivier-Adlhoch.
+	license:      {Copyright © 2011 Maxim Olivier-Adlhoch.
 
 		Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 		and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -32,25 +32,58 @@ REBOL [
 do %libs/unit.r
 
 print "======================================================================================="
-print "   HTTP 'GET tests:"
+print "   HTTP  tests:"
 print "======================================================================================="
 print ""
-print "simple get page and verify header"
-print "---------------------------------"
-page: http://localhost:81
+page: http://localhost:81/200bytes.html
 
-unit: http-test/HEAD page [
+;--------------
+; just get a page, don't test it.
+;--------------
+unit-a: http-get page
+
+;--------------
+; get a page header, test it and compare it to the get result
+;--------------
+http-test/head page [
+	;---
+	; compares header values
 	check-header [
-		Content-Length: "386"
+		Content-Length: "200"
 		Content-Type: "text/html"
 	]
-	is-http-date? [probe response/header response/header/date]
-	is-http-date? [probe response/header response/header/server]
+	
+	do [
+		probe request/header
+		probe response/header
+		true
+	]
+	;---
+	; returns true if the data is a valid internet date
+	is-http-date? [response/header/date]
+	is-http-date? [response/header/Last-Modified]
+	
+	;---
+	; returns true if our header is equivalent to given one
+	same-header?  [unit-a]
+	
+	;---
+	; returns true if response finishes within time limit
+	response-time 0:0:0.002
+] [ Accept-Language: "fr;fr-ca"]
+
+
+;--------------
+; test language header support
+;--------------
+http-test/with http://localhost:81/lang.rsp [
+	do [
+		"Bonjour" = response/content
+		true
+	]
+][
+	Accept-Language: "fr;fr-CA"
 ]
 
-print ["success?: " unit/test-passed?]
-
-von
-;unit/report-as-is
 
 ask ""

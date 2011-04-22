@@ -148,7 +148,7 @@ Items which fall in-between cracks which must not be forgotten, but not priority
 These items might eventually be addressed since they make overall testing better, but do not prevent
 the engine from working at its current implementation state.
 
-Some of these will be bumped to "Work in Progress" as the engine evolves.
+Some of these might be bumped to "Work in Progress" as the engine evolves.
 
 * Web socket request
 * Improved reporting on test results

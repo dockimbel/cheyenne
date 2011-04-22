@@ -82,7 +82,7 @@ test-passed?: unit/pass?/report [
 	;
 	; this test operation compares the header for expected values
 	check-header [
-		Content-Length: "386"
+		Content-Length: "200"
 		Content-Type: "text/html"
 	]
 	
@@ -97,7 +97,7 @@ test-passed?: unit/pass?/report [
 	do [
 		all [
 			unit/response/status-code = 200
-			unit/response/header/Content-Length = "386"
+			unit/response/header/Content-Length = "200"
 			true
 		]
 	]

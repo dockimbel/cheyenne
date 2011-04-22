@@ -1,12 +1,12 @@
 REBOL [
 	file: %tests.r
 	author: "Maxim Olivier-Adlhoch"
-	date: 2010-07-08
-	version: 0.5.1
+	date: 2011-04-24
+	version: 0.6.0
 	title: "Testing operations for use in cheyenne test-suite."
 	
 	license-type: 'MIT
-	license:      {Copyright © 2010 Maxim Olivier-Adlhoch.
+	license:      {Copyright © 2011 Maxim Olivier-Adlhoch.
 
 		Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
 		and associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -123,7 +123,6 @@ append unit-tests reduce [
 	;
 	; here we expect the date to be http 1.1 encoded using the strict grammar rules defined below in the RFC
 	;
-	; 
 	'is-http-date? func [
 		unit [object!] 
 		params [block! none!]  "A none params always returns true (a stand-in empty test should not invalidate the test)."
@@ -145,7 +144,54 @@ append unit-tests reduce [
 				append report reduce ['is-http-date? date-string]
 			]
 		]
-		?? result
+		result
+	]
+	
+	
+	;----
+	;- TEST: 'SAME-HEADER?
+	;
+	; here we expect the date to be http 1.1 encoded using the strict grammar rules defined below in the RFC
+	;
+	'same-header? func [
+		unit [object!] 
+		params [block!]
+		report [block! none!]
+		/local result other-unit
+	][
+		; allow the params to refer to any value which may be contained in the tested unit.
+		
+		other-unit: pick reduce params 1
+		
+		result:  (mold unit/response/header) = (mold other-unit/response/header)
+		if report [
+			append report reduce ['same-header? result]
+		]
+		result
+	]
+	
+	
+	;----
+	;- TEST: 'RESPONSE-TIME
+	;
+	; we expect the response to be within a certain time frame.  (this can be used, 
+	; just to see if there is a bug within modules which cause server delays, in general)
+	;
+	'RESPONSE-TIME func [
+		unit [object!] 
+		allowance [time!]
+		report [block! none!]
+		/local result delta
+	][
+		; allow the params to refer to any value which may be contained in the tested unit.
+		
+		delta: difference unit/response/time unit/response/time
+		result: allowance > delta
+		
+		if report [
+			; we report true OR the actual time it took.
+			append report reduce ['response-time any [result delta]]
+		]
 		result
 	]
 ]
