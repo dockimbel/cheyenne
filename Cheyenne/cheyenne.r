@@ -184,8 +184,16 @@ cheyenne: make log-class [
 		within uniserve [
 			set-verbose verbosity
 			
-			shared/pool-start: 	any [all [flag? 'debug 1] all [flag? 'workers args/workers] 4]
-			shared/pool-max: 	any [all [flag? 'debug 0] all [flag? 'workers args/workers] 8]
+			shared/pool-start: 	any [
+				all [flag? 'debug 0]
+				all [flag? 'workers args/workers/1]
+				4
+			]
+			shared/pool-max: 	any [
+				all [flag? 'debug 0]
+				all [flag? 'workers any [args/workers/2 args/workers/1]]
+				8
+			]
 			shared/job-max: 	1000	;-- CGI/RSP requests queue size
 
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
@@ -310,9 +318,10 @@ Supported options are:
                      
     -u               Manually uninstall Cheyenne NT Service (Windows).
     
-    -w number        Set the maximum number of worker processes. If
-                     set to 0, all workers will be closed after each
-                     CGI/RSP requests (for debugging purpose).
+    -w max   		 Set the starting and maximum number of worker
+    -w start,max     processes. If max is set to 0, all workers will be
+    				 closed after each CGI/RSP requests (for debugging
+    				 purpose).
                      
     -v[vv...]        Enable the verbose mode. Use 1 to 6 'v to set the
                      verbose level.
@@ -339,7 +348,7 @@ Supported options are:
 		]
 	]
 		
-	parse-cmd-line: has [ssa digit value][
+	parse-cmd-line: has [ssa digit value value2][
 		digit: charset [#"0" - #"9"]
 		if ssa: system/script/args [
 			parse/case ssa [
@@ -361,11 +370,13 @@ Supported options are:
 					| "-e" 		(set-flag 'embed)
 					| "-s" 		(set-flag 'service)			; -- internal use only
 					| "-u"		(set-flag 'uninstall)				
-					| "-w" copy value integer! (
+					| "-w" copy value integer! opt ["," copy value2 integer!] (
 						value: load trim value
 						set-flag 'workers
 						if zero? value [set-flag 'debug]
-						repend args ['workers abs value]
+						value: reduce [abs value]
+						if value2 [repend value abs load trim value2]
+						repend args ['workers value]
 					)			
 					| #"-" copy value 1 5 #"v" (
 						value: trim value

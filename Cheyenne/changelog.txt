@@ -1,5 +1,32 @@
 v0.9.21 - ??/??/2011
 
+	o New config option (globals section): 'allow-method. Extends allowed HTTP methods.
+	  Usage:	
+			allow-method DELETE
+		or
+			allow-method [DELETE OPTION ...]
+	
+	
+	o Boot: -w command line option extended to allow to specify an additional "start" 
+	  number value. Usage: 
+	  
+	  		cheyenne -w max
+	  	or
+	  		cheyenne -w start,max
+	
+	
+	o Boot: -w 0 now starts Cheyenne with no workers at all (was spawning one at start
+	  until now).
+
+	o Added missing 'fast-rebol-cgi config keyword declaration
+
+	o RSP: COLLECT function patched to work in RSP context.
+	
+	o Added support for 'access-os native. Now Cheyenne can work with /Core on MacOS X.
+	
+	o READ-CGI mezzanine is missing in /Core 2.7.8 on MacOS X, Cheyenne is now supplying
+	  it in such case.
+	
 	o CGI: (Windows) 'set-env function not redefined if already available as native.
 	
 	o CGI: (Windows) call.r wasn't loaded properly (native CALL was active instead).

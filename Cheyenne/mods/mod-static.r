@@ -22,6 +22,8 @@ install-HTTPd-extension [
 	log-dir: join cheyenne/data-dir %log/
 	log-file: %access.log
 	
+	allowed: [HEAD GET POST PUT]		;-- default list of allowed HTTP methods
+	
 	max-size: 4 * 1024 * 1024 ; in MB (TBD: export it to the conf file)
 	cache: make hash! 100
 	cache-size: 0
@@ -71,7 +73,7 @@ install-HTTPd-extension [
 	]
 	
 	method-support: func [req][
-		unless find [HEAD GET POST PUT] req/in/method [
+		unless find allowed req/in/method [
 			req/out/code: 405
 			return true
 		]
@@ -398,6 +400,14 @@ install-HTTPd-extension [
 		;--- User defined PID file folder
 		pid-dir: [file!] in globals do [
 			if slash <> last args/1 [append args/1 slash]
+		]
+		
+		;-- Extend the list of allowed HTTP methods
+		allow-method: [word! | block!] in globals do [
+			if all [block? args/1 not parse args/1 [some word!]][
+				log/error "invalid config: 'allow-method expects a word or a block of words"
+			]
+			append allowed args/1
 		]
 	]
 ]
