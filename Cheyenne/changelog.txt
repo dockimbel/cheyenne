@@ -1,5 +1,12 @@
 v0.9.21 - ??/??/2011
 
+	o Added a CGI configuration script (cgi-conf.r) to the source tree. Use it for configuring
+	  the shebang line of CGI scripts provided in %www/ folder on UNIX platforms. (Thanks to
+	  Tamas Herman for writing it). Run it from the Cheyenne/ folder:
+	  
+	  		cd Cheyenne
+	  		rebol -s cgi-conf.r
+
 	o New config option (globals section): 'allow-method. Extends allowed HTTP methods.
 	  Usage:	
 			allow-method DELETE
