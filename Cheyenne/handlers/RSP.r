@@ -222,46 +222,54 @@ install-module [
 		]
 
 		compile: func [entry /no-lang /local out value s e word id ctx close?][
+			if all [
+				entry/1								;-- avoid internal RSP debug scripts
+				%.r = suffix? entry/1				;-- only check pure REBOL scripts
+				error? try [load as-string entry/4]	;-- test if REBOL script is LOAD-able
+			][
+				out: reduce ['load entry/4]			;-- return a reproducible error as result
+			]
 			unless no-lang [
 				id: locale/lang
 				locale/set-default-lang
 			]
-			either out: attempt [load/header current: as-string fourth entry][
-				remove out 		;-- discards the header object
-			][
-				out: make string! 1024	
-				parse/all current [
-					any [
-						end break
-						| "#[" copy value to #"]" skip (
-							append out reform [
-								" prin any [pick __cat"
-								locale/id? value
-								mold value #"]"
-							]
-						)
-						| "<%" (close?: no) [
-							#"=" (append out " __emit ")
-							| #"?" (append out " __emit reduce [" close?: yes)
-							| none
-						   ] copy value [to "%>" | none] 2 skip (
-								if value [repend out [value #" "]]
-								if close? [append out #"]"]
+			unless out [
+				either out: attempt [load/header current: as-string entry/4][
+					remove out 						;-- discards the header object
+				][
+					out: make string! 1024	
+					parse/all current [
+						any [
+							end break
+							| "#[" copy value to #"]" skip (
+								append out reform [
+									" prin any [pick __cat"
+									locale/id? value
+									mold value #"]"
+								]
 							)
-						| s: copy value [any [e: "<%" :e break | e: "#[" :e break | skip]] e: (
-							append out reform [" __txt" index? s offset? s e #" "]
-						)
+							| "<%" (close?: no) [
+								#"=" (append out " __emit ")
+								| #"?" (append out " __emit reduce [" close?: yes)
+								| none
+							   ] copy value [to "%>" | none] 2 skip (
+									if value [repend out [value #" "]]
+									if close? [append out #"]"]
+								)
+							| s: copy value [any [e: "<%" :e break | e: "#[" :e break | skip]] e: (
+								append out reform [" __txt" index? s offset? s e #" "]
+							)
+						]
 					]
-				]
-				unless no-lang [locale/set-lang id]
-				if error? try [out: load out][
-					out: reduce ['load out]
+					unless no-lang [locale/set-lang id]
+					if error? try [out: load out][
+						out: reduce ['load out]
+					]
 				]
 			]
 			unless block? out [out: reduce [out]]
 			if all [
-				value? 'request
-				object? :request
+				entry/1							;-- avoid internal RSP debug scripts
 				request/web-app
 				ctx: find apps request/config/root-dir
 			][
@@ -284,7 +292,7 @@ install-module [
 		dump: has [cnt][
 			cnt: 1
 			foreach [a b c d] list [
-				log/info [a b]
+				log/info reform [a b]
 				log/info ["code:" mold c]
 				cnt: cnt + 1
 			]
@@ -292,7 +300,7 @@ install-module [
 
 		exec: func [path file /local code pos res][
 			if verbose > 0 [
-				log/info ["executing file: " mold file "path: " mold path]
+				log/info reform ["executing file: " mold file "path: " mold path]
 			]				
 			repend jobs [path current]
 			code: either pos: find list path [
@@ -311,156 +319,6 @@ install-module [
 			if verbose > 2 [dump]
 			response/error?: to logic! any [response/error? res] 		;-- Make TRUE persistant across nested executions
 		]
-	]
-		
-	debug-banner: context [
-		active?: t0: opts: trace.log: rsp-error: none
-		menu-head: read-cache %misc/debug-head.html
-		menu-code: read-cache %misc/debug-menu.rsp
-		menu: reduce [none 01/01/3000 none menu-code]
-		engine/compile/no-lang menu
-		bind second pick menu 3 self
-		
-		default-page: "<html><head><title>RSP Error</title></head><body></body></html>"
-		
-		opts-default: context [
-			lines: 50
-			colors: [lawngreen black]
-			error: 'popup
-			ip: none
-		]
-		
-		reset: does [
-			opts: rsp-error: none
-			active?: no
-			response/stats/1: 0
-			response/stats/2: 0
-		]
-		
-		allowed-ip?: does [
-			any [
-				none? opts/ip
-				opts/ip = request/client-ip
-			]
-		]
-		
-		no-menu?: does [
-			any [
-				not active?
-				not allowed-ip?
-				file? response/buffer
-				all [
-					block? response/headers
-					type: select response/headers 'Content-Type
-					not find type "html"
-				]
-			]
-		]
-		
-		insert-menu: has [buf pos body type][	
-			if no-menu? [exit]
-			wait .1						;-- give time to the IPC system to write down last log
-			if all [
-				object? rsp-error
-				any [
-					26 >= length? response/buffer
-					not any [
-						find response/buffer "</head>" 
-						find response/buffer "<body>"
-					]
-				]
-			][
-				append response/buffer default-page
-			]
-			buf: copy response/buffer
-			clear response/buffer
-			protected-exec %misc/debug-menu.rsp pick menu 3
-			either pos: find buf "</head>" [
-				insert pos menu-head
-			][
-				if body: find buf "<body" [
-					insert body "^/<head>^/"
-					insert body menu-head
-					insert body "^/</head>^/"
-				]
-			]	
-			if any [body body: find buf "<body"] [
-				insert find/tail body ">" response/buffer
-			]
-			clear response/buffer
-			insert response/buffer buf
-		]
-
-		make-redirect-page: func [url][
-			clear response/buffer
-			append response/buffer {
-				<html>
-					<head></head>
-					<body><font face="Arial"><center>
-						<h2>Redirection Trapped</h2>
-						<br><br>Destination URL: }
-			append response/buffer rejoin [
-				{<a href="} url {">} url
-				"</a></center></font></body></html>"
-			]
-		]
-
-		on-page-start: has [value][
-			unless active? [exit]
-			unless opts [
-				value: select request/config 'debug
-				opts: construct/with any [all [block? value value] []] opts-default
-			]
-			t0: now/time/precise
-		]
-
-		on-page-end: has [pos time][
-			if no-menu? [exit]
-			if pos: find response/buffer "</body>" [
-				time: to-integer 1000 * to-decimal (now/time/precise - t0)
-				insert pos reform [
-					"<br><br><small>Processed in :"
-					either zero? time ["< 15"][time]
-					"ms.<br>Real SQL queries :"
-					response/stats/1
-					"<br>Cached SQL queries :"
-					response/stats/2
-					"</small>"
-				]
-			]
-		]
-		
-		tail-file: func [file [file!] n [integer!] /local p buf sz out][
-			unless exists? file [return ""]
-			p: tail open/seek file
-			sz: 8190
-			out: clear any [out make string! sz]	
-			until [
-				pos: tail buf: copy/part p: skip p negate sz sz
-				while [pos: find/reverse pos lf][if zero? n: n - 1 [break]]
-				pos: any [pos buf]	
-				insert/part tail out pos length? pos
-				any [zero? n head? p]
-			]
-			as-string out
-		]
-		
-		unprotect 'debug
-		set 'debug make debug [
-			on: does [
-				active?: yes
-				on-page-start
-			]
-			off: does [
-				active?: no
-			]
-			options: func [spec [block!]][
-				opts: construct/with spec opts-default
-			]
-		]
-		protect 'debug
-				
-		set 'debug? does [active?]
 	]
 	
 	;--- public API ---
@@ -979,6 +837,156 @@ install-module [
 				depth/1: depth/1 - 1
 			]
 		][*do value]
+	]
+	
+	debug-banner: context [
+		active?: t0: opts: trace.log: rsp-error: none
+		menu-head: read-cache %misc/debug-head.html
+		menu-code: read-cache %misc/debug-menu.rsp
+		menu: reduce [none 01/01/3000 none menu-code]
+		engine/compile/no-lang menu
+		bind second pick menu 3 self
+
+		default-page: "<html><head><title>RSP Error</title></head><body></body></html>"
+
+		opts-default: context [
+			lines: 50
+			colors: [lawngreen black]
+			error: 'popup
+			ip: none
+		]
+
+		reset: does [
+			opts: rsp-error: none
+			active?: no
+			response/stats/1: 0
+			response/stats/2: 0
+		]
+
+		allowed-ip?: does [
+			any [
+				none? opts/ip
+				opts/ip = request/client-ip
+			]
+		]
+
+		no-menu?: does [
+			any [
+				not active?
+				not allowed-ip?
+				file? response/buffer
+				all [
+					block? response/headers
+					type: select response/headers 'Content-Type
+					not find type "html"
+				]
+			]
+		]
+
+		insert-menu: has [buf pos body type][	
+			if no-menu? [exit]
+			wait .1						;-- give time to the IPC system to write down last log
+			if all [
+				object? rsp-error
+				any [
+					26 >= length? response/buffer
+					not any [
+						find response/buffer "</head>" 
+						find response/buffer "<body>"
+					]
+				]
+			][
+				append response/buffer default-page
+			]
+			buf: copy response/buffer
+			clear response/buffer
+			protected-exec %misc/debug-menu.rsp pick menu 3
+			either pos: find buf "</head>" [
+				insert pos menu-head
+			][
+				if body: find buf "<body" [
+					insert body "^/<head>^/"
+					insert body menu-head
+					insert body "^/</head>^/"
+				]
+			]	
+			if any [body body: find buf "<body"] [
+				insert find/tail body ">" response/buffer
+			]
+			clear response/buffer
+			insert response/buffer buf
+		]
+
+		make-redirect-page: func [url][
+			clear response/buffer
+			append response/buffer {
+				<html>
+					<head></head>
+					<body><font face="Arial"><center>
+						<h2>Redirection Trapped</h2>
+						<br><br>Destination URL: }
+			append response/buffer rejoin [
+				{<a href="} url {">} url
+				"</a></center></font></body></html>"
+			]
+		]
+
+		on-page-start: has [value][
+			unless active? [exit]
+			unless opts [
+				value: select request/config 'debug
+				opts: construct/with any [all [block? value value] []] opts-default
+			]
+			t0: now/time/precise
+		]
+
+		on-page-end: has [pos time][
+			if no-menu? [exit]
+			if pos: find response/buffer "</body>" [
+				time: to-integer 1000 * to-decimal (now/time/precise - t0)
+				insert pos reform [
+					"<br><br><small>Processed in :"
+					either zero? time ["< 15"][time]
+					"ms.<br>Real SQL queries :"
+					response/stats/1
+					"<br>Cached SQL queries :"
+					response/stats/2
+					"</small>"
+				]
+			]
+		]
+
+		tail-file: func [file [file!] n [integer!] /local p buf sz out][
+			unless exists? file [return ""]
+			p: tail open/seek file
+			sz: 8190
+			out: clear any [out make string! sz]	
+			until [
+				pos: tail buf: copy/part p: skip p negate sz sz
+				while [pos: find/reverse pos lf][if zero? n: n - 1 [break]]
+				pos: any [pos buf]	
+				insert/part tail out pos length? pos
+				any [zero? n head? p]
+			]
+			as-string out
+		]
+
+		unprotect 'debug
+		set 'debug make debug [
+			on: does [
+				active?: yes
+				on-page-start
+			]
+			off: does [
+				active?: no
+			]
+			options: func [spec [block!]][
+				opts: construct/with spec opts-default
+			]
+		]
+		protect 'debug
+
+		set 'debug? does [active?]
 	]
 
 	;--- end of public API ---
