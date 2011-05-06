@@ -141,6 +141,6 @@ install-HTTPd-extension [
 		locals: [block!] in main
 		
 		;-- switches REBOL CGI scripts to FastCGI-like mode
-		fast-rebol-cgi: in globals
+		fast-rebol-cgi: in main
 	]
 ]
