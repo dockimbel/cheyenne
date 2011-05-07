@@ -167,7 +167,7 @@ install-module [
 		unless thru?: :print = :rsp-print [set print-funcs rsp-print-funcs]		
 		if err: sandboxed-exec :code [
 			if debug-banner/active? [
-				switch debug-banner/opts/error [
+				switch any [attempt [debug-banner/opts/error] 'inline][
 					inline [html-form-error err file]
 					popup  [debug-banner/rsp-error: make err [src: file]]
 				]
@@ -282,6 +282,17 @@ install-module [
 		refresh: func [entry file][
 			poke entry 4 read file
 			compile entry
+		]
+		
+		rebind: func [path file /local entry][
+			if all [
+				entry: find list path
+				entry/1							;-- avoid internal RSP debug scripts
+				request/web-app
+				ctx: find apps request/config/root-dir
+			][
+				bind second third entry third ctx
+			]
 		]
 
 		add-file: func [path file /local pos][
@@ -831,6 +842,9 @@ install-module [
 						clear at depth 2
 					]
 					arg/3: make arg/3 value
+					if all [request/translated splitted][
+						engine/rebind request/translated last splitted
+					]				
 				][
 					append/only depth :value
 				]
@@ -1232,7 +1246,8 @@ install-module [
 			unless empty? response/buffer [response/flush]
 			response/flush/end
 		]
-		request/web-app: none	; disables 'do sandboxing (avoid side-effects with other modules)
+		request/translated: none	; disables rebinding of webapp scripts
+		request/web-app: none		; disables 'do sandboxing (avoid side-effects with other modules)
 		result: build-msg
 	]
 	
