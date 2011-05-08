@@ -8,11 +8,15 @@ either all [value? 'access-os native? :access-os][
 		owner [integer!]
 		group [integer!]
 	][
+		path: to-rebol-file path
 		set-modes path [owner-id: owner group-id: group]
-		all [
-			owner = get-modes path 'owner-id
-			group = get-modes path 'group-id
-			0
+		any [
+			all [
+				owner = get-modes path 'owner-id
+				group = get-modes path 'group-id
+				0
+			]
+			1
 		]
 	]
 	set 'kill-app func [pid][access-os/set 'pid pid] 	; SIGTERM
@@ -40,8 +44,11 @@ either all [value? 'access-os native? :access-os][
 		set 'set-env func [name [string!] value [string!]][
 			_setenv name value 1
 		]
-		set 'set-uid make routine! [uid [integer!] return: [integer!]] libc "setuid"
-		set 'set-gid make routine! [gid [integer!] return: [integer!]] libc "setgid"
+		_set-uid: make routine! [uid [integer!] return: [integer!]] libc "setuid"
+		_set-gid: make routine! [gid [integer!] return: [integer!]] libc "setgid"
+		
+		set 'set-uid func [uid][zero? _set-uid uid]
+		set 'set-gid func [gid][zero? _set-gid gid]
 
 		set 'chown make routine! [
 			path 	[string!]
