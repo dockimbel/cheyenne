@@ -55,7 +55,10 @@ install-HTTPd-extension [
 			;-- %trace.log
 			if exists? file: uniserve/services/logger/trace-file [try-chown file uid gid]
 			;-- %.rsp-sessions
-			if exists? file: service/mod-list/mod-rsp/sessions/ctx-file [try-chown file uid gid]
+			if all [
+				find service/mod-list 'mod-rsp
+				exists? file: service/mod-list/mod-rsp/sessions/ctx-file 
+			][try-chown file uid gid]
 			
 			file: uniserve/services/MTA/q-file		;-- %.mta-queue
 			if cheyenne/port-id [append copy file join "-" cheyenne/port-id/1]
