@@ -54,15 +54,23 @@ install-HTTPd-extension [
 		if all [not zero? uid not zero? gid][
 			;-- %trace.log
 			if exists? file: uniserve/services/logger/trace-file [try-chown file uid gid]
+			
 			;-- %.rsp-sessions
 			if all [
 				find service/mod-list 'mod-rsp
 				exists? file: service/mod-list/mod-rsp/sessions/ctx-file 
 			][try-chown file uid gid]
 			
-			file: uniserve/services/MTA/q-file		;-- %.mta-queue
+			;-- %.mta-queue
+			file: uniserve/services/MTA/q-file
 			if cheyenne/port-id [append copy file join "-" cheyenne/port-id/1]
 			if exists? file [try-chown file uid gid]
+			
+			;-- %chey-<pid>.log
+			if all [
+				file: logger/file.log
+				exists? file
+			][try-chown file uid gid]
 		]
 		;-- change group id first to inherit privileges from group first
 		if any [zero? gid not set-gid gid][log/error ["setgid '" group " failed!"]]
