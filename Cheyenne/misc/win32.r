@@ -362,17 +362,18 @@ try**: func [body [block!] /local res][
 	res
 ]
 
-with-SCM: func [body2 [block!] /local scm res][
-	scm: try* [OpenSCManager 0 0 SC_MANAGER_ALL_ACCESS]
+with-SCM: func [body2 [block!] /quiet /local scm res cmd][
+	cmd: [OpenSCManager 0 0 SC_MANAGER_ALL_ACCESS]
+	scm: either quiet [try*/quiet cmd][try* cmd]
 	if zero? scm [return last-error]
 	res: do bind body2 'scm
 	try* [CloseServiceHandle scm]
 	res
 ]
 
-with-service: func [body [block!] /quiet /local srv res cmd][
+with-service: func [body [block!] /quiet /local srv res cmd code][
 	bind body 'srv
-	with-SCM [
+	code: [
 		cmd: [OpenService scm app-name DELETE or SERVICE_ALL_ACCESS]
 		srv: either quiet [try*/quiet cmd][try* cmd]
 		unless zero? srv [
@@ -381,6 +382,7 @@ with-service: func [body [block!] /quiet /local srv res cmd][
 		]
 		res
 	]
+	either quiet [with-SCM/quiet code][with-SCM code]
 ]
 
 ; === Cheyenne's internal API ===
