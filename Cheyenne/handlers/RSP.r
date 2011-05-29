@@ -1268,6 +1268,14 @@ install-module [
 	all [
 		any [
 			all [
+				value? 'config-path
+				any [
+					all [slash = last config-path file: config-path/:file]
+					file: config-path
+				]
+				block? cheyenne-conf: load/all file
+			]
+			all [
 				exists? file
 				block? cheyenne-conf: load/all file
 			]

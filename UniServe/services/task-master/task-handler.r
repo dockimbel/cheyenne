@@ -87,6 +87,7 @@ if ssa: system/script/args [
 	ssa: load/all ssa
 	if value: select ssa '-up [uniserve-path: value]
 	if value: select ssa '-mp [modules-path: value]
+	if value: select ssa '-cf [config-path: value]
 	servers-port: select ssa '-worker
 	
 	either block? servers-port [

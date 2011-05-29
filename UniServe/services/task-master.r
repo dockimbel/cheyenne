@@ -117,7 +117,7 @@ install-service [
 		if integer? shared/pool-start [loop shared/pool-start [fork]]
 	]
 	
-	on-started: does [
+	on-started: has [file][
 		worker-args: reform [
 			"-worker" mold any [uniserve/shared/server-ports port-id]		;TBD: fix shared object issues
 		]
@@ -125,6 +125,12 @@ install-service [
 			append worker-args reform [" -up" mold uniserve-path]
 			if value? 'modules-path [
 				append worker-args reform [" -mp" mold modules-path]
+			]
+			if all [
+				uniserve/shared
+				file: uniserve/shared/conf-file 
+			][		
+				append worker-args reform [" -cf" mold file]
 			]
 		]
 		if integer? shared/pool-start [loop shared/pool-start [fork]]
