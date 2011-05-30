@@ -126,6 +126,8 @@ cheyenne: make log-class [
 	name: 'boot
 	verbose: 0
 	
+	crash-file: %crash.log
+	
 	version: #do [							;-- Cheyenne's version (tuple!) including SVN revision
 		do %svn-version.r					;--   when encapped from a SVN repository
 		rejoin [
@@ -200,11 +202,6 @@ cheyenne: make log-class [
 				shared/conf-file: file
 				log/info ["config file  : " mold file]
 			]
-			if flag? 'folder [			;-- change path of logger's file
-				foreach file [trace-file error-file][
-					change-path services/logger/:file args/folder
-				]
-			]
 			
 			shared/pool-start: 	any [
 				all [flag? 'debug 0]
@@ -219,13 +216,6 @@ cheyenne: make log-class [
 			shared/job-max: 	1000	;-- CGI/RSP requests queue size
 
 			boot/with/no-wait/no-start [] ; empty block avoids loading modules from disk
-			
-			if flag? 'folder [
-				file: services/httpd/mod-list/mod-rsp/sessions/ctx-file
-				change-path file args/folder
-				file: uniserve/services/MTA/q-file
-				change-path file args/folder
-			]
 			
 			all [
 				not port-id
@@ -367,8 +357,8 @@ Supported options are:
 	
 	set-working-folders: has [home][
 		home: dirize first split-path system/options/boot
-		change-dir system/options/home: system/options/path: home
 		data-dir: either flag? 'folder [args/folder][home]
+		change-dir system/options/home: system/options/path: data-dir
 		
 		if OS-Windows? [
 			OS-change-dir home
@@ -489,7 +479,7 @@ Supported options are:
 		][
 			err: disarm err
 			either flag? 'no-screen [
-				write/append %crash.log reform [now ":" mold err]
+				write/append crash-file reform [now ":" mold err]
 				quit/return err/code
 			][
 				if value? 's-print [print: :s-print]

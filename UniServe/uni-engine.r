@@ -351,7 +351,10 @@ uniserve: make log-class [
 				in ctx 'on-close-server
 			]
 		]
-		either port/async-modes = 'connect [
+		either all [
+			in port 'async-modes
+			port/async-modes = 'connect 
+		][
 			if verbose > 0 [log/info ["port reconnecting : " port/remote-ip]]
 		][
 			unless keep [remove find spwl port]
