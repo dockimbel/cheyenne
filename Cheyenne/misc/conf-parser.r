@@ -59,7 +59,9 @@ conf-parser: make log-class [
 				remove back tail rules
 			]
 		]	
-		file: cheyenne/data-dir/(cfg-file)		
+		file: either slash = first cfg-file [cfg-file][
+			cheyenne/data-dir/:cfg-file
+		]
 		conf: load either exists? file [file][	
 			either encap? [
 				data: as-string read-cache cfg-file

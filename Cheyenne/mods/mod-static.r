@@ -41,7 +41,7 @@ install-HTTPd-extension [
 		][
 			repend cache [path file: read/binary path mdate]
 			cache-size: cache-size + length? file
-			if cache-size > max-size [clear cache]	; -- for now, very simple management rule
+			if cache-size > max-size [clear cache]	;-- for now, very simple management rule
 		]
 		file
 	]
@@ -49,6 +49,33 @@ install-HTTPd-extension [
 	form-host: func [vhost /local pos][
 		if pos: find vhost: form vhost #":" [change pos "-"]
 		vhost
+	]
+	
+	accepted-mime?: func [list type][
+		foreach mime list [
+			if all [
+				any [mime/1 = '* mime/1 = type/1]
+				any [mime/2 = '* mime/2 = type/2]
+			][
+				return true
+			]
+		]
+		false
+	]
+	
+	compress-file: func [req filters [block!] /local file][
+		file: req/in/file
+		if all [
+			req/file-info/size < 1048576			;-- Limit in-memory compression to 1 MB
+			value: select req/in/headers 'Accept-Encoding
+			find value "deflate"					;-- Test if client supports deflate algorithm
+			accepted-mime? select req/cfg 'compress req/out/mime
+		][
+			file: skip compress read/binary file 2
+			clear skip tail file -4
+			h-store req/out/headers 'Content-Encoding "deflate"	
+		]
+		file
 	]
 
 	;====== Server events handling ======
@@ -220,10 +247,15 @@ install-HTTPd-extension [
 			return true
 		]
 		req/out/code: 200
-		either req/file-info/size > 65536 [		;-- for files > 64Kb, stream them from disk
-			req/out/content: req/in/file
-		][										;-- for files <= 64Kb, send them from memory cache
-			req/out/content: read-cache req
+		
+		req/out/content: either select req/cfg 'compress [
+			compress-file req
+		][
+			either req/file-info/size > 65536 [	;-- for files > 64Kb, stream them from disk
+				req/in/file
+			][									;-- for files <= 64Kb, send them from memory cache
+				read-cache req
+			]
 		]
 		true
 	]
@@ -409,5 +441,8 @@ install-HTTPd-extension [
 			]
 			append allowed args/1
 		]
+		
+		;-- Compress static files on-the-fly (low bandwidth and/or slow connections only)
+		compress: [into [some path!]] in main
 	]
 ]
