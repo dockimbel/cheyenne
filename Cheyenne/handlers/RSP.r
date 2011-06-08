@@ -431,7 +431,7 @@ install-module [
 
 	set 'do-sql func [
 		[catch] db [word! path!] data [string! block! word!]
-		/flat /local out res defs pos
+		/flat /info /local out res defs pos
 	][
 		unless pos: any [
 			all [
@@ -461,6 +461,7 @@ install-module [
 					poke pos 2 port: first port
 				]
 			]
+			if info [return port]
 		
 			either word? data [
 				poke response/stats 2 response/stats/2 + 1
