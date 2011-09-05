@@ -88,6 +88,11 @@ context [
 		return: [integer!]
 	] kernel32 "GetEnvironmentStringsA"
 	
+	FreeEnvironmentStrings: make routine! [
+		env-block 	[integer!]
+		return: 	[integer!]
+	] kernel32 "FreeEnvironmentStringsA"
+	
 	unless all [value? 'set-env native? :set-env][
 		set 'set-env make routine! [
 			name	[string!]
@@ -181,6 +186,15 @@ context [
 		none
 	]
 	
+	until [
+		log-file: join %call-error- [random 1000 %.log]
+		not exists? log-file
+	]
+	
+	log: func [msg][
+		write/append/lines log-file [now/time/precise "-" msg]
+	]
+	
 	cmd: context [
 		output: error: none
 		show?: input?: no
@@ -188,8 +202,7 @@ context [
 		pipe-size: 10'000
 		pipe-buffer: make-null-string! pipe-size
 
-		si: make struct! start-info second start-info
-		pi: make struct! PROCESS_INFORMATION none
+		si: pi: none
 
 		in-hRead:      make-lpDWORD
 		in-hWrite:     make-lpDWORD
@@ -206,6 +219,9 @@ context [
 	launch-call: func [cmd-line [string!] /local ret env][
 		cmd-line: join cmd-line null
 		change/dup cmd/pipe-buffer null cmd/pipe-size
+		
+		cmd/si: make struct! start-info second start-info
+		cmd/pi: make struct! PROCESS_INFORMATION none
 		
 		ret: catch [
 			;-- Create STDOUT pipe and ensure the read handle is not inherited
@@ -230,29 +246,30 @@ context [
 			
 			if zero? CreateProcess 0 cmd-line sa sa to char! 1 0 env 0 cmd/si cmd/pi [throw 2]
 			
+			if zero? FreeEnvironmentStrings env [throw 4]
 			ret: none
 		]
 		if integer? ret [
-			make error! join pick [
+			log join pick [
 				"CreatePipe"
 				"CreateProcess"
 				"SetHandleInformation"
+				"FreeEnvironmentStrings"
 			] ret " failed!"
+			log get-error-msg
 		]
 	]
 	
 	read-pipe: func [buffer pipe /local remain][
 		if zero? PeekNamedPipe pipe/int 0 0 0 cmd/bytes-avail 0 [throw 1]
 
-		unless zero? remain: cmd/bytes-avail/int [ 
+		unless zero? remain: cmd/bytes-avail/int [
 			until [
 				if zero? ReadFile pipe/int cmd/pipe-buffer cmd/pipe-size cmd/bytes-read 0 [throw 2]
-
 				insert/part tail buffer cmd/pipe-buffer cmd/bytes-read/int
-
 				change/dup cmd/pipe-buffer null cmd/pipe-size
-				remain: remain - cmd/bytes-read/int 
-				zero? remain 
+				remain: remain - cmd/bytes-read/int	
+				remain <= 0
 			]
 		]
 	]
@@ -288,12 +305,13 @@ context [
 				ret: none
 			]
 			if integer? ret [
-				make error! join pick [
+				log join pick [
 					"PeekNamedPipe"
 					"ReadFile"
 					"GetExitCodeProcess"
 					"WriteFile"
 				] ret " failed!"
+				log get-error-msg
 			]
 		;]
 		false
