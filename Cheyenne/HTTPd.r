@@ -796,7 +796,7 @@ Connection: Upgrade^M
 					if verbose > 1 [log/info ["translated file: " mold req/in/file]]
 					if all [
 						"websocket" = select rih: req/in/headers 'Upgrade
-						"Upgrade" = select rih 'Connection
+						find any [select rih 'Connection ""] "Upgrade"
 						select rih 'Host
 						select rih 'Sec-WebSocket-Key
 						attempt [8 <= to integer! select rih 'Sec-WebSocket-Version]
