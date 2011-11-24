@@ -525,7 +525,7 @@ Connection: Upgrade^M
 		if verbose > 0 [
 			log/info ["[WebSocket] <= " copy/part as-string data 80]
 		]		
-		insert as-binary data either 125 < probe length? data [
+		insert as-binary data either 125 < length? data [
 			join #{817E} copy/part reverse debase/base to-hex 2 + length? data 16 2
 		][
 			join #{81} to char! length? data
