@@ -494,53 +494,42 @@ Connection: Upgrade^M
 		]
 	]
 	
-	ws-make-key: func [key1 key2 /local key z pos][
-		key: make string! 16
-       	foreach k reduce [key1 key2][
-       		z: 0
-        	remove-each c k [if c = #" " [z: z + 1] not find digit c]
-        	append key any [
-        		attempt [as-string debase/base to-hex (to integer! (to integer! k) / z) 16]
-        		""
-        	]
-        ]       
-        ;-- hack in uniserve's buffer to support ws HTTP specs violation
-		append key pos: skip tail client/locals/in-buffer -8
-		clear pos	
-		as-string checksum/method key 'md5
-	]
-	
 	ws-handshake: func [req /local roh rih value][
 		roh: req/out/headers
 		rih: req/in/headers
 		client/locals/expire: none			;-- timeout disabled for web socket ports
-		req/in/ws?: yes
 		req/out/code: 101
-		h-store roh 'Connection none
-		h-store roh 'Sec-WebSocket-Origin join "http://" rih/Host
-        h-store roh 'Sec-WebSocket-Location rejoin [
-        	"ws://" rih/Host req/in/url: join req/in/path req/in/target	;-- TBD: add support for wss://
-        ]       
-        req/out/content: ws-make-key rih/Sec-WebSocket-Key1 rih/Sec-WebSocket-Key2
-        
+		req/in/ws?: yes
+		
+		h-store roh 'Upgrade "websocket"
+		h-store roh 'Connection "Upgrade"
+		
+		h-store roh 'Sec-WebSocket-Accept enbase checksum/method
+			join rih/Sec-WebSocket-Key "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+			'sha1
+		     
         if value: select rih 'Sec-WebSocket-Protocol [
         	h-store roh 'Sec-WebSocket-Protocol value	; echo back whatever protocol is asked for
         ]
+        
 		req/state: 'ws-handshake
 		send-response req
-		if verbose > 0 [
-			log/info ["[WebSocket] Opened=> " roh/Sec-WebSocket-Location]
-		]
+		if verbose > 0 [log/info "[WebSocket] Opened"]
+		
 		req/socket-port: client
 		do-phase req 'socket-connect
 	]
 	
-	ws-send-response: func [req /direct /with port /local data][
+	ws-send-response: func [req /direct /with port /local data len][
 		data: any [all [direct req] req/out/content]
 		if verbose > 0 [
 			log/info ["[WebSocket] <= " copy/part as-string data 80]
+		]		
+		insert as-binary data either 125 < probe length? data [
+			join #{817E} copy/part reverse debase/base to-hex 2 + length? data 16 2
+		][
+			join #{81} to char! length? data
 		]
-		data: head insert tail insert copy data #"^(00)" #"^(FF)"
 		either with [
 			write-client/with data port
 		][
@@ -667,7 +656,14 @@ Connection: Upgrade^M
 				keep?: yes
 			]
 			write-client data: join
-				either req/in/ws? [ws-response][out/status-line]
+				either all [
+					req/in/ws?
+					none? select req/in/headers 'Upgrade
+				][
+					ws-response
+				][
+					out/status-line
+				]
 				form-header out/headers
 		]
 
@@ -756,7 +752,7 @@ Connection: Upgrade^M
 		exit
 	]
 	
-	on-received: func [data /local req len limit q v up?][
+	on-received: func [data /local req len limit q v up? rih][
 		q: client/user-data
 		if empty? q [insert q copy [[state request]]] 	;-- avoid wasting a call to make-http-session
 		req: last q
@@ -798,8 +794,14 @@ Connection: Upgrade^M
 				unless req/out/code [
 					do-phase req 'url-to-filename
 					if verbose > 1 [log/info ["translated file: " mold req/in/file]]
-					if "WebSocket" = select req/in/headers 'Upgrade [	
-						ws-handshake req
+					if all [
+						"websocket" = select rih: req/in/headers 'Upgrade
+						"Upgrade" = select rih 'Connection
+						select rih 'Host
+						select rih 'Sec-WebSocket-Key
+						attempt [8 <= to integer! select rih 'Sec-WebSocket-Version]
+					][
+						ws-handshake req v
 						req/state: 'ws-header
 						stop-at: none			;-- switch to packet mode
 						exit
@@ -870,47 +872,88 @@ Connection: Upgrade^M
 		reset-stop
 	]
 	
-	on-raw-received: func [data /local req start][		;-- web sockets handled in packet mode
+	unmask: func [data mask len][
+		repeat i len [
+			data/(i): to char! data/:i xor mask/(i + 3 // 4 + 1)	;-- in-place decoding
+		]
+	]
+
+	on-raw-received: func [data /local req start len mask opcode pos][	;-- web sockets handled in packet mode
 		req: last client/user-data
 		start: data
 		until [	
-			switch req/state [
-				ws-header [
-					either 127 < to integer! data/1 [
-						;encoded-length frames not supported yet
+			switch/default req/state [
+				ws-header [				
+					if zero? mask: data/2 and 128 [			;-- if mask bit is unset, close connection
+						; TBD: send a close frame with code 1002
 						close-client
 						exit
-					][
-						if data/1 <> #"^(00)" [close-client]	;-- only 00 mode supported
-						req/state: 'ws-frame
-						req/in/content: clear any [req/in/content make binary! 10'000]
 					]
-					start: data: next data
+					opcode: data/1 and 7
+					
+					len: data/2 and 127						;-- mask the high bit
+					either len < 126 [				
+						mask: copy/part at data 3 4					
+						unmask data: at data 7 mask len
+					][
+						switch len [
+							126 [len: to integer! reverse copy/part at data 3 pos: 2]
+							127 [len: attempt [to integer! copy/part at data 3 pos: 4]]
+						]
+						if any [none? len len > 100'000][	; @@ TBD: add disk streaming mode
+							close-client
+							exit
+						]
+					]
+					
+					req/state: 'ws-frame
+					req/in/content: clear any [req/in/content make binary! 10'000]
+					
+					start: data					
+				]
+				ws-fragment [
+					; TBD: assemble fragmented frames
 				]
 				ws-frame [
 					if verbose > 0 [
-						log/info [
-							"[WebSocket] => "
-							head remove back tail copy/part as-string start 80
+						log/info ["[WebSocket] => " copy/part as-string start 80]
+					]					
+					switch/default opcode [
+						0 [								;-- continuation
+
 						]
-					]				
-					either data: find data #"^(FF)" [
-						insert/part req/in/content start data
-						either req/socket-app [
-							do-phase req 'socket-message
-						][
-							do-phase req 'make-response		;TBD: see if this mode is relevant
+						1 [								;-- text
+							insert/part req/in/content start len
+							either req/socket-app [
+								do-phase req 'socket-message
+							][
+								do-phase req 'make-response		;TBD: see if this mode is relevant
+							]
+							data: skip data len
+							req/state: 'ws-header
 						]
-						data: next data
-						req/state: 'ws-header
+						2 [								;-- binary
+
+						]
+						8 [								;-- close
+							close-client
+							exit
+						]
+						9 [								;-- ping
+
+						]
+						10 [							;-- pong
+
+						]
 					][
-						append req/in/content start
-						;TBD: check limit properly + add disk streaming mode
-						if 100'000 > length? req/in/content [close-client]
+						close-client
 						exit
 					]
 				]
-			]
+			][
+				close-client						;-- unknown state, close connection
+				exit
+			]			
 			tail? data
 		]
 	]

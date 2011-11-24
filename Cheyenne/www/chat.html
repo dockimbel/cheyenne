@@ -121,7 +121,7 @@ Header meanings :
 			function(){
 				$(".hideable").hide();
 
-				if (typeof(WebSocket) != "function") alert("Your browser doesn't support Web Sockets!");
+				if (window.WebSocket === undefined) alert("Your browser doesn't support Web Sockets!");
 
 				$("#enter").click(          function(event) {enter_chat();});
 				$("[name=send]").click(     function(event) {post_msg();});
@@ -137,7 +137,7 @@ Header meanings :
   </head>
   <body>
 		<h2>Realtime chat demo using web sockets</h2>
-		<small>- <i>requires a web socket enabled web browser like Chrome 4</i> -</small><br><br>
+		<small>- <i>requires a websocket enabled browser like Chrome 14</i> -</small><br><br>
 		Connection state : <span id="debug">not connected</span>
 
 		<div id="login" class="logbox" align="center">
