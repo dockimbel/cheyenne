@@ -520,16 +520,33 @@ Connection: Upgrade^M
 		do-phase req 'socket-connect
 	]
 	
+	ws-make-frame: func [data type /local frame][
+		frame: #{80} or to binary! reduce [
+			select [
+				continuation 	0
+				text			1
+				binary			2
+				close			8
+				ping			9
+				pong			10
+			] type
+		]		
+		either 125 < length? data [
+			append frame #{7E}
+			insert/part tail frame reverse debase/base to-hex 2 + length? data 16 2
+		][
+			append frame to char! length? data
+		]
+		head insert as-binary data frame
+	]
+	
 	ws-send-response: func [req /direct /with port /local data len][
 		data: any [all [direct req] req/out/content]
 		if verbose > 0 [
 			log/info ["[WebSocket] <= " copy/part as-string data 80]
 		]		
-		insert as-binary data either 125 < length? data [
-			join #{817E} copy/part reverse debase/base to-hex 2 + length? data 16 2
-		][
-			join #{81} to char! length? data
-		]
+		data: ws-make-frame data 'text
+		
 		either with [
 			write-client/with data port
 		][
@@ -936,6 +953,7 @@ Connection: Upgrade^M
 
 						]
 						8 [								;-- close
+							write-client ws-make-frame 'close
 							close-client
 							exit
 						]
