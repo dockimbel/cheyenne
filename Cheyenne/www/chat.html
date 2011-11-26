@@ -63,6 +63,7 @@ Header meanings :
     	var ws;
     	var user;
     	var msgbox;
+    	var wsobj;
 
     	function debug(str){ $("#debug").text(str); };
 
@@ -73,19 +74,19 @@ Header meanings :
 
 		function ws_connect() {
 			/* Initiate the connection to the server using a web socket */
-			ws = new WebSocket("ws://" + location.host + "/chat.rsp");
+			ws = new wsobj("ws://" + location.host + "/chat.rsp");
 
 			ws.onopen = function() {
 				debug("online");
 				user = $("[name=login]").val();
-				ws.send('u' + user);	/* Send the user name to the server */
+				ws.send('u' + user);			/* Send the user name to the server */
 				$("#post").focus();
 			};
 
 			ws.onmessage = function(evt) {
-				var msg = evt.data.slice(1); /* Extract the payload bypassing the header */
+				var msg = evt.data.slice(1); 	/* Extract the payload bypassing the header */
 
-				switch(evt.data[0]) {		 /* 1 byte header action value */
+				switch(evt.data[0]) {		 	/* 1 byte header action value */
 					case 'u':
 						$("#users").append('<li id="_' + msg + '">' + msg + '</li>');
 						info('<font color="darkgreen">' + msg + ' enters...</font>');
@@ -121,7 +122,12 @@ Header meanings :
 			function(){
 				$(".hideable").hide();
 
-				if (window.WebSocket === undefined) alert("Your browser doesn't support Web Sockets!");
+				wsobj = window.WebSocket;			/* W3C */
+				if (wsobj === undefined) {
+					wsobj = window.MozWebSocket;	/* Firefox */
+					if (wsobj === undefined)
+						alert("Your browser doesn't support Web Sockets!");
+				}
 
 				$("#enter").click(          function(event) {enter_chat();});
 				$("[name=send]").click(     function(event) {post_msg();});

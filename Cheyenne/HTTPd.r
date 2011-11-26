@@ -537,7 +537,7 @@ Connection: Upgrade^M
 		][
 			append frame to char! length? data
 		]
-		head insert as-binary data frame
+		head insert copy as-binary data frame
 	]
 	
 	ws-send-response: func [req /direct /with port /local data len][
@@ -906,7 +906,7 @@ Connection: Upgrade^M
 						close-client
 						exit
 					]
-					opcode: data/1 and 7
+					opcode: data/1 and 15
 					
 					len: data/2 and 127						;-- mask the high bit
 					either len < 126 [				
@@ -934,7 +934,7 @@ Connection: Upgrade^M
 				ws-frame [
 					if verbose > 0 [
 						log/info ["[WebSocket] => " copy/part as-string start 80]
-					]					
+					]
 					switch/default opcode [
 						0 [								;-- continuation
 
@@ -953,7 +953,7 @@ Connection: Upgrade^M
 
 						]
 						8 [								;-- close
-							write-client ws-make-frame 'close
+							write-client ws-make-frame #{} 'close
 							close-client
 							exit
 						]
