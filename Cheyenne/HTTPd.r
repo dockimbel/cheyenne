@@ -520,7 +520,7 @@ Connection: Upgrade^M
 		do-phase req 'socket-connect
 	]
 	
-	ws-make-frame: func [data type /local frame][
+	ws-make-frame: func [data type /local frame size len][
 		frame: #{80} or to binary! reduce [
 			select [
 				continuation 	0
@@ -531,11 +531,15 @@ Connection: Upgrade^M
 				pong			10
 			] type
 		]		
-		either 125 < length? data [
-			append frame #{7E}
-			insert/part tail frame reverse debase/base to-hex 2 + length? data 16 2
+		either 125 < len: length? data [
+			size: debase/base to-hex len 16				;-- in network byte order (LE)
+			insert tail frame reduce either len > 65535 [
+				[#{7F00000000} size]					;-- 7+64 bits data size
+			][
+				[#{7E} skip size 2]						;-- 7+16 bits data size
+			]
 		][
-			append frame to char! length? data
+			append frame to char! len
 		]
 		head insert copy as-binary data frame
 	]
@@ -552,6 +556,11 @@ Connection: Upgrade^M
 		][
 			write-client data
 		]
+	]
+	
+	ws-close: func [code [integer!]][
+		write-client ws-make-frame skip debase/base to-hex code 16 2 'close
+		close-client
 	]
 	
 	process-queue: has [q req][
@@ -895,81 +904,84 @@ Connection: Upgrade^M
 		]
 	]
 
-	on-raw-received: func [data /local req start len mask opcode pos][	;-- web sockets handled in packet mode
+	on-raw-received: func [data /local req start len mask opcode pos fin?][	;-- web sockets handled in packet mode
 		req: last client/user-data
-		start: data
-		until [	
+		until [
+			fin?: none
 			switch/default req/state [
-				ws-header [				
-					if zero? mask: data/2 and 128 [			;-- if mask bit is unset, close connection
-						; TBD: send a close frame with code 1002
-						close-client
+				ws-header [
+					if zero? mask: data/2 and 128 [		;-- if mask bit is unset, close connection
+						ws-close 1002					;-- protocol error
 						exit
 					]
-					opcode: data/1 and 15
+					fin?: 	1 = shift to integer! data/1 7	;-- test FIN flag
+					opcode: data/1 and 15					;-- extract opcode
+					len: 	data/2 and 127					;-- mask the high bit
+					pos: 	0								;-- payload offset
 					
-					len: data/2 and 127						;-- mask the high bit
-					either len < 126 [				
-						mask: copy/part at data 3 4					
-						unmask data: at data 7 mask len
-					][
-						switch len [
-							126 [len: to integer! reverse copy/part at data 3 pos: 2]
-							127 [len: attempt [to integer! copy/part at data 3 pos: 4]]
-						]
-						if any [none? len len > 100'000][	; @@ TBD: add disk streaming mode
-							close-client
-							exit
-						]
+					switch len [
+						126 [len: to integer! copy/part at data 3 pos: 2]
+						127 [len: attempt [to integer! copy/part at data 3 pos: 4]]
 					]
+					if any [none? len len > 100'000][	; @@ TBD: add disk streaming mode ?
+						ws-close pick [1004 1002] to-logic len	;-- frame too large or protocol error
+						exit
+					]					
+					pos: pos + 3						;-- 3 is default offset to data (one-based index)
+					mask: copy/part at data pos 4					
+					unmask data: at data pos + 4 mask len
 					
 					req/state: 'ws-frame
 					req/in/content: clear any [req/in/content make binary! 10'000]
-					
-					start: data					
-				]
-				ws-fragment [
-					; TBD: assemble fragmented frames
 				]
 				ws-frame [
 					if verbose > 0 [
-						log/info ["[WebSocket] => " copy/part as-string start 80]
+						log/info ["[WebSocket] => " copy/part as-string data 80]
 					]
 					switch/default opcode [
 						0 [								;-- continuation
-
+							insert/part req/in/content data len
+							if fin? [do-phase req 'socket-message]
 						]
-						1 [								;-- text
-							insert/part req/in/content start len
-							either req/socket-app [
-								do-phase req 'socket-message
-							][
-								do-phase req 'make-response		;TBD: see if this mode is relevant
-							]
-							data: skip data len
-							req/state: 'ws-header
+						1 [								;-- text (UTF-8 encoded)
+							req/in/content: as-string req/in/content
+							insert/part req/in/content data len
+							do-phase req 'socket-message
 						]
 						2 [								;-- binary
-
+							req/in/content: as-binary req/in/content
+							insert/part req/in/content data len
+							do-phase req 'socket-message
 						]
 						8 [								;-- close
-							write-client ws-make-frame #{} 'close
-							close-client
+							ws-close 1000				;-- normal closure
 							exit
 						]
 						9 [								;-- ping
-
+							if len > 125 [
+								ws-close 1002			;-- protocol error
+								exit
+							]
+							data: head data				;-- reuse the incoming ping unmasked frame
+							data/1: #"^(03)" xor data/1	;-- convert ping opcode to pong
+							write-client data			;-- echo back
 						]
-						10 [							;-- pong
-
+						10 [							;-- pong (unilateral heartbeat, no response)
+							if len > 125 [
+								ws-close 1002			;-- protocol error
+								exit
+							]
+							;do-phase req 'socket-message	;TBD: pass the event to application layer?
 						]
 					][
-						close-client
+						ws-close 1003					;-- unsupported frame type
 						exit
 					]
+					data: skip data len
+					req/state: 'ws-header
 				]
 			][
-				close-client						;-- unknown state, close connection
+				ws-close 1002							;-- protocol error
 				exit
 			]			
 			tail? data
