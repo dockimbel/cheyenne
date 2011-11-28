@@ -7,7 +7,7 @@ REBOL [
 		This is the first experimental release of Cheyenne's embed mode support.
 		
 		It relies on the new module : mod-embed.r
-==>		(you should uncomment 'embed in httpd.cfg to activate it and be able to run this demo)
+==>		(you should uncomment 'embed in httpd.cfg to activate it to be able to run this demo)
 		
 		All the other modules will be disabled while mod-embed is active (current behaviour, it may
 		change in the future).
@@ -194,7 +194,7 @@ publish-site [
 				<form method="POST" action="auth">
 				"login:" <input type="text" name="login"><br>
 				"pass:" <input type="password" name="pass">
-				<input type="submit" value="post"
+				<input type="submit" value="post">
 				</form>
 			] 
 		]

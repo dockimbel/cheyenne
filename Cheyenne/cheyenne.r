@@ -476,6 +476,7 @@ Supported options are:
 				flag? 'help			[do-help-app]
 				true 				[do-cheyenne-app]
 			]
+			if flag? 'embed [return 'no-quit]
 		][
 			err: disarm err
 			either flag? 'no-screen [
@@ -487,6 +488,7 @@ Supported options are:
 				halt
 			]
 		]
+		none
 	]
 	
 	on-quit: does [
@@ -495,5 +497,4 @@ Supported options are:
 	]
 ]
 
-cheyenne/boot
-quit/return 0
+unless cheyenne/boot = 'no-quit [quit/return 0]
