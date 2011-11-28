@@ -1,5 +1,15 @@
 v0.9.21 - ??/??/2011
 
+	o AUTH config option extended to accept a second optional integer parameter. This optional 
+	  parameter is a HTTP code (4xx or 5xx only) that will be returned instead of redirecting 
+	  the client when accessing an unauthorized resource before login in. Usage:
+	  
+	  		AUTH url
+	  	or
+	  		AUTH url 4xx|5xx
+	  		
+	o Websocket procotol support upgraded to RFC hybi-10 revision.
+
 	o New /info refinement for DO-SQL. Returns the port! value associated with a database
 	  connection. Usage:
 	  
