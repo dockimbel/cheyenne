@@ -65,7 +65,7 @@ Header meanings :
     	var msgbox;
     	var wsobj;
 
-		function normalize(str) {return str.replace(/\s/, '');}
+		function normalize(str) {return str.replace(/\s/g, '');}
     	function debug(str)		{ $("#debug").text(str); };
 
     	function info(str) {
