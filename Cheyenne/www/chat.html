@@ -65,7 +65,8 @@ Header meanings :
     	var msgbox;
     	var wsobj;
 
-    	function debug(str){ $("#debug").text(str); };
+		function normalize(str) {return str.replace(/\s/, '');}
+    	function debug(str)		{ $("#debug").text(str); };
 
     	function info(str) {
     		$("#msg").append(str + '<br>');
@@ -88,14 +89,14 @@ Header meanings :
 
 				switch(evt.data[0]) {		 	/* 1 byte header action value */
 					case 'u':
-						$("#users").append('<li id="_' + msg + '">' + msg + '</li>');
+						$("#users").append('<li id="_' + normalize(msg) + '">' + msg + '</li>');
 						info('<font color="darkgreen">' + msg + ' enters...</font>');
 						break;
 					case 'm':
 						info(msg);
 						break;
 					case 'r':
-						$("#_" + msg).remove();
+						$("#_" + normalize(msg)).remove();
 						info('<font color="darkred">' + msg + ' exits...</font>');
 						break;
 				};
