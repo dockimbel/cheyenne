@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!doctype html>
 <html>
   <head>
   	<style>
@@ -113,8 +113,10 @@ Header meanings :
 		}
 
 		function post_msg() {
-			ws.send('m' + user + ': ' + $("#post").val());
-			$("#post").val('');
+			if ($("#post").val() != '') {
+				ws.send('m' + user + ': ' + $("#post").val());
+				$("#post").val('');
+			}
 			$("#post").focus();
 		}
 
@@ -142,9 +144,10 @@ Header meanings :
     </script>
   </head>
   <body>
-		<h2>Realtime chat demo using web sockets</h2>
-		<small>- <i>requires a websocket enabled browser like Chrome 14</i> -</small><br><br>
-		Connection state : <span id="debug">not connected</span>
+		<h2>Realtime chat demo using websockets</h2>
+		<small>- <i>requires a websocket <a href="http://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-10" target="_new">hybi-10</a> enabled browser like Chrome 14, FF 8 or IE 10</i> -</small>
+		<br><br>
+		<div class="hideable">Connection state : <span id="debug">connecting...</span></div>
 
 		<div id="login" class="logbox" align="center">
 			<b>User name</b>
