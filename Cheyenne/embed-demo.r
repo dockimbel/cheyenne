@@ -144,7 +144,7 @@ REBOL [
 ; system/script/args: "-e -w 0"
 ; #include %cheyenne.r
 
-;-- Comment this line if you want to encap this script
+;-- Comment the following line if you want to encap this script
 do/args %cheyenne.r "-e"
 
 htmlize: func [title [string!] body [block! string!]][
