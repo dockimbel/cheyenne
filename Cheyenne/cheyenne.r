@@ -474,7 +474,7 @@ Supported options are:
 				flag? 'tray-only	[do-tray-app]
 				flag? 'version		[do-version-app]
 				flag? 'help			[do-help-app]
-				true 				[do-cheyenne-app]
+				'else 				[do-cheyenne-app]
 			]
 			if flag? 'embed [return 'no-quit]
 		][
