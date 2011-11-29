@@ -52,6 +52,7 @@ set-cache [
 		%mod-extapp.r
 		%mod-socket.r
 		%mod-upload.r
+		%mod-embed.r
 	]
 	%handlers/ [
 		%CGI.r
