@@ -3,6 +3,7 @@ REBOL [
 	Author: "SOFTINNOV / Nenad Rakocevic"
 	Version: 1.0
 	Date: 09/06/2007
+	Encap: [quiet secure none title "Cheyenne"] 
 	Notes: {
 		This is the first experimental release of Cheyenne's embed mode support.
 		
@@ -136,6 +137,14 @@ REBOL [
 	}
 ]
 
+;-- For encapping this demo + Cheyenne, uncomment the following lines and
+;-- set the SDK path to match your own. (Don't forget to run Cheyenne at least
+;-- once from sources to generate the .cache.efs file)
+; #include %//dev/SDK/v278/Source/view.r
+; system/script/args: "-e -w 0"
+; #include %cheyenne.r
+
+;-- Comment this line if you want to encap this script
 do/args %cheyenne.r "-e"
 
 htmlize: func [title [string!] body [block! string!]][
