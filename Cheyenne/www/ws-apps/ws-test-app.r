@@ -51,7 +51,7 @@ install-socket-app [								;-- load application at Cheyenne startup
 	on-message: func [client data][						
 		;send client data							;-- 'send function emit string! data to client (must be UTF-8 encoded!).
 													;-- 'send will emit the data to the client from which the message originates.
-		do-task/on-done data func [client data][	;-- 'do-task processes the argument data (can be anything) in background 
+		do-task/on-done data func [client data][	;-- 'do-task processes the argument data (string!) in background 
 			data: uppercase data					;--	simulates a post-processing action
 			print ["post-processing:" data]
 			send client data
