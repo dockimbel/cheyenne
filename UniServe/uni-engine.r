@@ -355,12 +355,12 @@ uniserve: make log-class [
 			in port 'async-modes
 			port/async-modes = 'connect 
 		][
-			if verbose > 0 [log/info ["port reconnecting : " port/remote-ip]]
+			if verbose > 0 [log/info ["port reconnecting: " port/remote-ip]]
 		][
 			unless keep [remove find spwl port]
 			attempt [close port]
 			;port/awake: none		; -- used as a marker for a closed port
-			if verbose > 0 [log/info ["port closed : " port/remote-ip]]
+			if verbose > 0 [log/info ["port closed: " port/remote-ip ":" port/port-id]]
 		]
 		res
 	]
@@ -547,7 +547,7 @@ uniserve: make log-class [
 			remove find port/async-modes 'write
 		][
 			on-write port
-		]	
+		]
 		flag-stop
 	]
 	
@@ -566,7 +566,7 @@ uniserve: make log-class [
 			process-error port disarm state 'read
 		][			
 			either all [port/scheme <> 'udp state <= 0][
-				if verbose > 0 [log/info ["Connection closed by peer " port/remote-ip]]
+				if verbose > 0 [log/info ["Connection closed by peer " port/remote-ip ", port: " port/port-id]]
 				close-connection port
 			][
 				touch port
