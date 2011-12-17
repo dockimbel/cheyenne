@@ -184,7 +184,7 @@ install-HTTPd-extension [
 			sess: sessions/create req
 			repend sess/vars ['login? no]
 		]
-		either url: second pos: find req/cfg 'auth [
+		either pos: find req/cfg 'auth [
 			either any [
 				find/match req/in/path "/public/"
 				select sess/vars 'login?
@@ -192,6 +192,7 @@ install-HTTPd-extension [
 				; TBD: set no-cache headers to avoid browser caching of protected ressources
 				if declined? req [throw false]	; let other modules serve the allowed ressource	
 			][
+				url: pos/2
 				unless url = rejoin [ 	; test if the requested url is not the login URL 
 					req/app req/in/path any [
 						all [
