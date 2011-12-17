@@ -50,7 +50,7 @@ scheduler: context [
 		flag-exit: off
 		while [none? res: system/words/wait []][
 			on-timer
-			if any [flag-exit empty? jobs][exit]
+			if any [flag-exit empty? jobs][return none]
 		]
 	]
 	
