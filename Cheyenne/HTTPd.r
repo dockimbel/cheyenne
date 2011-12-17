@@ -558,7 +558,11 @@ Connection: Upgrade^M
 		]
 	]
 	
-	ws-close: func [code [integer!]][
+	ws-close: func [req code [integer!]][
+		if req/socket-port [
+			do-phase req 'socket-disconnect
+			req/socket-port: none
+		]
 		write-client ws-make-frame skip debase/base to-hex code 16 2 'close
 		close-client
 	]
@@ -911,7 +915,7 @@ Connection: Upgrade^M
 			switch/default req/state [
 				ws-header [
 					if zero? mask: data/2 and 128 [		;-- if mask bit is unset, close connection
-						ws-close 1002					;-- protocol error
+						ws-close req 1002				;-- protocol error
 						exit
 					]
 					fin?: 	1 = shift to integer! data/1 7	;-- test FIN flag
@@ -924,7 +928,7 @@ Connection: Upgrade^M
 						127 [len: attempt [to integer! copy/part at data 3 pos: 4]]
 					]
 					if any [none? len len > 100'000][	; @@ TBD: add disk streaming mode ?
-						ws-close pick [1004 1002] to-logic len	;-- frame too large or protocol error
+						ws-close req pick [1004 1002] to-logic len	;-- frame too large or protocol error
 						exit
 					]					
 					pos: pos + 3						;-- 3 is default offset to data (one-based index)
@@ -954,12 +958,12 @@ Connection: Upgrade^M
 							do-phase req 'socket-message
 						]
 						8 [								;-- close
-							ws-close 1000				;-- normal closure
+							ws-close req 1000			;-- normal closure
 							exit
 						]
 						9 [								;-- ping
 							if len > 125 [
-								ws-close 1002			;-- protocol error
+								ws-close req 1002		;-- protocol error
 								exit
 							]
 							data: head data				;-- reuse the incoming ping unmasked frame
@@ -968,20 +972,20 @@ Connection: Upgrade^M
 						]
 						10 [							;-- pong (unilateral heartbeat, no response)
 							if len > 125 [
-								ws-close 1002			;-- protocol error
+								ws-close req 1002		;-- protocol error
 								exit
 							]
 							;do-phase req 'socket-message	;TBD: pass the event to application layer?
 						]
 					][
-						ws-close 1003					;-- unsupported frame type
+						ws-close req 1003				;-- unsupported frame type
 						exit
 					]
 					data: skip data len
 					req/state: 'ws-header
 				]
 			][
-				ws-close 1002							;-- protocol error
+				ws-close req 1002						;-- protocol error
 				exit
 			]			
 			tail? data
@@ -1008,6 +1012,7 @@ Connection: Upgrade^M
 		if all [
 			object? req: pick tail client/user-data -1
 			req/socket-app
+			req/socket-port
 		][		
 			do-phase req 'socket-disconnect
 			req/socket-port: none
