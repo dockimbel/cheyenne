@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML>
 <html>
 <head>
 	<title>Welcome!</title>
@@ -8,16 +8,16 @@
 <h2>Web Socket test page</h2>
 
 <script>
-var conn = new WebSocket("ws://localhost/ws.rsp")
+var conn = new WebSocket('ws://localhost/ws.rsp');
 
-conn.onopen = function(evt) { alert("Conn opened");}
-conn.onmessage = function(evt) { alert("Read: " + evt.data); }
-conn.onclose = function(evt) { alert("Conn closed"); }
+conn.onopen    = function(evt) { alert('Connection opened');}
+conn.onmessage = function(evt) { alert('Read: ' + evt.data); }
+conn.onclose   = function(evt) { alert('Connection closed'); }
 
 
 </script>
 <button onClick="conn.send('Hello World');"> Send Message </button>
-<button onClick=" alert('button closed');conn.close();"> Disconnect </button>
+<button onClick="conn.close(1000);"> Disconnect </button>
 </center>
 </body>
 </html>
