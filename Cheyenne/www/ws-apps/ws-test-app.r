@@ -39,7 +39,6 @@ install-socket-app [								;-- load application at Cheyenne startup
 	;-- function to force disconnection. The 'client argument is the client port value. Once
 	;-- this event processed, the client port is removed from the 'clients list of connections.
 	on-disconnect: func [client][
-		print "client socket disconnected!"
 		if empty? clients [							;-- 'clients connection list is a hash!, so all series functions apply.
 			set-timer none							;-- passing none to 'set-timer will stop the timer.
 		]
