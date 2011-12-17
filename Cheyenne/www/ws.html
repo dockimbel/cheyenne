@@ -8,7 +8,14 @@
 <h2>Web Socket test page</h2>
 
 <script>
-var conn = new WebSocket('ws://localhost/ws.rsp');
+var wsobj = window.WebSocket;		/* W3C */
+if (wsobj === undefined) {
+	wsobj = window.MozWebSocket;	/* Firefox */
+	if (wsobj === undefined)
+		alert("Your browser doesn't support Web Sockets!");
+}
+
+var conn = new wsobj('ws://localhost/ws.rsp');
 
 conn.onopen    = function(evt) { alert('Connection opened');}
 conn.onmessage = function(evt) { alert('Read: ' + evt.data); }
