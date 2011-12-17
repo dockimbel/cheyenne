@@ -23,13 +23,12 @@ install-HTTPd-extension [
 		rsp-session: on-connect: on-message: on-disconnect: on-timer: clients: none
 		
 		set-timer: func [delay [time! none!]][
-			timer?: either delay [
+			either delay [
 				scheduler/add-job/every/name compose [fire-event (__ctx) 'on-timer] delay __id				
-				yes
 			][
 				scheduler/delete __id
-				no
 			]
+			timer?: to logic! delay
 		]
 		
 		send: func [port [port!] data [string!]][
