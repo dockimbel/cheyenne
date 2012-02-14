@@ -484,7 +484,7 @@ install-module [
 						insert port data
 						either flat [
 							out: make block! 8
-							until [if data: pick port 1 [append out data] data]
+							while [data: pick port 1][append out data]
 							out
 						][
 							attempt [copy port]
