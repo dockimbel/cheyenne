@@ -355,7 +355,7 @@ install-HTTPd-extension [
 	
 	words: [
 		;--- Allow databases declaration for background tasks
-		databases: [block!] in globals
+		databases: [block!] in [globals main]
 		
 		;--- Define a new webapp structure
 		webapp: [block!] in main do [
