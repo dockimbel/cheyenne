@@ -117,9 +117,12 @@ install-service [
 		if integer? shared/pool-start [loop shared/pool-start [fork]]
 	]
 	
-	on-started: has [file][
+	on-started: has [file ports][
 		worker-args: reform [
-			"-worker" mold any [in uniserve/shared 'server-ports port-id]		;TBD: fix shared object issues
+			"-worker" mold any [
+				all [ports: in uniserve/shared 'server-ports get ports]	;TBD: fix shared object issues
+				port-id
+			]
 		]
 		if not encap? [
 			append worker-args reform [" -up" mold uniserve-path]
@@ -128,7 +131,8 @@ install-service [
 			]
 			if all [
 				uniserve/shared
-				file: uniserve/shared/conf-file 
+				file: in uniserve/shared 'conf-file 
+				file: get file
 			][		
 				append worker-args reform [" -cf" mold file]
 			]
