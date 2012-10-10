@@ -119,7 +119,7 @@ install-service [
 	
 	on-started: has [file][
 		worker-args: reform [
-			"-worker" mold any [uniserve/shared/server-ports port-id]		;TBD: fix shared object issues
+			"-worker" mold any [in uniserve/shared 'server-ports port-id]		;TBD: fix shared object issues
 		]
 		if not encap? [
 			append worker-args reform [" -up" mold uniserve-path]
