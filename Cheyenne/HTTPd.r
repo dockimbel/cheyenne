@@ -13,7 +13,7 @@ install-service [
 	name: 'HTTPd
 	port-id: 80
 	module: 'CGI
-	auto-expire: 0:00:15
+	auto-expire: 0:01:0
 	started?: no
 	verbose: 0
 	
@@ -702,7 +702,7 @@ Connection: Upgrade^M
 		
 		if any [
 			all [not keep? 1 = length? q]
-			out/code = 405
+			out/code >= 400
 		][
 			close-client
 		]
@@ -1018,6 +1018,7 @@ Connection: Upgrade^M
 			req/socket-port: none
 		]
 		;--- TBD: close properly tmp disk files (when upload has been interrupted)
+		true
 	]
 	
 	random/seed now/time/precise
