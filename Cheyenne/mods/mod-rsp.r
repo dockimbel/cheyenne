@@ -335,8 +335,10 @@ install-HTTPd-extension [
 		if sess: sessions/exists? req [sess/busy?: no]
 		ro: req/out
 		if verbose > 0 [log/info mold ro/content]
-		unless any-string? ro/content [ro/content: mold ro/content]
+		;unless any-string? ro/content [ro/content: mold ro/content]
+		ro/content: none
 		ro/code: 500
+		
 		either req/in/ws? [
 			either all [req/socket-app not empty? req/tasks][		;-- TBD: see what should be the
 				service/mod-list/mod-socket/on-task-done req		;-- policy in such case...
