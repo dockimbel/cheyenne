@@ -328,6 +328,16 @@ install-module [
 			current: last jobs
 			clear skip tail jobs -2
 			if verbose > 2 [dump]
+			
+			;-- FIX: issue with MySQL server when connection times out
+			;-- worker process is now killed to ensure a clean state  
+			if all [
+				object? :res
+				res/id = 'timeout
+			][
+				s-quit
+			]
+
 			response/error?: to logic! any [response/error? res] 		;-- Make TRUE persistant across nested executions
 		]
 	]
