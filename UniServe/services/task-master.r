@@ -158,12 +158,17 @@ install-service [
 		]
 	]
 	
-	on-close-client: does [
+	on-close-client: has [ctx svc sav-client][
 		remove find pool-list :client
 		shared/pool-count: shared/pool-count - 1
 		if client/user-data/busy [
 			if in obj: client/user-data/ctx/1 'on-task-failed [
-				obj/on-task-failed 'error client/user-data/ctx/3
+				ctx: client/user-data/ctx
+				svc: ctx/1
+				sav-client: svc/client
+				svc/client: svc/peer: ctx/2				; restore client port
+				obj/on-task-failed 'error ctx/3
+				svc/client: svc/peer: sav-client
 			]
 		]
 		if verbose > 0 [log/info "slave process closed"]
