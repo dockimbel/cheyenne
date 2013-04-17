@@ -618,7 +618,9 @@ install-module [
 				src: split-path spec/2
 				path: spec/1
 			]
-			if exists? target: join src/1 path [throw 'name-taken]
+			if exists? target: join src/1 path [
+				throw make error! reform [target "already exists."]
+			]
 			save-dir: system/script/path
 			change-dir src/1
 			rename src/2 path							;-- use rename trick to move file
