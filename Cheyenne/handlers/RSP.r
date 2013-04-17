@@ -604,9 +604,12 @@ install-module [
 		
 		store: func [[catch] spec [block!] /as target [file!] /local src path save-dir][
 			either as [
-				if slash = last target [join target spec/1]
+				if slash = last target [target: join target spec/1]
 				src: split-path spec/2
-				unless path: relative-path src/1 target [		
+				unless path: relative-path src/1 target [
+					if exists? target [
+						throw make error! reform [target "already exists."]
+					]
 					call/wait reform [					;-- fallback method
 						pick ["move /Y" "mv"] system/version/4 = 3
 						to-local-file spec/2
