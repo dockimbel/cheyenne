@@ -53,6 +53,7 @@ set-cache [
 		%mod-socket.r
 		%mod-upload.r
 		%mod-embed.r
+		%mod-cors.r
 	]
 	%handlers/ [
 		%CGI.r
