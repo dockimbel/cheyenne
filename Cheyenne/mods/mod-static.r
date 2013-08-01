@@ -6,9 +6,9 @@ install-HTTPd-extension [
 	name: 'mod-static
 	
 	order: [
-		method-support	last
 		url-translate	first
 		url-to-filename	last
+		method-support	last
 		access-check	last
 		set-mime-type	last
 		make-response	last

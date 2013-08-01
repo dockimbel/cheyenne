@@ -7,10 +7,10 @@ install-HTTPd-extension [
 	
 	;-- Take precedence over any other module
 	order: [
-		method-support	first
 		url-translate 	first
 		url-to-filename first
 		parsed-headers	first
+		method-support	first
 		filter-input	first
 		access-check	first
 		filter-output	first

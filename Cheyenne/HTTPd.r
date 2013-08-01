@@ -105,10 +105,10 @@ Connection: Upgrade^M
 	http-responses: make hash! http-responses
 
 	phases: make hash! [
-		method-support	  []
 		url-translate 	  []
 		url-to-filename   []
 		parsed-headers	  []
+		method-support	  []
 		upload-file		  []
 		filter-input	  []
 		access-check	  []
@@ -807,7 +807,6 @@ Connection: Upgrade^M
 					log/info ["Request Line=>" trim/tail to-string data]
 				]
 				parse-request-line data req/in
-				do-phase req 'method-support
 				do-phase req 'url-translate
 				req/state: 'headers
 				exit
@@ -821,6 +820,7 @@ Connection: Upgrade^M
 				parse-headers data req/in
 				do-phase req 'parsed-headers
 				select-vhost req
+				do-phase req 'method-support
 				unless req/out/code [
 					do-phase req 'url-to-filename
 					if verbose > 1 [log/info ["translated file: " mold req/in/file]]
