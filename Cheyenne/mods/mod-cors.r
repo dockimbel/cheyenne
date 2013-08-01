@@ -18,6 +18,10 @@ install-HTTPd-extension [
 	rules: make block! 2
 	
 	match-host?: func [host origin /local spec][
+		origin: any [
+			find/match origin "http://" 				;-- skip the http prefix
+			origin
+		]
 		all [
 			spec: select rules host
 			any [
