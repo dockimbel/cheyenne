@@ -131,10 +131,9 @@ cheyenne: make log-class [
 	crash-file: %crash.log
 	
 	version: #do [							;-- Cheyenne's version (tuple!) including SVN revision
-		do %svn-version.r					;--   when encapped from a SVN repository
 		rejoin [
-			vers: get in first load/header %cheyenne.r 'version #"."
-			svn-version? %./
+			get in first load/header %cheyenne.r 'version ".dev"
+			;;TBD: add a proper version identifier
 		]
 	]
 	if issue? version [version: system/script/header/version]
