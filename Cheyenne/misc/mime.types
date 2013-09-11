@@ -2,7 +2,8 @@ application/andrew-inset		ez
 application/mac-binhex40		hqx
 application/mac-compactpro		cpt
 application/msword				doc
-application/octet-stream		bin dms lha lzh exe class dmg
+application/octet-stream		bin dms lha lzh class dmg
+application/x-msdos-program		exe
 application/oda					oda
 application/pdf					pdf
 application/postscript			ai eps ps
