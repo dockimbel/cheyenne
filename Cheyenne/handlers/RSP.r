@@ -571,13 +571,15 @@ install-module [
 			copy cache/3
 		]
 		
-		invalid: func [[catch] db [word!] class [word! block!] /local cache list][		
+		invalid: func [[catch] db [word!] class [word! block!] /local cache list pos][		
 			if word? class [class: reduce [class]]
 			cache: get-cache :db
 			unless sync-list [sync-list: make block! length? cache]
-			if list: sync-list/:db [
+			if list: select sync-list :db [
 				foreach w class [
-					poke list (index? next find cache w) / 2 now
+					if pos: find cache w [
+						poke list (index? next pos) / 2 now
+					]
 				]
 			]
 		]
