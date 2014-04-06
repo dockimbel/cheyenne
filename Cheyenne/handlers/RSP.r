@@ -531,7 +531,7 @@ install-module [
 			data
 		]
 		
-		define: func [[catch] db [word!] spec [block!]][
+		define: func [[catch] db [word!] spec [block!] /local pos][
 			parse spec [
 				some [
 					pos: string! (
