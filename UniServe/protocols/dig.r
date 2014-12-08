@@ -50,8 +50,8 @@ install-protocol [
 				]
 			]
 		][
-			out: ""
-			call/output/wait "ipconfig /all" out
+			out: make string! 64000
+			call/output/show "ipconfig /all" out
 			parse out [thru local-ip thru "DNS" thru #":" copy v to newline]		
 			attempt [to-tuple trim v]
 		]
