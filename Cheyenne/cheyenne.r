@@ -308,6 +308,14 @@ cheyenne: make log-class [
 		set-tray-remote-events
 		do-events
 	]
+
+	do-install-app: does [
+		unless NT-service-running? [
+			unless install-NT-service [
+				alert "ERROR : installing a service requires Administrator rights!"
+			]
+		]
+	]
 	
 	do-uninstall-app: does [
 		if NT-service? [
@@ -403,6 +411,7 @@ Supported options are:
 					)
 					| "-e" 		(set-flag 'embed)
 					| "-s" 		(set-flag 'service)			; -- internal use only
+					| "-i"		(set-flag 'install)
 					| "-u"		(set-flag 'uninstall)				
 					| "-w" copy value integer! opt ["," copy value2 integer!] (
 						value: load trim value
@@ -471,6 +480,7 @@ Supported options are:
 		if error? set/any 'err try [
 			case [
 				flag? 'bg-process	[do-bg-process-app]
+				flag? 'install		[do-install-app]
 				flag? 'uninstall	[do-uninstall-app]
 				flag? 'tray-only	[do-tray-app]
 				flag? 'version		[do-version-app]
