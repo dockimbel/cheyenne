@@ -79,6 +79,7 @@ image/x-xpixmap					xpm
 image/x-xwindowdump				xwd
 image/x-quicktime				qti qtif
 image/x-macpaint				pntg
+image/svg+xml					svg
 model/iges						igs iges
 model/mesh						msh mesh silo
 model/vrml						wrl vrml
