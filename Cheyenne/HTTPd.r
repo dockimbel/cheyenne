@@ -1010,6 +1010,7 @@ Connection: Upgrade^M
 	on-close-client: has [req][
 		if verbose > 1 [log/info "Connection closed"]
 		if all [
+			block? client/user-data						;-- avoid cases of immediate connection closed
 			object? req: pick tail client/user-data -1
 			req/socket-app
 			req/socket-port
